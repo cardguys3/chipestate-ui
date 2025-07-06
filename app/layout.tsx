@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
 
 import { createPagesBrowserClient } from '@supabase/auth-helpers-nextjs'
-import { SupabaseProvider } from "@supabase/auth-helpers-react"
+
 import { useState } from "react"
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
@@ -36,9 +36,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <SupabaseProvider client={supabase}>
-          {children}
-        </SupabaseProvider>
+
       </body>
     </html>
   )
