@@ -106,11 +106,19 @@ export default function RegisterPage() {
         ))}
 
         <button
-          type="submit"
-          className="w-full bg-emerald-600 text-white font-semibold py-2 rounded hover:bg-emerald-700 transition"
-        >
-          Register
-        </button>
+  type="submit"
+  className="w-full bg-emerald-600 text-white font-semibold py-2 rounded hover:bg-emerald-700 transition"
+>
+  Register
+</button>
+
+<button
+  type="button"
+  onClick={() => router.back()}
+  className="mt-2 w-full bg-gray-200 text-gray-700 font-semibold py-2 rounded hover:bg-gray-300 transition"
+>
+  ← Back
+</button>
       </form>
     </main>
   )
