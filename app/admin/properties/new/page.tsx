@@ -4,6 +4,25 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession, useSupabaseClient } from '@supabase/auth-helpers-react'
 
+const residentialSubtypes = [
+  'Single Family',
+  'Condo',
+  'Townhome',
+  'Mobile Home',
+  'Vacation Rental',
+  'Vacant Lot'
+]
+
+const commercialSubtypes = [
+  'Office Space',
+  'Retail',
+  'Hospitality',
+  'Special Purpose',
+  'Industrial',
+  'Vacation Rental',
+  'Vacant Lot'
+]
+
 export default function AddPropertyPage() {
   const router = useRouter()
   const session = useSession()
@@ -34,6 +53,14 @@ export default function AddPropertyPage() {
   const handleChange = (e: any) => {
     const { name, value, type, checked } = e.target
     setForm({ ...form, [name]: type === 'checkbox' ? checked : value })
+
+    if (name === 'property_type') {
+      setForm((prev) => ({
+        ...prev,
+        property_type: value,
+        sub_type: '', // reset subtype
+      }))
+    }
   }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,6 +103,9 @@ export default function AddPropertyPage() {
     }
   }
 
+  const subtypeOptions =
+    form.property_type === 'commercial' ? commercialSubtypes : residentialSubtypes
+
   return (
     <main className="min-h-screen bg-gray-50 p-6 max-w-3xl mx-auto">
       <h1 className="text-2xl font-bold text-blue-900 mb-4">Add New Property</h1>
@@ -90,8 +120,28 @@ export default function AddPropertyPage() {
           <input name="zip" placeholder="Zip" onChange={handleChange} required className="input" />
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <input name="property_type" placeholder="Type (residential, commercial, etc)" onChange={handleChange} required className="input" />
-          <input name="sub_type" placeholder="Sub-type (single_family, retail, etc)" onChange={handleChange} className="input" />
+          <select
+            name="property_type"
+            value={form.property_type}
+            onChange={handleChange}
+            required
+            className="input"
+          >
+            <option value="residential">Residential</option>
+            <option value="commercial">Commercial</option>
+          </select>
+          <select
+            name="sub_type"
+            value={form.sub_type}
+            onChange={handleChange}
+            required
+            className="input"
+          >
+            <option value="">Select Subtype</option>
+            {subtypeOptions.map((type) => (
+              <option key={type} value={type}>{type}</option>
+            ))}
+          </select>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <input name="purchase_price" placeholder="Purchase Price" onChange={handleChange} required className="input" />
