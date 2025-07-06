@@ -2,14 +2,33 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabaseClient'
 import dynamic from 'next/dynamic'
 
 const LoginModal = dynamic(() => import('./LoginModal'), { ssr: false })
 
+const ADMIN_EMAILS = ['mark@chipestate.com', 'cardguys3@gmail.com']
+
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [showLogin, setShowLogin] = useState(false)
+  const [userEmail, setUserEmail] = useState<string | null>(null)
+
+  const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail)
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data } = await supabase.auth.getUser()
+      setUserEmail(data.user?.email ?? null)
+    }
+    getUser()
+  }, [])
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    window.location.href = '/' // Refresh to homepage after logout
+  }
 
   return (
     <>
@@ -29,19 +48,33 @@ export default function Header() {
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex space-x-1 items-center text-base font-medium text-white">
-            <Link href="/market" className="px-3 py-1 rounded-md transition-colors duration-200 hover:bg-amber-100 hover:text-blue-900">Market</Link>
-            <Link href="/glossary" className="px-3 py-1 rounded-md transition-colors duration-200 hover:bg-amber-100 hover:text-blue-900">Glossary</Link>
-            <Link href="/about" className="px-3 py-1 rounded-md transition-colors duration-200 hover:bg-amber-100 hover:text-blue-900">About</Link>
-            <Link href="/contact" className="px-3 py-1 rounded-md transition-colors duration-200 hover:bg-amber-100 hover:text-blue-900">Contact</Link>
-            <Link href="/terms" className="px-3 py-1 rounded-md transition-colors duration-200 hover:bg-amber-100 hover:text-blue-900">Terms</Link>
-            <Link href="/privacy" className="px-3 py-1 rounded-md transition-colors duration-200 hover:bg-amber-100 hover:text-blue-900">Privacy</Link>
-            <button
-              onClick={() => setShowLogin(true)}
-              className="px-3 py-1 rounded-md transition-colors duration-200 hover:bg-amber-100 hover:text-blue-900"
-            >
-              Login
-            </button>
-            <Link href="/register" className="ml-4 bg-emerald-600 text-white px-6 py-1.5 rounded-md hover:bg-emerald-700">Sign Up</Link>
+            <Link href="/market" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">Market</Link>
+            <Link href="/glossary" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">Glossary</Link>
+            <Link href="/about" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">About</Link>
+            <Link href="/contact" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">Contact</Link>
+            <Link href="/terms" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">Terms</Link>
+            <Link href="/privacy" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">Privacy</Link>
+
+            {userEmail ? (
+              <>
+                {isAdmin && (
+                  <Link href="/admin" className="px-3 py-1 rounded-md transition hover:bg-yellow-300 text-amber-200 hover:text-blue-900">Admin</Link>
+                )}
+                <button onClick={handleLogout} className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">
+                  Log Out
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => setShowLogin(true)}
+                  className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900"
+                >
+                  Login
+                </button>
+                <Link href="/register" className="ml-4 bg-emerald-600 text-white px-6 py-1.5 rounded-md hover:bg-emerald-700">Sign Up</Link>
+              </>
+            )}
           </nav>
 
           {/* Mobile Hamburger */}
@@ -61,13 +94,18 @@ export default function Header() {
             <Link href="/contact" className="block hover:text-amber-600">Contact</Link>
             <Link href="/terms" className="block hover:text-amber-600">Terms</Link>
             <Link href="/privacy" className="block hover:text-amber-600">Privacy</Link>
-            <button
-              onClick={() => setShowLogin(true)}
-              className="block w-full text-left hover:text-amber-600"
-            >
-              Login
-            </button>
-            <Link href="/register" className="block bg-emerald-600 text-white px-3 py-1 rounded hover:bg-emerald-700">Sign Up</Link>
+
+            {userEmail ? (
+              <>
+                {isAdmin && <Link href="/admin" className="block hover:text-yellow-400">Admin</Link>}
+                <button onClick={handleLogout} className="block text-left w-full hover:text-amber-600">Log Out</button>
+              </>
+            ) : (
+              <>
+                <button onClick={() => setShowLogin(true)} className="block text-left w-full hover:text-amber-600">Login</button>
+                <Link href="/register" className="block bg-emerald-600 text-white px-3 py-1 rounded hover:bg-emerald-700">Sign Up</Link>
+              </>
+            )}
           </div>
         )}
       </header>
