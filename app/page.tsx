@@ -30,10 +30,11 @@ export default function Home() {
             rentalReturn="6.2%"
             projectedReturn="8.4%"
             chipsAvailable={42}
+            chipsSold={58}
             chipPrice="$52.35"
             isOccupied={true}
             type="residential"
-	    subType="single_family"
+            subType="single_family"
           />
           <PropertyCard
             image="/property2.jpg"
@@ -42,13 +43,15 @@ export default function Home() {
             rentalReturn="5.8%"
             projectedReturn="7.1%"
             chipsAvailable={28}
+            chipsSold={12}
             chipPrice="$48.00"
             isOccupied={false}
             type="residential"
-	    subType="single_family"
+            subType="single_family"
           />
         </div>
       </section>
+
       <Footer />
       <ChatBubble />
     </main>
