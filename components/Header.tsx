@@ -31,9 +31,7 @@ export default function Header() {
           <Link href="/terms" className="px-3 py-1 rounded-md transition-colors duration-200 hover:bg-amber-100 hover:text-blue-900">Terms</Link>
           <Link href="/privacy" className="px-3 py-1 rounded-md transition-colors duration-200 hover:bg-amber-100 hover:text-blue-900">Privacy</Link>
           <Link href="/login" className="px-3 py-1 rounded-md transition-colors duration-200 hover:bg-amber-100 hover:text-blue-900">Login</Link>
-          <Link href="/signup" className="ml-4 bg-emerald-600 text-white px-6 py-1.5 rounded-md hover:bg-emerald-700">
-            Sign Up
-          </Link>
+          <Link href="/register" className="ml-4 bg-emerald-600 text-white px-6 py-1.5 rounded-md hover:bg-emerald-700">Sign Up</Link>
         </nav>
 
         {/* Mobile Hamburger */}
@@ -54,7 +52,7 @@ export default function Header() {
           <Link href="/terms" className="block hover:text-amber-600">Terms</Link>
           <Link href="/privacy" className="block hover:text-amber-600">Privacy</Link>
           <Link href="/login" className="block hover:text-amber-600">Login</Link>
-          <Link href="/signup" className="block bg-emerald-600 text-white px-3 py-1 rounded hover:bg-emerald-700">Sign Up</Link>
+          <Link href="/register" className="block bg-emerald-600 text-white px-3 py-1 rounded hover:bg-emerald-700">Sign Up</Link>
         </div>
       )}
     </header>
