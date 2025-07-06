@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
 
-import { createBrowserClient } from "@supabase/auth-helpers-nextjs"
+import { createPagesBrowserClient } from '@supabase/auth-helpers-nextjs'
 import { SupabaseProvider } from "@supabase/auth-helpers-react"
 import { useState } from "react"
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
@@ -28,7 +28,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const supabase = createBrowserClient(
+  const supabase = createPagesBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
