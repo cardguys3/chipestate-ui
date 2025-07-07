@@ -13,7 +13,7 @@ export default function Home() {
           Welcome to ChipEstate
         </h1>
         <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-          Buy and sell fractional real estate shares — one chip at a time. Explore real properties, track your earnings, and build your real estate portfolio from the ground up.
+          Buy and sell fractional real estate — one chip at a time. Real properties, real earnings, and now you can build your real estate portfolio from the ground up.
         </p>
       </section>
 
