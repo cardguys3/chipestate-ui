@@ -8,7 +8,10 @@ export default function ChipsPage() {
   const [chips, setChips] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
-  const supabase = createBrowserClient<any>() // fallback to any type
+  const supabase = createBrowserClient<any>(
+	  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+	  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+	)
 
   useEffect(() => {
     async function fetchChips() {
