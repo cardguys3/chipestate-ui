@@ -46,6 +46,7 @@ export default async function MarketPage() {
             <thead>
               <tr className="text-left border-b border-blue-800 text-gray-300">
                 <th className="py-2 pr-4">Property</th>
+                <th className="py-2 pr-4">Name</th>
                 <th className="py-2 px-2">Price</th>
                 <th className="py-2 px-2">Chart (30D)</th>
                 <th className="py-2 px-2">Operating Reserve</th>
@@ -84,6 +85,7 @@ export default async function MarketPage() {
                         <div className="text-gray-400 text-xs">{`${p.city}, ${p.state} ${p.zip}`}</div>
                       </div>
                     </td>
+                    <td className="px-2">{p.title || 'Untitled'}</td>
                     <td className="px-2">${p.price?.toFixed(2)}</td>
                     <td className="px-2 text-gray-400">N/A</td>
                     <td className="px-2">${p.reserve || 0} <span className="text-gray-400 text-xs">(0%)</span></td>
