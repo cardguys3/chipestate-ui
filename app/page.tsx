@@ -28,6 +28,13 @@ export default function Home() {
     fetchProperties()
   }, [])
 
+  const getImageUrl = (url: string | null) => {
+    if (!url) return '/default-image.png'
+    return url.startsWith('http')
+      ? url
+      : `https://ajburehyunbvpuhnyjbo.supabase.co/storage/v1/object/public/property-images/${url}`
+  }
+
   return (
     <main className="min-h-screen bg-gray-50">
       <section className="mt-16 px-4 text-center">
@@ -35,41 +42,34 @@ export default function Home() {
           Welcome to ChipEstate
         </h1>
         <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-          Buy and sell fractional real estate — one chip at a time. Real properties, real earnings, and now you can build your real estate portfolio from the ground up.
+          Buy and sell fractional real estate — one chip at a time. Real properties, real earnings, and now you can build your real estate portfolio online.
         </p>
       </section>
 
-      <section className="mt-16 px-4">
-        <h2 className="text-2xl font-bold text-blue-700 mb-4 text-center">Highlighted Properties</h2>
-
+      <section className="mt-12 px-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
         {loading ? (
-          <p className="text-center text-gray-500">Loading...</p>
+          <p className="col-span-full text-center text-gray-500">Loading properties...</p>
         ) : properties.length === 0 ? (
-          <p className="text-center text-gray-500">No properties available.</p>
+          <p className="col-span-full text-center text-gray-500">No active properties found.</p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 max-w-7xl mx-auto">
-            {properties.map((property) => (
-              <PropertyCard
-                key={property.id}
-                image={property.image_url}
-                addressLine1={property.address_line1}
-                cityStateZip={`${property.city}, ${property.state} ${property.zip}`}
-                rentalReturn="--"
-                projectedReturn="--"
-                chipsAvailable={property.chips_available}
-                chipsSold={property.total_chips - property.chips_available}
-                chipPrice={`$${(property.current_value / property.total_chips).toFixed(2)}`}
-                isOccupied={property.occupied}
-                type={property.property_type}
-                subType={property.sub_type}
+          properties.map((property) => (
+            <div key={property.id} className="border rounded-lg shadow hover:shadow-md transition">
+              <img
+                src={getImageUrl(property.image_url)}
+                alt={property.title || 'Property image'}
+                className="w-full h-48 object-cover rounded-t-lg"
               />
-            ))}
-          </div>
+              <div className="p-4">
+                <h2 className="text-xl font-semibold text-blue-800 mb-2">{property.title}</h2>
+                <p className="text-sm text-gray-600">{property.description}</p>
+              </div>
+            </div>
+          ))
         )}
       </section>
 
       <ChatBubble />
-      
+      <Footer />
     </main>
   )
 }
