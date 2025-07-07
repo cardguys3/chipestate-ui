@@ -2,15 +2,18 @@
 
 import { useEffect, useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
-import Link from 'next/link'
 
 export default function ChipsPage() {
   const [chips, setChips] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [propertyId, setPropertyId] = useState('')
+  const [properties, setProperties] = useState<any[]>([])
+  const [users, setUsers] = useState<any[]>([])
+
+  const [selectedPropertyId, setSelectedPropertyId] = useState('')
   const [quantity, setQuantity] = useState(0)
-  const [assignEmail, setAssignEmail] = useState('')
+
   const [assignChipId, setAssignChipId] = useState('')
+  const [assignEmail, setAssignEmail] = useState('')
 
   const supabase = createBrowserClient<any>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -19,6 +22,8 @@ export default function ChipsPage() {
 
   useEffect(() => {
     fetchChips()
+    fetchProperties()
+    fetchUsers()
   }, [])
 
   const fetchChips = async () => {
@@ -51,11 +56,21 @@ export default function ChipsPage() {
     setLoading(false)
   }
 
+  const fetchProperties = async () => {
+    const { data, error } = await supabase.from('properties').select('id, title')
+    if (!error && data) setProperties(data)
+  }
+
+  const fetchUsers = async () => {
+    const { data, error } = await supabase.from('users_extended').select('id, email')
+    if (!error && data) setUsers(data)
+  }
+
   const handleBulkCreate = async () => {
-    if (!propertyId || quantity <= 0) return
+    if (!selectedPropertyId || quantity <= 0) return
     const newChips = Array.from({ length: quantity }, (_, i) => ({
-      serial: `${propertyId}-${Date.now()}-${i + 1}`,
-      property_id: propertyId,
+      serial: `${selectedPropertyId}-${Date.now()}-${i + 1}`,
+      property_id: selectedPropertyId,
     }))
     const { error } = await supabase.from('chips').insert(newChips)
     if (error) {
@@ -97,48 +112,94 @@ export default function ChipsPage() {
     <main className="p-8 text-white bg-gray-900 min-h-screen">
       <h1 className="text-3xl font-bold mb-6">Chip Registry</h1>
 
-      <div className="bg-gray-800 p-4 rounded mb-6">
-        <h2 className="text-xl font-semibold mb-2">Bulk Create Chips</h2>
-        <input
-          type="text"
-          placeholder="Property ID"
-          value={propertyId}
-          onChange={(e) => setPropertyId(e.target.value)}
-          className="text-black px-2 py-1 mr-2"
-        />
-        <input
-          type="number"
-          placeholder="Quantity"
-          value={quantity}
-          onChange={(e) => setQuantity(Number(e.target.value))}
-          className="text-black px-2 py-1 mr-2"
-        />
-        <button onClick={handleBulkCreate} className="bg-emerald-600 px-4 py-1 rounded">
-          Create Chips
-        </button>
+      {/* Bulk Create */}
+      <div className="bg-gray-800 p-6 rounded border border-gray-700 mb-6">
+        <h2 className="text-xl font-semibold mb-4">Bulk Create Chips</h2>
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1">
+            <label className="block mb-1 text-white">Select Property</label>
+            <select
+              value={selectedPropertyId}
+              onChange={(e) => setSelectedPropertyId(e.target.value)}
+              className="w-full text-black px-3 py-2 rounded"
+            >
+              <option value="">-- Choose a Property --</option>
+              {properties.map((prop) => (
+                <option key={prop.id} value={prop.id}>
+                  {prop.title}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex-1">
+            <label className="block mb-1 text-white">Quantity</label>
+            <input
+              type="number"
+              value={quantity}
+              onChange={(e) => setQuantity(Number(e.target.value))}
+              className="w-full text-black px-3 py-2 rounded"
+              placeholder="Enter quantity"
+            />
+          </div>
+          <div className="flex items-end">
+            <button
+              onClick={handleBulkCreate}
+              className="bg-emerald-600 text-white px-4 py-2 rounded"
+            >
+              Create Chips
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div className="bg-gray-800 p-4 rounded mb-6">
-        <h2 className="text-xl font-semibold mb-2">Assign Chip to User</h2>
-        <input
-          type="text"
-          placeholder="Chip ID"
-          value={assignChipId}
-          onChange={(e) => setAssignChipId(e.target.value)}
-          className="text-black px-2 py-1 mr-2"
-        />
-        <input
-          type="email"
-          placeholder="User Email"
-          value={assignEmail}
-          onChange={(e) => setAssignEmail(e.target.value)}
-          className="text-black px-2 py-1 mr-2"
-        />
-        <button onClick={handleAssign} className="bg-blue-600 px-4 py-1 rounded">
-          Assign
-        </button>
+      {/* Assign Chip */}
+      <div className="bg-gray-800 p-6 rounded border border-gray-700 mb-6">
+        <h2 className="text-xl font-semibold mb-4">Assign Chip to User</h2>
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1">
+            <label className="block mb-1 text-white">Chip ID</label>
+            <input
+              type="text"
+              value={assignChipId}
+              onChange={(e) => setAssignChipId(e.target.value)}
+              className="w-full text-black px-3 py-2 rounded"
+              placeholder="Enter Chip ID"
+            />
+          </div>
+          <div className="flex-1">
+            <label className="block mb-1 text-white">User Email</label>
+            <select
+              value={assignEmail}
+              onChange={(e) => setAssignEmail(e.target.value)}
+              className="w-full text-black px-3 py-2 rounded mb-2"
+            >
+              <option value="">-- Select a User --</option>
+              {users.map((u) => (
+                <option key={u.id} value={u.email}>
+                  {u.email}
+                </option>
+              ))}
+            </select>
+            <input
+              type="email"
+              value={assignEmail}
+              onChange={(e) => setAssignEmail(e.target.value)}
+              className="w-full text-black px-3 py-2 rounded"
+              placeholder="Or type email manually"
+            />
+          </div>
+          <div className="flex items-end">
+            <button
+              onClick={handleAssign}
+              className="bg-blue-600 text-white px-4 py-2 rounded"
+            >
+              Assign
+            </button>
+          </div>
+        </div>
       </div>
 
+      {/* Chips Table */}
       {loading ? (
         <p>Loading...</p>
       ) : (
