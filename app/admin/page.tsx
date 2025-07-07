@@ -1,6 +1,6 @@
 // app/admin/page.tsx
 import { cookies } from 'next/headers'
-import { createServerClient, createBrowserClient } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr'
 import { redirect } from 'next/navigation'
 
 export default async function AdminPage() {
@@ -9,7 +9,9 @@ export default async function AdminPage() {
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: () => cookieStore }
+    {
+      cookies: cookieStore, // <-- FIXED: pass cookieStore directly
+    }
   )
 
   const {
