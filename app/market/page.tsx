@@ -5,21 +5,21 @@ import { cookies } from 'next/headers'
 import Image from 'next/image'
 
 export default async function MarketPage() {
-  const cookieStore = await cookies();
+  const cookieStore = await cookies()
 
-const supabase = createServerClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  {
-    cookies: {
-      get(name) {
-        return cookieStore.get(name)?.value ?? '';
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name) {
+          return cookieStore.get(name)?.value ?? ''
+        },
+        set() {},
+        remove() {},
       },
-      set() {},
-      remove() {}
     }
-  }
-)
+  )
 
   const { data: properties, error } = await supabase
     .from('properties')
@@ -34,6 +34,12 @@ const supabase = createServerClient(
         <p className="mt-4 text-red-500">Error loading properties: {error.message}</p>
       </main>
     )
+  }
+
+  const getImageSrc = (imageUrl: string | null) => {
+    if (!imageUrl) return '/placeholder.png'
+    if (imageUrl.startsWith('http')) return imageUrl
+    return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/property-images/${imageUrl}`
   }
 
   return (
@@ -64,7 +70,7 @@ const supabase = createServerClient(
                 >
                   <td className="flex items-center gap-3 py-3 pr-4">
                     <Image
-                      src={p.image_url || '/placeholder.png'}
+                      src={getImageSrc(p.image_url)}
                       alt={p.address_line1}
                       width={60}
                       height={60}
