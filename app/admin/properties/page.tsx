@@ -31,7 +31,7 @@ export default async function AdminPropertiesPage() {
 
   const { data: properties, error } = await supabase
     .from('properties')
-    .select('*')
+    .select('*').eq('is_hidden', false)
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -97,23 +97,17 @@ export default async function AdminPropertiesPage() {
                     Edit
                   </Link>
                   <form action={`/api/properties/delete`} method="POST" className="inline">
-                    <input type="hidden" name="id" value={property.id} />
-                    <button
-                      type="submit"
-                      className="text-red-400 hover:underline ml-2"
-                    >
-                      Delete
-                    </button>
-                  </form>
-                  <form action={`/api/properties/hide`} method="POST" className="inline">
-                    <input type="hidden" name="id" value={property.id} />
-                    <button
-                      type="submit"
-                      className="text-yellow-400 hover:underline ml-2"
-                    >
-                      Hide
-                    </button>
-                  </form>
+  <input type="hidden" name="id" value={property.id} />
+  <button type="submit" className="text-red-400 hover:underline ml-2">
+    Delete
+  </button>
+</form>
+<form action={`/api/properties/hide`} method="POST" className="inline">
+  <input type="hidden" name="id" value={property.id} />
+  <button type="submit" className="text-yellow-400 hover:underline ml-2">
+    Hide
+  </button>
+</form>
                 </td>
               </tr>
             ))}
