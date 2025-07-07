@@ -23,6 +23,7 @@ export default function RegisterPage() {
   })
 
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(true)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,14 +33,16 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError(null)
+    setSuccess(null)
 
     if (form.password !== form.confirmPassword) {
-      setError("Passwords do not match")
+      setError("❌ Passwords do not match.")
       return
     }
 
     if (form.password.length < 8) {
-      setError("Password must be at least 8 characters")
+      setError("❌ Password must be at least 8 characters.")
       return
     }
 
@@ -49,7 +52,7 @@ export default function RegisterPage() {
     })
 
     if (signUpError) {
-      setError(signUpError.message)
+      setError("❌ " + signUpError.message)
       return
     }
 
@@ -73,43 +76,38 @@ export default function RegisterPage() {
       return
     }
 
-    router.push('/dashboard')
+    setSuccess("✅ Registration successful! Redirecting to dashboard...")
+    setTimeout(() => router.push('/dashboard'), 2000)
   }
 
   return (
     <main className="min-h-screen bg-gray-100 p-6 max-w-xl mx-auto">
       <h1 className="text-2xl font-bold text-blue-900 mb-4">Create Your ChipEstate Account</h1>
-      {error && <div className="text-red-600 mb-3">{error}</div>}
+
+      {error && <div className="text-red-600 mb-4 bg-red-100 p-3 rounded border border-red-300">{error}</div>}
+      {success && <div className="text-green-700 mb-4 bg-green-100 p-3 rounded border border-green-300">{success}</div>}
 
       <form onSubmit={handleSubmit} className="space-y-5 bg-white p-6 rounded-lg shadow">
 
-        {[
-          ['First Name', 'first_name'],
-          ['Middle Name', 'middle_name'],
-          ['Last Name', 'last_name'],
-          ['Email Address', 'email', 'email'],
-          ['Phone Number', 'phone'],
-          ['Date of Birth', 'dob', 'date'],
-          ['Address Line 1', 'address_line1'],
-          ['Address Line 2', 'address_line2'],
-          ['City', 'city'],
-          ['State', 'state'],
-          ['Zip Code', 'zip']
-        ].map(([label, name, type = 'text']) => (
-          <div key={name as string}>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-            <input
-              type={type}
-              name={name as string}
-              value={(form as any)[name as string]}
-              onChange={handleChange}
-              required={!['middle_name', 'address_line2'].includes(name as string)}
-              className="w-full border border-gray-300 px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring-emerald-400 focus:border-emerald-400"
-            />
-          </div>
-        ))}
+        {[['First Name', 'first_name'], ['Middle Name', 'middle_name'], ['Last Name', 'last_name'],
+          ['Email Address', 'email', 'email'], ['Phone Number', 'phone'],
+          ['Date of Birth', 'dob', 'date'], ['Address Line 1', 'address_line1'],
+          ['Address Line 2', 'address_line2'], ['City', 'city'], ['State', 'state'], ['Zip Code', 'zip']]
+          .map(([label, name, type = 'text']) => (
+            <div key={name as string}>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+              <input
+                type={type}
+                name={name as string}
+                value={(form as any)[name as string]}
+                onChange={handleChange}
+                required={!['middle_name', 'address_line2'].includes(name as string)}
+                className="w-full border border-gray-300 px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring-emerald-400 focus:border-emerald-400"
+              />
+            </div>
+          ))}
 
-        {/* Password Field */}
+        {/* Password */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
           <input
@@ -123,7 +121,7 @@ export default function RegisterPage() {
           />
         </div>
 
-        {/* Confirm Password Field */}
+        {/* Confirm Password */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
           <input
@@ -136,6 +134,7 @@ export default function RegisterPage() {
           />
         </div>
 
+        {/* Show/hide toggle */}
         <div className="text-sm text-right">
           <button
             type="button"
@@ -146,6 +145,7 @@ export default function RegisterPage() {
           </button>
         </div>
 
+        {/* Submit */}
         <button
           type="submit"
           className="w-full bg-emerald-600 text-white font-semibold py-2 rounded hover:bg-emerald-700 transition"
@@ -153,6 +153,7 @@ export default function RegisterPage() {
           Register
         </button>
 
+        {/* Cancel */}
         <button
           type="button"
           onClick={() => router.back()}
