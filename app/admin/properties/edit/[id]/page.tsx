@@ -66,8 +66,9 @@ export default function EditPropertyPage() {
       .from('property-images')
       .getPublicUrl(filePath)
 
-    setImageUrl(publicUrlData?.publicUrl || null)
-    setForm({ ...form, image_url: publicUrlData?.publicUrl })
+    const newUrl = publicUrlData?.publicUrl || null
+    setImageUrl(newUrl)
+    setForm({ ...form, image_url: newUrl })
     setUploading(false)
   }
 
@@ -143,9 +144,21 @@ export default function EditPropertyPage() {
         <div className="mt-4">
           <label className="block mb-1 text-sm font-semibold">Property Image</label>
           <label className="cursor-pointer inline-block px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded text-white">
-            {uploading ? 'Uploading...' : 'Upload Image'}
+            {uploading ? 'Uploading...' : 'Upload New Image'}
             <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
           </label>
+          <p className="text-sm text-gray-300 mt-2">or provide an external image URL:</p>
+          <input
+            type="url"
+            name="image_url"
+            value={imageUrl || ''}
+            onChange={(e) => {
+              setImageUrl(e.target.value)
+              setForm({ ...form, image_url: e.target.value })
+            }}
+            placeholder="https://example.com/image.jpg"
+            className="w-full p-2 mt-1 rounded bg-[#102134] border border-gray-600 text-white"
+          />
           {imageUrl && (
             <img
               src={imageUrl}
