@@ -1,12 +1,22 @@
+'use client'
+
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 import Link from 'next/link'
 
 export default async function AdminPropertiesPage() {
+  const cookieStore = cookies()
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies }
+    {
+      cookies: {
+        get: (name) => cookieStore.get(name)?.value ?? '',
+        set: () => {}, // No-op for SSR
+        remove: () => {}, // No-op for SSR
+      },
+    }
   )
 
   const {
