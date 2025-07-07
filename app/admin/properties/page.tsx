@@ -1,4 +1,3 @@
-
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 import Link from 'next/link'
@@ -9,12 +8,11 @@ export default async function AdminPropertiesPage() {
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    
     {
       cookies: {
         get: (name) => cookieStore.get(name)?.value ?? '',
-        set: () => {}, // No-op for SSR
-        remove: () => {}, // No-op for SSR
+        set: () => {},
+        remove: () => {},
       },
     }
   )
@@ -73,7 +71,14 @@ export default async function AdminPropertiesPage() {
           <tbody>
             {properties?.map((property) => (
               <tr key={property.id} className="border-t border-gray-700 text-sm">
-                <td className="px-4 py-3">{property.title}</td>
+                <td className="px-4 py-3">
+                  <Link
+                    href={`/admin/properties/edit/${property.id}`}
+                    className="text-blue-400 hover:underline"
+                  >
+                    {property.title}
+                  </Link>
+                </td>
                 <td className="px-4 py-3">{property.property_type}</td>
                 <td className="px-4 py-3">{property.total_chips}</td>
                 <td className="px-4 py-3">{property.chips_available}</td>
@@ -84,13 +89,31 @@ export default async function AdminPropertiesPage() {
                     <span className="text-red-400">Inactive</span>
                   )}
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 space-x-3">
                   <Link
                     href={`/admin/properties/edit/${property.id}`}
                     className="text-blue-400 hover:underline"
                   >
                     Edit
                   </Link>
+                  <form action={`/api/properties/delete`} method="POST" className="inline">
+                    <input type="hidden" name="id" value={property.id} />
+                    <button
+                      type="submit"
+                      className="text-red-400 hover:underline ml-2"
+                    >
+                      Delete
+                    </button>
+                  </form>
+                  <form action={`/api/properties/hide`} method="POST" className="inline">
+                    <input type="hidden" name="id" value={property.id} />
+                    <button
+                      type="submit"
+                      className="text-yellow-400 hover:underline ml-2"
+                    >
+                      Hide
+                    </button>
+                  </form>
                 </td>
               </tr>
             ))}
