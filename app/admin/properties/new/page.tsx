@@ -54,9 +54,10 @@ export default function NewPropertyPage() {
 
   return (
     <div className="min-h-screen bg-[#0a2540] text-white px-6 py-8">
-      <div className="max-w-2xl mx-auto bg-[#102a4d] p-8 rounded shadow">
+      <div className="max-w-2xl mx-auto bg-[#102a4d] p-8 rounded border border-gray-500 shadow-lg">
         <h1 className="text-3xl font-bold mb-6">Add New Property</h1>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Property Name */}
           <div>
             <label className="block mb-1 font-medium">
               Property Name <span className="text-red-500">*</span>
@@ -66,10 +67,11 @@ export default function NewPropertyPage() {
               name="name"
               required
               onChange={handleChange}
-              className="w-full p-2 text-black rounded"
+              className="w-full p-2 text-white bg-[#0a2540] border border-gray-500 rounded focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 
+          {/* Address */}
           <div>
             <label className="block mb-1 font-medium">
               Address <span className="text-red-500">*</span>
@@ -79,10 +81,11 @@ export default function NewPropertyPage() {
               name="address"
               required
               onChange={handleChange}
-              className="w-full p-2 text-black rounded"
+              className="w-full p-2 text-white bg-[#0a2540] border border-gray-500 rounded focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 
+          {/* Property Type */}
           <div>
             <label className="block mb-1 font-medium">
               Property Type <span className="text-red-500">*</span>
@@ -91,14 +94,17 @@ export default function NewPropertyPage() {
               name="type"
               required
               onChange={handleChange}
-              className="w-full p-2 text-black rounded"
+              className="w-full p-2 bg-[#0a2540] text-white border border-gray-500 rounded"
             >
-              <option value="">Select Type</option>
+              <option value="" disabled className="text-white bg-[#0a2540]">
+                Select Type
+              </option>
               <option value="Residential">Residential</option>
               <option value="Commercial">Commercial</option>
             </select>
           </div>
 
+          {/* Subtype */}
           {form.type === 'Residential' && (
             <div>
               <label className="block mb-1 font-medium">
@@ -108,12 +114,14 @@ export default function NewPropertyPage() {
                 name="subtype"
                 required
                 onChange={handleChange}
-                className="w-full p-2 text-black rounded"
+                className="w-full p-2 bg-[#0a2540] text-white border border-gray-500 rounded"
               >
-                <option value="">Select Subtype</option>
-                {residentialSubtypes.map((subtype) => (
-                  <option key={subtype} value={subtype}>
-                    {subtype}
+                <option value="" disabled className="text-white bg-[#0a2540]">
+                  Select Subtype
+                </option>
+                {residentialSubtypes.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
                   </option>
                 ))}
               </select>
@@ -129,18 +137,21 @@ export default function NewPropertyPage() {
                 name="subtype"
                 required
                 onChange={handleChange}
-                className="w-full p-2 text-black rounded"
+                className="w-full p-2 bg-[#0a2540] text-white border border-gray-500 rounded"
               >
-                <option value="">Select Subtype</option>
-                {commercialSubtypes.map((subtype) => (
-                  <option key={subtype} value={subtype}>
-                    {subtype}
+                <option value="" disabled className="text-white bg-[#0a2540]">
+                  Select Subtype
+                </option>
+                {commercialSubtypes.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
                   </option>
                 ))}
               </select>
             </div>
           )}
 
+          {/* Property Price */}
           <div>
             <label className="block mb-1 font-medium">
               Property Price <span className="text-red-500">*</span>
@@ -150,10 +161,11 @@ export default function NewPropertyPage() {
               name="price"
               required
               onChange={handleChange}
-              className="w-full p-2 text-black rounded"
+              className="w-full p-2 text-white bg-[#0a2540] border border-gray-500 rounded focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 
+          {/* Chips */}
           <div>
             <label className="block mb-1 font-medium">
               Number of Chips <span className="text-red-500">*</span>
@@ -163,25 +175,27 @@ export default function NewPropertyPage() {
               name="chips"
               required
               onChange={handleChange}
-              className="w-full p-2 text-black rounded"
+              className="w-full p-2 text-white bg-[#0a2540] border border-gray-500 rounded focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 
+          {/* Upload Image */}
           <div>
             <label className="block mb-2 font-medium">
               Upload Property Image <span className="text-red-500">*</span>
             </label>
-            <label className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-4 rounded cursor-pointer inline-block text-center">
+            <label className="block w-full bg-emerald-600 hover:bg-emerald-700 text-white text-center py-2 px-4 rounded cursor-pointer">
               Choose Image
               <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
             </label>
           </div>
 
-          <div className="flex justify-between pt-4">
+          {/* Action Buttons */}
+          <div className="flex justify-between pt-6">
             <button
               type="button"
               onClick={handleCancel}
-              className="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded"
+              className="bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded"
             >
               Cancel
             </button>
