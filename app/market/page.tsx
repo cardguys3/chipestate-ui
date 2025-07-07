@@ -1,10 +1,13 @@
+'use server'
+
 import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { cookies as getCookies } from 'next/headers'
 import Image from 'next/image'
 import Link from 'next/link'
 
 export default async function MarketPage() {
-  const cookieStore = cookies()
+  const cookieStore = await getCookies()
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -32,14 +35,10 @@ export default async function MarketPage() {
 
   const resolveImage = (imageUrl: string | null) => {
     if (!imageUrl) return '/placeholder.png'
-    try {
-      const isExternal = imageUrl.startsWith('http://') || imageUrl.startsWith('https://')
-      return isExternal
-        ? imageUrl
-        : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/property-images/${imageUrl}`
-    } catch {
-      return '/placeholder.png'
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      return imageUrl
     }
+    return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/property-images/${imageUrl}`
   }
 
   return (
