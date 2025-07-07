@@ -1,167 +1,177 @@
-"use client";
+'use client'
 
-import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { createBrowserClient } from "@supabase/ssr";
+import { useEffect, useState } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import { createBrowserClient } from '@supabase/ssr'
+
+const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 export default function EditPropertyPage() {
-  const router = useRouter();
-  const { id } = useParams();
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-
-  const [form, setForm] = useState<any>(null);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const router = useRouter()
+  const { id } = useParams()
+  const [form, setForm] = useState<any>(null)
+  const [imageUrl, setImageUrl] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (!id) return
+
     const fetchProperty = async () => {
       const { data, error } = await supabase
-        .from("properties")
-        .select("*")
-        .eq("id", id)
-        .single();
-      if (data) {
-        setForm(data);
-        if (data.image_path) {
-          const { data: publicURL } = supabase.storage
-            .from("property-images")
-            .getPublicUrl(data.image_path);
-          setImageUrl(publicURL?.publicUrl || null);
-        }
+        .from('properties')
+        .select('*')
+        .eq('id', id)
+        .single()
+
+      if (error) {
+        setError('Failed to load property.')
+      } else {
+        setForm(data)
+        setImageUrl(data.image_url)
       }
-    };
-    fetchProperty();
-  }, [id]);
+    }
+
+    fetchProperty()
+  }, [id])
 
   const handleChange = (e: any) => {
-    const { name, value } = e.target;
-    setForm((prev: any) => ({ ...prev, [name]: value }));
-  };
+    const { name, value, type, checked } = e.target
+    setForm({ ...form, [name]: type === 'checkbox' ? checked : value })
+  }
 
-  const handleFileChange = async (e: any) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const filePath = `${Date.now()}-${file.name}`;
-    setLoading(true);
-    const { error } = await supabase.storage
-      .from("property-images")
-      .upload(filePath, file);
-    if (!error) {
-      setForm((prev: any) => ({ ...prev, image_path: filePath }));
-      const { data } = supabase.storage
-        .from("property-images")
-        .getPublicUrl(filePath);
-      setImageUrl(data?.publicUrl || null);
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${Date.now()}.${fileExt}`
+    const filePath = `${fileName}`
+
+    const { error: uploadError } = await supabase.storage
+      .from('property-images')
+      .upload(filePath, file, { upsert: true })
+
+    if (uploadError) {
+      alert('Upload failed: ' + uploadError.message)
+      setUploading(false)
+      return
     }
-    setLoading(false);
-  };
 
-  const handleSubmit = async (e: any) => {
-    e.preventDefault();
-    setLoading(true);
-    await supabase.from("properties").update(form).eq("id", id);
-    setLoading(false);
-    router.push("/admin/properties");
-  };
+    const { data: publicUrlData } = supabase.storage
+      .from('property-images')
+      .getPublicUrl(filePath)
 
-  const cancelChanges = () => {
-    router.push("/admin/properties");
-  };
+    setImageUrl(publicUrlData?.publicUrl || null)
+    setForm({ ...form, image_url: publicUrlData?.publicUrl })
+    setUploading(false)
+  }
 
-  if (!form)
-    return <p className="text-white bg-gray-900 min-h-screen p-6">Loading...</p>;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    const { error: updateError } = await supabase
+      .from('properties')
+      .update({
+        ...form,
+        purchase_price: Number(form.purchase_price),
+        current_value: Number(form.current_value),
+        total_chips: Number(form.total_chips),
+        chips_available: Number(form.chips_available),
+        reserve_balance: Number(form.reserve_balance),
+        image_url: imageUrl,
+      })
+      .eq('id', id)
+
+    if (updateError) {
+      setError(updateError.message)
+    } else {
+      router.push('/admin/properties')
+    }
+  }
+
+  if (!form) return <p className="p-6 text-white">Loading...</p>
 
   return (
-    <main className="min-h-screen bg-gray-900 p-6 text-white">
-      <h1 className="text-2xl font-bold mb-6">Edit Property</h1>
-      <form
-        onSubmit={handleSubmit}
-        className="space-y-6 max-w-3xl border border-gray-700 p-6 rounded-lg"
-      >
-        <div>
-          <label className="block mb-1 font-semibold">
-            Title<span className="text-red-500">*</span>
+    <main className="min-h-screen bg-[#0e1a2b] p-6 max-w-3xl mx-auto text-white">
+      <h1 className="text-2xl font-bold mb-4">Edit Property</h1>
+      {error && <p className="text-red-500 mb-4">{error}</p>}
+      <form onSubmit={handleSubmit} className="space-y-4 bg-[#1e2a3c] p-6 rounded-lg border border-gray-700 shadow-md">
+        {[
+          { name: 'title', label: 'Title*' },
+          { name: 'address_line1', label: 'Address Line 1*' },
+          { name: 'address_line2', label: 'Address Line 2' },
+          { name: 'city', label: 'City*' },
+          { name: 'state', label: 'State*' },
+          { name: 'zip', label: 'Zip*' },
+          { name: 'property_type', label: 'Property Type*' },
+          { name: 'sub_type', label: 'Sub-type*' },
+          { name: 'purchase_price', label: 'Purchase Price*' },
+          { name: 'current_value', label: 'Current Value*' },
+          { name: 'total_chips', label: 'Total Chips*' },
+          { name: 'chips_available', label: 'Chips Available*' },
+          { name: 'manager_name', label: 'Manager Name*' },
+          { name: 'reserve_balance', label: 'Reserve Balance*' },
+        ].map((field) => (
+          <div key={field.name}>
+            <label className="block text-sm font-medium mb-1">{field.label}</label>
+            <input
+              name={field.name}
+              value={form[field.name] || ''}
+              onChange={handleChange}
+              className="w-full p-2 rounded bg-[#102134] border border-gray-600 text-white"
+              required={field.label.includes('*')}
+            />
+          </div>
+        ))}
+
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            name="occupied"
+            checked={form.occupied}
+            onChange={handleChange}
+            className="accent-blue-500"
+          />
+          Occupied?
+        </label>
+
+        <div className="mt-4">
+          <label className="block mb-1 text-sm font-semibold">Property Image</label>
+          <label className="cursor-pointer inline-block px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded text-white">
+            {uploading ? 'Uploading...' : 'Upload Image'}
+            <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
           </label>
-          <input
-            name="title"
-            value={form.title || ""}
-            onChange={handleChange}
-            required
-            className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-white"
-          />
-        </div>
-
-        <div>
-          <label className="block mb-1 font-semibold">Description</label>
-          <textarea
-            name="description"
-            value={form.description || ""}
-            onChange={handleChange}
-            className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-white"
-          />
-        </div>
-
-        <div>
-          <label className="block mb-1 font-semibold">
-            Price<span className="text-red-500">*</span>
-          </label>
-          <input
-            name="price"
-            value={form.price || ""}
-            onChange={handleChange}
-            type="number"
-            required
-            className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-white"
-          />
-        </div>
-
-        <div>
-          <label className="block mb-1 font-semibold">Number of Chips</label>
-          <input
-            name="chips"
-            value={form.chips || ""}
-            onChange={handleChange}
-            type="number"
-            className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-white"
-          />
-        </div>
-
-        <div>
-          <label className="block mb-2 font-semibold">Upload Property Image</label>
-          <input
-            type="file"
-            onChange={handleFileChange}
-            className="file:bg-emerald-600 file:text-white file:px-4 file:py-2 file:rounded hover:file:bg-emerald-700"
-          />
           {imageUrl && (
             <img
               src={imageUrl}
-              alt="Property"
-              className="mt-4 rounded max-w-xs border border-gray-700"
+              alt="Preview"
+              className="mt-2 rounded border border-gray-600 w-full max-w-xs"
+              onError={(e) => (e.currentTarget.style.display = 'none')}
             />
           )}
         </div>
 
-        <div className="flex gap-4">
+        <div className="flex justify-between pt-4 gap-4">
           <button
             type="submit"
-            disabled={loading}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded"
+            className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2 rounded w-1/2"
           >
             Save Changes
           </button>
           <button
             type="button"
-            onClick={cancelChanges}
-            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+            onClick={() => router.push('/admin/properties')}
+            className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded w-1/2"
           >
             Cancel Changes
           </button>
         </div>
       </form>
     </main>
-  );
+  )
 }
