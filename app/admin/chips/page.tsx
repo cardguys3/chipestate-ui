@@ -1,16 +1,14 @@
-// app/admin/chips/page.tsx
 'use client'
 
 import { useEffect, useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
-import { Database } from '@/types/supabase'
 import Link from 'next/link'
 
 export default function ChipsPage() {
   const [chips, setChips] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
-  const supabase = createBrowserClient<Database>()
+  const supabase = createBrowserClient<any>() // fallback to any type
 
   useEffect(() => {
     async function fetchChips() {
