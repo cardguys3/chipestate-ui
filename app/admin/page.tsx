@@ -3,13 +3,14 @@ import { createServerClient } from '@supabase/ssr'
 import { redirect } from 'next/navigation'
 
 export default async function AdminPage() {
+  const cookieStore = cookies() // ✅ this is now a synchronous object
   const supabase = createServerClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  {
-    cookies: cookies(), // ✅ use directly — do NOT wrap in function
-  }
-)
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: cookieStore, // ✅ pass the object directly — not a function or promise
+    }
+  )
 
   const {
     data: { user },
