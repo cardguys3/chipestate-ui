@@ -15,6 +15,10 @@ export default function ChipsPage() {
   const [assignChipId, setAssignChipId] = useState('')
   const [assignEmail, setAssignEmail] = useState('')
 
+  const [bulkAssignPropertyId, setBulkAssignPropertyId] = useState('')
+  const [bulkAssignEmail, setBulkAssignEmail] = useState('')
+  const [bulkAssignQuantity, setBulkAssignQuantity] = useState(0)
+
   const supabase = createBrowserClient<any>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -48,11 +52,8 @@ export default function ChipsPage() {
           last_name
         )
       `)
-    if (error) {
-      console.error('Error fetching chips:', error)
-    } else {
-      setChips(data)
-    }
+    if (error) console.error('Error fetching chips:', error)
+    else setChips(data)
     setLoading(false)
   }
 
@@ -73,10 +74,8 @@ export default function ChipsPage() {
       property_id: selectedPropertyId,
     }))
     const { error } = await supabase.from('chips').insert(newChips)
-    if (error) {
-      alert('Failed to create chips')
-      console.error(error)
-    } else {
+    if (error) alert('Failed to create chips')
+    else {
       alert('Chips created successfully')
       fetchChips()
     }
@@ -90,20 +89,52 @@ export default function ChipsPage() {
       .eq('email', assignEmail)
       .single()
 
-    if (userError || !user) {
-      alert('User not found')
-      return
-    }
+    if (userError || !user) return alert('User not found')
 
-    const { error: updateError } = await supabase
+    const { error } = await supabase
       .from('chips')
       .update({ owner_id: user.id, assigned_at: new Date().toISOString() })
       .eq('id', assignChipId)
 
-    if (updateError) {
-      alert('Failed to assign chip')
-    } else {
+    if (error) alert('Failed to assign chip')
+    else {
       alert('Chip assigned successfully')
+      fetchChips()
+    }
+  }
+
+  const handleBulkAssign = async () => {
+    if (!bulkAssignEmail || !bulkAssignPropertyId || bulkAssignQuantity <= 0) return
+
+    const { data: user, error: userError } = await supabase
+      .from('users_extended')
+      .select('id')
+      .eq('email', bulkAssignEmail)
+      .single()
+
+    if (userError || !user) return alert('User not found')
+
+    const { data: availableChips } = await supabase
+      .from('chips')
+      .select('id')
+      .eq('property_id', bulkAssignPropertyId)
+      .is('owner_id', null)
+      .limit(bulkAssignQuantity)
+
+    if (!availableChips || availableChips.length < bulkAssignQuantity) {
+      return alert('Not enough unassigned chips available for that property.')
+    }
+
+    const chipIds = availableChips.map((chip) => chip.id)
+
+    const { error } = await supabase
+      .from('chips')
+      .update({ owner_id: user.id, assigned_at: new Date().toISOString() })
+      .in('id', chipIds)
+
+    if (error) alert('Bulk assignment failed')
+    else {
+      alert('Chips assigned successfully')
       fetchChips()
     }
   }
@@ -121,7 +152,7 @@ export default function ChipsPage() {
             <select
               value={selectedPropertyId}
               onChange={(e) => setSelectedPropertyId(e.target.value)}
-              className="w-full text-black px-3 py-2 rounded"
+              className="w-full text-black px-3 py-2 rounded border"
             >
               <option value="">-- Choose a Property --</option>
               {properties.map((prop) => (
@@ -137,7 +168,7 @@ export default function ChipsPage() {
               type="number"
               value={quantity}
               onChange={(e) => setQuantity(Number(e.target.value))}
-              className="w-full text-black px-3 py-2 rounded"
+              className="w-full text-black px-3 py-2 rounded border"
               placeholder="Enter quantity"
             />
           </div>
@@ -152,9 +183,9 @@ export default function ChipsPage() {
         </div>
       </div>
 
-      {/* Assign Chip */}
+      {/* Assign Individual Chip */}
       <div className="bg-gray-800 p-6 rounded border border-gray-700 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Assign Chip to User</h2>
+        <h2 className="text-xl font-semibold mb-4">Assign Single Chip</h2>
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
             <label className="block mb-1 text-white">Chip ID</label>
@@ -162,7 +193,7 @@ export default function ChipsPage() {
               type="text"
               value={assignChipId}
               onChange={(e) => setAssignChipId(e.target.value)}
-              className="w-full text-black px-3 py-2 rounded"
+              className="w-full text-black px-3 py-2 rounded border"
               placeholder="Enter Chip ID"
             />
           </div>
@@ -171,7 +202,7 @@ export default function ChipsPage() {
             <select
               value={assignEmail}
               onChange={(e) => setAssignEmail(e.target.value)}
-              className="w-full text-black px-3 py-2 rounded mb-2"
+              className="w-full text-black px-3 py-2 rounded border mb-2"
             >
               <option value="">-- Select a User --</option>
               {users.map((u) => (
@@ -184,7 +215,7 @@ export default function ChipsPage() {
               type="email"
               value={assignEmail}
               onChange={(e) => setAssignEmail(e.target.value)}
-              className="w-full text-black px-3 py-2 rounded"
+              className="w-full text-black px-3 py-2 rounded border"
               placeholder="Or type email manually"
             />
           </div>
@@ -193,13 +224,75 @@ export default function ChipsPage() {
               onClick={handleAssign}
               className="bg-blue-600 text-white px-4 py-2 rounded"
             >
-              Assign
+              Assign Chip
             </button>
           </div>
         </div>
       </div>
 
-      {/* Chips Table */}
+      {/* Bulk Assign Chips */}
+      <div className="bg-gray-800 p-6 rounded border border-gray-700 mb-6">
+        <h2 className="text-xl font-semibold mb-4">Bulk Assign Chips</h2>
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1">
+            <label className="block mb-1 text-white">Property</label>
+            <select
+              value={bulkAssignPropertyId}
+              onChange={(e) => setBulkAssignPropertyId(e.target.value)}
+              className="w-full text-black px-3 py-2 rounded border"
+            >
+              <option value="">-- Choose Property --</option>
+              {properties.map((prop) => (
+                <option key={prop.id} value={prop.id}>
+                  {prop.title}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex-1">
+            <label className="block mb-1 text-white">Quantity</label>
+            <input
+              type="number"
+              value={bulkAssignQuantity}
+              onChange={(e) => setBulkAssignQuantity(Number(e.target.value))}
+              className="w-full text-black px-3 py-2 rounded border"
+              placeholder="Number of chips"
+            />
+          </div>
+          <div className="flex-1">
+            <label className="block mb-1 text-white">User Email</label>
+            <select
+              value={bulkAssignEmail}
+              onChange={(e) => setBulkAssignEmail(e.target.value)}
+              className="w-full text-black px-3 py-2 rounded border mb-2"
+            >
+              <option value="">-- Select User --</option>
+              {users.map((u) => (
+                <option key={u.id} value={u.email}>
+                  {u.email}
+                </option>
+              ))}
+            </select>
+            <input
+              type="email"
+              value={bulkAssignEmail}
+              onChange={(e) => setBulkAssignEmail(e.target.value)}
+              className="w-full text-black px-3 py-2 rounded border"
+              placeholder="Or type email manually"
+            />
+          </div>
+          <div className="flex items-end">
+            <button
+              onClick={handleBulkAssign}
+              className="bg-purple-600 text-white px-4 py-2 rounded"
+            >
+              Assign Chips
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Chip Table */}
       {loading ? (
         <p>Loading...</p>
       ) : (
