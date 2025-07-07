@@ -1,14 +1,12 @@
 'use client'
 
 import PropertyCard from '@/components/PropertyCard'
-import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import ChatBubble from '@/components/ChatBubble'
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-gray-50">
-      <Header />
 
       <section className="mt-16 px-4 text-center">
         <h1 className="text-4xl font-extrabold text-blue-800 mb-4">
