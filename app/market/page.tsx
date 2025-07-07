@@ -1,44 +1,32 @@
-'use client'
-
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import Image from 'next/image'
 
-const properties = [
-  {
-    image: '/property1.jpg',
-    addressLine1: '217 W Stone St',
-    cityStateZip: 'Gibsonburg, OH 43431',
-    price: '$50.00',
-    priceChange: '0.00%',
-    chart: '',
-    reserve: '$0',
-    reservePct: '0.0%',
-    yield: '11.92%',
-    capRate: '11.92%',
-    status: 'Rented',
-    marketCap: '$117,450',
-    tokens: '0/2,349',
-    tokensPct: '0.00%',
-  },
-  {
-    image: '/property2.jpg',
-    addressLine1: '1935 S Glen Rd',
-    cityStateZip: 'Shelby, MI 49455',
-    price: '$47.95',
-    priceChange: '-2.24%',
-    chart: '',
-    reserve: '$2,012',
-    reservePct: '100.00%',
-    yield: '18.23%',
-    capRate: '9.93%',
-    status: 'Rented',
-    marketCap: '$1,324,295',
-    tokens: '5,524/27,624',
-    tokensPct: '20.00%',
-  }
-  // Add more properties as needed
-]
+export default async function MarketPage() {
+  const cookieStore = cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: () => cookieStore as any,
+    }
+  )
 
-export default function MarketPage() {
+  const { data: properties, error } = await supabase
+    .from('properties')
+    .select('*')
+    .eq('is_active', true)
+    .eq('is_hidden', false)
+
+  if (error) {
+    return (
+      <main className="min-h-screen bg-[#0B1D33] text-white px-6 py-8">
+        <h1 className="text-2xl font-semibold">Marketplace</h1>
+        <p className="mt-4 text-red-500">Error loading properties: {error.message}</p>
+      </main>
+    )
+  }
+
   return (
     <main className="min-h-screen bg-[#0B1D33] text-white px-6 py-8">
       <div className="max-w-7xl mx-auto">
@@ -60,34 +48,34 @@ export default function MarketPage() {
               </tr>
             </thead>
             <tbody>
-              {properties.map((p, i) => (
+              {properties.map((p: any) => (
                 <tr
-                  key={i}
+                  key={p.id}
                   className="border-b border-blue-800 hover:bg-blue-900 transition duration-150"
                 >
                   <td className="flex items-center gap-3 py-3 pr-4">
                     <Image
-                      src={p.image}
-                      alt={p.addressLine1}
+                      src={p.image_url || '/placeholder.png'}
+                      alt={p.address_line1}
                       width={60}
                       height={60}
                       className="rounded-md object-cover w-16 h-16"
                     />
                     <div>
-                      <div className="font-semibold">{p.addressLine1}</div>
-                      <div className="text-gray-400 text-xs">{p.cityStateZip}</div>
+                      <div className="font-semibold">{p.address_line1}</div>
+                      <div className="text-gray-400 text-xs">{`${p.city}, ${p.state} ${p.zip}`}</div>
                     </div>
                   </td>
-                  <td className="px-2">{p.price}</td>
-                  <td className="px-2">{p.priceChange}</td>
-                  <td className="px-2">{p.reserve} <span className="text-gray-400 text-xs">({p.reservePct})</span></td>
-                  <td className="px-2">{p.yield}</td>
-                  <td className="px-2">{p.capRate}</td>
+                  <td className="px-2">${p.price?.toFixed(2)}</td>
+                  <td className="px-2 text-gray-400">N/A</td>
+                  <td className="px-2">${p.reserve || 0} <span className="text-gray-400 text-xs">(0%)</span></td>
+                  <td className="px-2">{p.yield || 'N/A'}</td>
+                  <td className="px-2">{p.cap_rate || 'N/A'}</td>
                   <td className="px-2">
-                    <span className="bg-purple-700 text-xs px-2 py-1 rounded-full text-white">{p.status}</span>
+                    <span className="bg-purple-700 text-xs px-2 py-1 rounded-full text-white">{p.status || 'N/A'}</span>
                   </td>
-                  <td className="px-2">{p.marketCap}</td>
-                  <td className="px-2">{p.tokens} <span className="text-gray-400 text-xs">({p.tokensPct})</span></td>
+                  <td className="px-2">${p.market_cap || 'N/A'}</td>
+                  <td className="px-2">{p.chips_sold || 0}/{p.chips_total || 0}</td>
                 </tr>
               ))}
             </tbody>
