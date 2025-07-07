@@ -4,174 +4,196 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 
-const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+const residentialSubtypes = ['Single Family', 'Multi-Family', 'Townhouse', 'Condo']
+const commercialSubtypes = ['Office', 'Retail', 'Industrial', 'Mixed-Use']
 
-const residentialSubtypes = [
-  'Single Family',
-  'Condo',
-  'Townhome',
-  'Mobile Home',
-  'Vacation Rental',
-  'Vacant Lot'
-]
-
-const commercialSubtypes = [
-  'Office Space',
-  'Retail',
-  'Hospitality',
-  'Special Purpose',
-  'Industrial',
-  'Vacation Rental',
-  'Vacant Lot'
-]
-
-export default function AddPropertyPage() {
+export default function NewPropertyPage() {
+  const [form, setForm] = useState<any>({})
+  const [imageFile, setImageFile] = useState<File | null>(null)
   const router = useRouter()
-
-  const [form, setForm] = useState({
-    title: '',
-    address_line1: '',
-    address_line2: '',
-    city: '',
-    state: '',
-    zip: '',
-    property_type: 'residential',
-    sub_type: '',
-    purchase_price: '',
-    current_value: '',
-    total_chips: '',
-    chips_available: '',
-    manager_name: '',
-    reserve_balance: '',
-    occupied: false,
-  })
-
-  const [imageUrl, setImageUrl] = useState<string | null>(null)
-  const [uploading, setUploading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
   const handleChange = (e: any) => {
-    const { name, value, type, checked } = e.target
-    setForm({ ...form, [name]: type === 'checkbox' ? checked : value })
-
-    if (name === 'property_type') {
-      setForm((prev) => ({
-        ...prev,
-        property_type: value,
-        sub_type: '', // reset subtype
-      }))
-    }
+    const { name, value } = e.target
+    setForm((prev: any) => ({ ...prev, [name]: value }))
   }
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setUploading(true)
-
-    const fileExt = file.name.split('.').pop()
-    const fileName = `${Date.now()}.${fileExt}`
-    const filePath = `${fileName}`
-
-    const { error: uploadError } = await supabase.storage.from('property-images').upload(filePath, file)
-    if (uploadError) {
-      alert('Upload failed: ' + uploadError.message)
-      setUploading(false)
-      return
-    }
-
-    const { data: publicUrlData } = supabase.storage.from('property-images').getPublicUrl(filePath)
-    setImageUrl(publicUrlData?.publicUrl || null)
-    setUploading(false)
+  const handleFileChange = (e: any) => {
+    const file = e.target.files?.[0] || null
+    setImageFile(file)
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault()
-    const { error: insertError } = await supabase.from('properties').insert({
-      ...form,
-      purchase_price: Number(form.purchase_price),
-      current_value: Number(form.current_value),
-      total_chips: Number(form.total_chips),
-      chips_available: Number(form.chips_available),
-      reserve_balance: Number(form.reserve_balance),
-      image_url: imageUrl,
-    })
 
-    if (insertError) {
-      setError(insertError.message)
-    } else {
-      router.push('/admin/properties')
+    let imageUrl = null
+    if (imageFile) {
+      const { data, error } = await supabase.storage
+        .from('property-images')
+        .upload(`images/${imageFile.name}`, imageFile, {
+          cacheControl: '3600',
+          upsert: true,
+        })
+      if (error) {
+        console.error('Upload failed:', error.message)
+      } else {
+        imageUrl = data?.path
+      }
     }
+
+    await supabase.from('properties').insert([{ ...form, image_url: imageUrl }])
+    router.push('/admin/properties')
   }
 
-  const subtypeOptions =
-    form.property_type === 'commercial' ? commercialSubtypes : residentialSubtypes
+  const handleCancel = () => {
+    router.push('/admin/properties')
+  }
 
   return (
-    <main className="min-h-screen bg-gray-50 p-6 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold text-blue-900 mb-4">Add New Property</h1>
-      {error && <p className="text-red-600 mb-3">{error}</p>}
-      <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded-lg shadow">
-        <input name="title" placeholder="Property Title" onChange={handleChange} required className="input" />
-        <input name="address_line1" placeholder="Address Line 1" onChange={handleChange} required className="input" />
-        <input name="address_line2" placeholder="Address Line 2" onChange={handleChange} className="input" />
-        <div className="grid grid-cols-3 gap-4">
-          <input name="city" placeholder="City" onChange={handleChange} required className="input" />
-          <input name="state" placeholder="State" onChange={handleChange} required className="input" />
-          <input name="zip" placeholder="Zip" onChange={handleChange} required className="input" />
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <select
-            name="property_type"
-            value={form.property_type}
-            onChange={handleChange}
-            required
-            className="input"
-          >
-            <option value="residential">Residential</option>
-            <option value="commercial">Commercial</option>
-          </select>
-          <select
-            name="sub_type"
-            value={form.sub_type}
-            onChange={handleChange}
-            required
-            className="input"
-          >
-            <option value="">Select Subtype</option>
-            {subtypeOptions.map((type) => (
-              <option key={type} value={type}>{type}</option>
-            ))}
-          </select>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <input name="purchase_price" placeholder="Purchase Price" onChange={handleChange} required className="input" />
-          <input name="current_value" placeholder="Current Value" onChange={handleChange} required className="input" />
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <input name="total_chips" placeholder="Total Chips" onChange={handleChange} required className="input" />
-          <input name="chips_available" placeholder="Chips Available" onChange={handleChange} required className="input" />
-        </div>
-        <input name="manager_name" placeholder="Property Manager" onChange={handleChange} className="input" />
-        <input name="reserve_balance" placeholder="Reserve Balance" onChange={handleChange} className="input" />
-        <label className="flex items-center gap-2">
-          <input type="checkbox" name="occupied" onChange={handleChange} />
-          Occupied?
-        </label>
+    <div className="min-h-screen bg-[#0a2540] text-white px-6 py-8">
+      <div className="max-w-2xl mx-auto bg-[#102a4d] p-8 rounded shadow">
+        <h1 className="text-3xl font-bold mb-6">Add New Property</h1>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block mb-1 font-medium">
+              Property Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="name"
+              required
+              onChange={handleChange}
+              className="w-full p-2 text-black rounded"
+            />
+          </div>
 
-        <div className="mb-4">
-          <label className="block mb-1 text-sm font-semibold">Upload Property Image</label>
-          <input type="file" accept="image/*" onChange={handleImageUpload} />
-          {uploading && <p className="text-sm text-gray-500 mt-2">Uploading...</p>}
-          {imageUrl && <img src={imageUrl} alt="Preview" className="mt-3 w-full max-w-xs rounded" />}
-        </div>
+          <div>
+            <label className="block mb-1 font-medium">
+              Address <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="address"
+              required
+              onChange={handleChange}
+              className="w-full p-2 text-black rounded"
+            />
+          </div>
 
-        <button type="submit" className="bg-emerald-600 text-white px-6 py-2 rounded hover:bg-emerald-700 w-full">
-          Save Property
-        </button>
-      </form>
-    </main>
+          <div>
+            <label className="block mb-1 font-medium">
+              Property Type <span className="text-red-500">*</span>
+            </label>
+            <select
+              name="type"
+              required
+              onChange={handleChange}
+              className="w-full p-2 text-black rounded"
+            >
+              <option value="">Select Type</option>
+              <option value="Residential">Residential</option>
+              <option value="Commercial">Commercial</option>
+            </select>
+          </div>
+
+          {form.type === 'Residential' && (
+            <div>
+              <label className="block mb-1 font-medium">
+                Subtype <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="subtype"
+                required
+                onChange={handleChange}
+                className="w-full p-2 text-black rounded"
+              >
+                <option value="">Select Subtype</option>
+                {residentialSubtypes.map((subtype) => (
+                  <option key={subtype} value={subtype}>
+                    {subtype}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {form.type === 'Commercial' && (
+            <div>
+              <label className="block mb-1 font-medium">
+                Subtype <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="subtype"
+                required
+                onChange={handleChange}
+                className="w-full p-2 text-black rounded"
+              >
+                <option value="">Select Subtype</option>
+                {commercialSubtypes.map((subtype) => (
+                  <option key={subtype} value={subtype}>
+                    {subtype}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div>
+            <label className="block mb-1 font-medium">
+              Property Price <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              name="price"
+              required
+              onChange={handleChange}
+              className="w-full p-2 text-black rounded"
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium">
+              Number of Chips <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              name="chips"
+              required
+              onChange={handleChange}
+              className="w-full p-2 text-black rounded"
+            />
+          </div>
+
+          <div>
+            <label className="block mb-2 font-medium">
+              Upload Property Image <span className="text-red-500">*</span>
+            </label>
+            <label className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-4 rounded cursor-pointer inline-block text-center">
+              Choose Image
+              <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+            </label>
+          </div>
+
+          <div className="flex justify-between pt-4">
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-4 rounded"
+            >
+              Save Property
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   )
 }
