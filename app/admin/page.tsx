@@ -4,12 +4,12 @@ import { redirect } from 'next/navigation'
 
 export default async function AdminPage() {
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: () => cookies(), // ✅ FIXED
-    }
-  )
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  {
+    cookies: cookies(), // ✅ use directly — do NOT wrap in function
+  }
+)
 
   const {
     data: { user },
