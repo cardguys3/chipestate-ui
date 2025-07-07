@@ -3,19 +3,21 @@ import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
-  const cookieStore = cookies()
+  const cookieStore = cookies() // ✅ don't `await` this
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: cookieStore }
+    {
+      cookies: cookieStore // ✅ pass directly
+    }
   )
 
   const { id } = await req.json()
 
   const { error } = await supabase
     .from('properties')
-    .update({ is_hidden: true }) // This is your "Delete" behavior
+    .update({ is_hidden: true })
     .eq('id', id)
 
   if (error) {
