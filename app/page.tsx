@@ -28,14 +28,6 @@ export default function Home() {
     fetchProperties()
   }, [])
 
-  const resolveImageUrl = (property: any) => {
-    if (!property.image_url) return '/placeholder.jpg'
-    const isFullUrl = property.image_url.startsWith('http://') || property.image_url.startsWith('https://')
-    return isFullUrl
-      ? property.image_url
-      : `https://ajburehyunbvpuhnyjbo.supabase.co/storage/v1/object/public/property-images/${property.image_url}`
-  }
-
   return (
     <main className="min-h-screen bg-gray-50">
       <section className="mt-16 px-4 text-center">
@@ -59,7 +51,7 @@ export default function Home() {
             {properties.map((property) => (
               <PropertyCard
                 key={property.id}
-                image={resolveImageUrl(property)}
+                image={property.image_url}
                 addressLine1={property.address_line1}
                 cityStateZip={`${property.city}, ${property.state} ${property.zip}`}
                 rentalReturn="--"
@@ -77,7 +69,7 @@ export default function Home() {
       </section>
 
       <ChatBubble />
-      <Footer />
+      
     </main>
   )
 }
