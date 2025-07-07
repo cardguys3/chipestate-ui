@@ -12,7 +12,6 @@ const supabase = createBrowserClient(
 export default function EditPropertyPage() {
   const router = useRouter()
   const { id } = useParams()
-
   const [form, setForm] = useState<any>(null)
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
@@ -95,47 +94,78 @@ export default function EditPropertyPage() {
     }
   }
 
-  if (!form) return <p className="p-6">Loading...</p>
+  if (!form) return <p className="p-6 text-white">Loading...</p>
 
   return (
-    <main className="min-h-screen bg-gray-50 p-6 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold text-blue-900 mb-4">Edit Property</h1>
-      {error && <p className="text-red-600 mb-3">{error}</p>}
-      <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded-lg shadow">
-        <input name="title" value={form.title} onChange={handleChange} className="input" placeholder="Title" />
-        <input name="address_line1" value={form.address_line1} onChange={handleChange} className="input" placeholder="Address Line 1" />
-        <input name="address_line2" value={form.address_line2} onChange={handleChange} className="input" placeholder="Address Line 2" />
-        <div className="grid grid-cols-3 gap-4">
-          <input name="city" value={form.city} onChange={handleChange} className="input" placeholder="City" />
-          <input name="state" value={form.state} onChange={handleChange} className="input" placeholder="State" />
-          <input name="zip" value={form.zip} onChange={handleChange} className="input" placeholder="Zip" />
-        </div>
-        <input name="property_type" value={form.property_type} onChange={handleChange} className="input" placeholder="Property Type" />
-        <input name="sub_type" value={form.sub_type} onChange={handleChange} className="input" placeholder="Sub-type" />
-        <div className="grid grid-cols-2 gap-4">
-          <input name="purchase_price" value={form.purchase_price} onChange={handleChange} className="input" placeholder="Purchase Price" />
-          <input name="current_value" value={form.current_value} onChange={handleChange} className="input" placeholder="Current Value" />
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <input name="total_chips" value={form.total_chips} onChange={handleChange} className="input" placeholder="Total Chips" />
-          <input name="chips_available" value={form.chips_available} onChange={handleChange} className="input" placeholder="Chips Available" />
-        </div>
-        <input name="manager_name" value={form.manager_name} onChange={handleChange} className="input" placeholder="Manager Name" />
-        <input name="reserve_balance" value={form.reserve_balance} onChange={handleChange} className="input" placeholder="Reserve Balance" />
+    <main className="min-h-screen bg-[#0e1a2b] p-6 max-w-3xl mx-auto text-white">
+      <h1 className="text-2xl font-bold mb-4">Edit Property</h1>
+      {error && <p className="text-red-500 mb-4">{error}</p>}
+      <form onSubmit={handleSubmit} className="space-y-4 bg-[#1e2a3c] p-6 rounded-lg border border-gray-700 shadow-md">
+        {[
+          { name: 'title', label: 'Title*' },
+          { name: 'address_line1', label: 'Address Line 1*' },
+          { name: 'address_line2', label: 'Address Line 2' },
+          { name: 'city', label: 'City*' },
+          { name: 'state', label: 'State*' },
+          { name: 'zip', label: 'Zip*' },
+          { name: 'property_type', label: 'Property Type*' },
+          { name: 'sub_type', label: 'Sub-type*' },
+          { name: 'purchase_price', label: 'Purchase Price*' },
+          { name: 'current_value', label: 'Current Value*' },
+          { name: 'total_chips', label: 'Total Chips*' },
+          { name: 'chips_available', label: 'Chips Available*' },
+          { name: 'manager_name', label: 'Manager Name*' },
+          { name: 'reserve_balance', label: 'Reserve Balance*' },
+        ].map((field) => (
+          <div key={field.name}>
+            <label className="block text-sm font-medium mb-1">{field.label}</label>
+            <input
+              name={field.name}
+              value={form[field.name]}
+              onChange={handleChange}
+              className="w-full p-2 rounded bg-[#102134] border border-gray-600 text-white"
+              required={field.label.includes('*')}
+            />
+          </div>
+        ))}
+
         <label className="flex items-center gap-2">
-          <input type="checkbox" name="occupied" checked={form.occupied} onChange={handleChange} />
+          <input
+            type="checkbox"
+            name="occupied"
+            checked={form.occupied}
+            onChange={handleChange}
+            className="accent-blue-500"
+          />
           Occupied?
         </label>
 
-        <div>
-          <label className="block mb-1 text-sm font-semibold">Update Property Image</label>
-          <input type="file" accept="image/*" onChange={handleImageUpload} />
-          {imageUrl && <img src={imageUrl} alt="Preview" className="mt-2 rounded w-full max-w-xs" />}
+        <div className="mt-4">
+          <label className="block mb-1 text-sm font-semibold">Property Image</label>
+          <label className="cursor-pointer inline-block px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded text-white">
+            {uploading ? 'Uploading...' : 'Upload Image'}
+            <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+          </label>
+          {imageUrl && (
+            <img src={imageUrl} alt="Preview" className="mt-2 rounded border border-gray-600 w-full max-w-xs" />
+          )}
         </div>
 
-        <button type="submit" className="bg-blue-700 text-white px-6 py-2 rounded hover:bg-blue-800 w-full">
-          Save Changes
-        </button>
+        <div className="flex justify-between pt-4 gap-4">
+          <button
+            type="submit"
+            className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2 rounded w-1/2"
+          >
+            Save Changes
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push('/admin/properties')}
+            className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded w-1/2"
+          >
+            Cancel Changes
+          </button>
+        </div>
       </form>
     </main>
   )
