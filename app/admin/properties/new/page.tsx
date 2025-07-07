@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useSession, useSupabaseClient } from '@supabase/auth-helpers-react'
+import { useSupabaseClient } from '@supabase/ssr'
 
 const residentialSubtypes = [
   'Single Family',
@@ -25,7 +25,6 @@ const commercialSubtypes = [
 
 export default function AddPropertyPage() {
   const router = useRouter()
-  const session = useSession()
   const supabase = useSupabaseClient()
 
   const [form, setForm] = useState({

@@ -2,14 +2,13 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { useSession, useSupabaseClient } from '@supabase/auth-helpers-react'
+import { createBrowserClient } from '@supabase/ssr'
 
 export default function EditPropertyPage() {
   const router = useRouter()
   const { id } = useParams()
-  const supabase = useSupabaseClient()
-  const session = useSession()
-
+  const supabase = createBrowserClient()
+  
   const [form, setForm] = useState<any>(null)
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
@@ -19,7 +18,12 @@ export default function EditPropertyPage() {
     if (!id) return
 
     const fetchProperty = async () => {
-      const { data, error } = await supabase.from('properties').select('*').eq('id', id).single()
+      const { data, error } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('id', id)
+        .single()
+
       if (error) {
         setError('Failed to load property.')
       } else {
@@ -45,14 +49,20 @@ export default function EditPropertyPage() {
     const fileName = `${Date.now()}.${fileExt}`
     const filePath = `${fileName}`
 
-    const { error: uploadError } = await supabase.storage.from('property-images').upload(filePath, file)
+    const { error: uploadError } = await supabase.storage
+      .from('property-images')
+      .upload(filePath, file)
+
     if (uploadError) {
       alert('Upload failed: ' + uploadError.message)
       setUploading(false)
       return
     }
 
-    const { data: publicUrlData } = supabase.storage.from('property-images').getPublicUrl(filePath)
+    const { data: publicUrlData } = supabase.storage
+      .from('property-images')
+      .getPublicUrl(filePath)
+
     setImageUrl(publicUrlData?.publicUrl || null)
     setForm({ ...form, image_url: publicUrlData?.publicUrl })
     setUploading(false)
@@ -61,15 +71,18 @@ export default function EditPropertyPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    const { error: updateError } = await supabase.from('properties').update({
-      ...form,
-      purchase_price: Number(form.purchase_price),
-      current_value: Number(form.current_value),
-      total_chips: Number(form.total_chips),
-      chips_available: Number(form.chips_available),
-      reserve_balance: Number(form.reserve_balance),
-      image_url: imageUrl,
-    }).eq('id', id)
+    const { error: updateError } = await supabase
+      .from('properties')
+      .update({
+        ...form,
+        purchase_price: Number(form.purchase_price),
+        current_value: Number(form.current_value),
+        total_chips: Number(form.total_chips),
+        chips_available: Number(form.chips_available),
+        reserve_balance: Number(form.reserve_balance),
+        image_url: imageUrl,
+      })
+      .eq('id', id)
 
     if (updateError) {
       setError(updateError.message)
