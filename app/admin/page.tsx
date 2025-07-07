@@ -1,6 +1,4 @@
 // app/admin/page.tsx
-'use client'
-
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 import { redirect } from 'next/navigation'
@@ -11,9 +9,7 @@ export default async function AdminPage() {
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: () => cookieStore,
-    }
+    { cookies: () => cookieStore }
   )
 
   const {
@@ -45,6 +41,7 @@ export default async function AdminPage() {
           <AdminCard title="Chips" href="/admin/chips" />
           <AdminCard title="Financials" href="/admin/financials" />
           <AdminCard title="Approvals" href="/admin/approvals" />
+          <AdminCard title="Analytics" href="/admin/analytics" />
         </div>
       </div>
     </main>
