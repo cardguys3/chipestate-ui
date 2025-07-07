@@ -1,15 +1,20 @@
 import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { cookies as nextCookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
-  const cookieStore = cookies() // ✅ don't `await` this
+  // ✅ Must call cookies synchronously
+  const cookieStore = nextCookies()
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      cookies: cookieStore // ✅ pass directly
+      cookies: {
+        get: (name) => cookieStore.get(name)?.value ?? '',
+        set: () => {},   // no-op for SSR
+        remove: () => {} // no-op for SSR
+      }
     }
   )
 

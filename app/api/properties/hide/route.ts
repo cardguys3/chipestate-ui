@@ -1,20 +1,28 @@
 import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { cookies as nextCookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
-  const cookieStore = cookies() // ✅ NOT async — this is correct
+  // ✅ Correct: get cookies synchronously
+  const cookieStore = nextCookies()
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: cookieStore }
+    {
+      cookies: {
+        get: (name) => cookieStore.get(name)?.value ?? '',
+        set: () => {},   // No-op for server-side
+        remove: () => {} // No-op for server-side
+      }
+    }
   )
 
   const { id } = await req.json()
 
   const { error } = await supabase
     .from('properties')
-    .update({ is_active: false }) // This is your "Hide" behavior
+    .update({ is_active: false }) // ✅ Hiding the property
     .eq('id', id)
 
   if (error) {
