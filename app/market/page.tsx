@@ -5,12 +5,12 @@ import Image from 'next/image'
 export default async function MarketPage() {
   const cookieStore = cookies()
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: () => cookieStore as any,
-    }
-  )
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  {
+    cookies: cookieStore
+  }
+)
 
   const { data: properties, error } = await supabase
     .from('properties')
