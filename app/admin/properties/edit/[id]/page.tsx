@@ -62,14 +62,15 @@ export default function EditPropertyPage() {
       return
     }
 
-    const { data: publicUrlData } = supabase.storage
-      .from('property-images')
-      .getPublicUrl(filePath)
+const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+  .from('property-images')
+  .createSignedUrl(filePath, 60 * 60) // valid for 1 hour
 
-    setImageUrl(publicUrlData?.publicUrl || null)
-    setForm({ ...form, image_url: publicUrlData?.publicUrl })
-    setUploading(false)
-  }
+if (signedUrlError) {
+  alert('Failed to get image URL: ' + signedUrlError.message)
+  setUploading(false)
+  return
+}
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -147,8 +148,12 @@ export default function EditPropertyPage() {
             <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
           </label>
           {imageUrl && (
-            <img src={imageUrl} alt="Preview" className="mt-2 rounded border border-gray-600 w-full max-w-xs" />
-          )}
+  <img
+    src={imageUrl.startsWith('http') ? imageUrl : supabase.storage.from('property-images').getPublicUrl(imageUrl).data.publicUrl}
+    alt="Preview"
+    className="mt-2 rounded border border-gray-600 w-full max-w-xs"
+  />
+)}
         </div>
 
         <div className="flex justify-between pt-4 gap-4">
