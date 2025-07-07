@@ -1,4 +1,4 @@
-const glossaryData = [
+export const glossaryData = [
   {
     "term": "Annualized Return",
     "definition": "The return on an investment expressed as a yearly rate, assuming reinvestment of earnings.",
