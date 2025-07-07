@@ -9,4 +9,4 @@ export const analyticsData = {
     properties: 72,
     chipsSold: 3192
   }
-}
+};
