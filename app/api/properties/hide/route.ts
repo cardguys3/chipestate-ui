@@ -1,10 +1,9 @@
 import { createServerClient } from '@supabase/ssr'
-import { cookies as nextCookies } from 'next/headers'
+import { cookies as getCookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
-  // ✅ Correct: get cookies synchronously
-  const cookieStore = nextCookies()
+  const cookieStore = await getCookies()
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,8 +11,8 @@ export async function POST(req: NextRequest) {
     {
       cookies: {
         get: (name) => cookieStore.get(name)?.value ?? '',
-        set: () => {},   // No-op for server-side
-        remove: () => {} // No-op for server-side
+        set: () => {},   // No-op for SSR
+        remove: () => {} // No-op for SSR
       }
     }
   )
@@ -22,7 +21,7 @@ export async function POST(req: NextRequest) {
 
   const { error } = await supabase
     .from('properties')
-    .update({ is_active: false }) // ✅ Hiding the property
+    .update({ is_active: false })
     .eq('id', id)
 
   if (error) {
