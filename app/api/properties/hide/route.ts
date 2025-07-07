@@ -1,24 +1,26 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
   const cookieStore = cookies()
-  const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
 
-  const formData = await req.formData()
-  const id = formData.get('id')
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: cookieStore }
+  )
 
-  if (!id) return NextResponse.json({ error: 'Missing ID' }, { status: 400 })
+  const { id } = await req.json()
 
   const { error } = await supabase
     .from('properties')
-    .update({ is_active: false })
+    .update({ is_active: false }) // This is your "Hide" behavior
     .eq('id', id)
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 })
   }
 
-  return NextResponse.redirect(new URL('/admin/properties', req.url))
+  return NextResponse.json({ success: true })
 }
