@@ -1,20 +1,23 @@
+'use server'
+
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 import { redirect } from 'next/navigation'
 
 export default async function AdminPage() {
-const cookieStore = cookies()
-const supabase = createServerClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  {
-    cookies: {
-      get: (...args) => cookieStore.get(...args),
-      set: () => {},
-      remove: () => {},
-    },
-  }
-)
+  const cookieStore = cookies()
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get: (name) => cookieStore.get(name)?.value ?? '',
+        set: () => {},
+        remove: () => {},
+      },
+    }
+  )
 
   const {
     data: { user },
