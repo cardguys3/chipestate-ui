@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
+import { v4 as uuidv4 } from 'uuid'
 
 const residentialSubtypes = ['Single Family', 'Multi-Family', 'Townhouse', 'Condo']
 const commercialSubtypes = ['Office', 'Retail', 'Industrial', 'Mixed-Use']
@@ -44,7 +45,31 @@ export default function NewPropertyPage() {
       }
     }
 
-    await supabase.from('properties').insert([{ ...form, image_url: imageUrl }])
+    const { data: insertedProperties, error } = await supabase
+      .from('properties')
+      .insert([{ ...form, image_url: imageUrl }])
+      .select()
+
+    if (error || !insertedProperties || insertedProperties.length === 0) {
+      console.error('Property creation failed:', error)
+      return
+    }
+
+    const propertyId = insertedProperties[0].id
+    const chipCount = parseInt(form.chips)
+
+    const chipRows = Array.from({ length: chipCount }, (_, index) => ({
+      id: uuidv4(),
+      property_id: propertyId,
+      chip_number: index + 1,
+      created_at: new Date().toISOString(),
+    }))
+
+    const { error: chipError } = await supabase.from('chips').insert(chipRows)
+    if (chipError) {
+      console.error('Chip creation failed:', chipError.message)
+    }
+
     router.push('/admin/properties')
   }
 
@@ -67,7 +92,7 @@ export default function NewPropertyPage() {
               name="name"
               required
               onChange={handleChange}
-              className="w-full p-2 text-white bg-[#0a2540] border border-gray-500 rounded focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full p-2 text-white bg-[#0a2540] border border-gray-500 rounded"
             />
           </div>
 
@@ -81,7 +106,7 @@ export default function NewPropertyPage() {
               name="address"
               required
               onChange={handleChange}
-              className="w-full p-2 text-white bg-[#0a2540] border border-gray-500 rounded focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full p-2 text-white bg-[#0a2540] border border-gray-500 rounded"
             />
           </div>
 
@@ -96,16 +121,14 @@ export default function NewPropertyPage() {
               onChange={handleChange}
               className="w-full p-2 bg-[#0a2540] text-white border border-gray-500 rounded"
             >
-              <option value="" disabled className="text-white bg-[#0a2540]">
-                Select Type
-              </option>
+              <option value="" disabled>Select Type</option>
               <option value="Residential">Residential</option>
               <option value="Commercial">Commercial</option>
             </select>
           </div>
 
           {/* Subtype */}
-          {form.type === 'Residential' && (
+          {(form.type === 'Residential' || form.type === 'Commercial') && (
             <div>
               <label className="block mb-1 font-medium">
                 Subtype <span className="text-red-500">*</span>
@@ -116,33 +139,8 @@ export default function NewPropertyPage() {
                 onChange={handleChange}
                 className="w-full p-2 bg-[#0a2540] text-white border border-gray-500 rounded"
               >
-                <option value="" disabled className="text-white bg-[#0a2540]">
-                  Select Subtype
-                </option>
-                {residentialSubtypes.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {form.type === 'Commercial' && (
-            <div>
-              <label className="block mb-1 font-medium">
-                Subtype <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="subtype"
-                required
-                onChange={handleChange}
-                className="w-full p-2 bg-[#0a2540] text-white border border-gray-500 rounded"
-              >
-                <option value="" disabled className="text-white bg-[#0a2540]">
-                  Select Subtype
-                </option>
-                {commercialSubtypes.map((s) => (
+                <option value="" disabled>Select Subtype</option>
+                {(form.type === 'Residential' ? residentialSubtypes : commercialSubtypes).map((s) => (
                   <option key={s} value={s}>
                     {s}
                   </option>
@@ -161,7 +159,7 @@ export default function NewPropertyPage() {
               name="price"
               required
               onChange={handleChange}
-              className="w-full p-2 text-white bg-[#0a2540] border border-gray-500 rounded focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full p-2 text-white bg-[#0a2540] border border-gray-500 rounded"
             />
           </div>
 
@@ -175,7 +173,7 @@ export default function NewPropertyPage() {
               name="chips"
               required
               onChange={handleChange}
-              className="w-full p-2 text-white bg-[#0a2540] border border-gray-500 rounded focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full p-2 text-white bg-[#0a2540] border border-gray-500 rounded"
             />
           </div>
 
