@@ -1,27 +1,55 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from '@supabase/auth-helpers-react'
+import { supabase } from '@/lib/supabaseClient'
 
 export default function AdminDashboard() {
   const session = useSession()
   const router = useRouter()
 
+  const [firstName, setFirstName] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+
   useEffect(() => {
-    if (!session) return
-    const email = session.user?.email
-    const isAdmin = ['mark@chipestate.com', 'cardguys3@gmail.com'].includes(email || '')
-    if (!isAdmin) {
-      router.push('/')
+    const loadAdmin = async () => {
+      if (!session?.user) return
+
+      const email = session.user.email
+      const isAdmin = ['mark@chipestate.com', 'cardguys3@gmail.com'].includes(email || '')
+      if (!isAdmin) {
+        router.push('/')
+        return
+      }
+
+      const { data, error } = await supabase
+        .from('users_extended')
+        .select('first_name')
+        .eq('id', session.user.id)
+        .single()
+
+      if (data?.first_name) {
+        setFirstName(data.first_name)
+      }
+
+      setLoading(false)
     }
-  }, [session])
+
+    loadAdmin()
+  }, [session, router])
+
+  if (loading) {
+    return <main className="min-h-screen bg-[#0B1D33] text-white p-10">Loading...</main>
+  }
 
   return (
     <main className="min-h-screen bg-[#0B1D33] text-white px-6 py-10">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
-        <p className="text-gray-300 mb-8">Welcome, administrator. Select a section to manage:</p>
+        <p className="text-gray-300 mb-8">
+          Welcome, {firstName || 'administrator'}. Select a section to manage:
+        </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           <AdminCard title="Users" href="/admin/users" />
@@ -46,3 +74,4 @@ function AdminCard({ title, href }: { title: string; href: string }) {
     </a>
   )
 }
+
