@@ -23,19 +23,22 @@ export default function ChipsPage() {
   const [filterEmail, setFilterEmail] = useState('')
   const [filterProperty, setFilterProperty] = useState('')
   const [filterDate, setFilterDate] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
+  const pageSize = 10
+  const totalPages = Math.ceil(chips.length / pageSize)
+  const paginatedChips = chips.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+
   const fetchChips = async () => {
     setLoading(true)
     let query = supabase
       .from('chips')
-      .select(
-        `serial, created_at, assigned_at, properties(title), users_extended(email)`
-      )
+      .select(`id, serial, created_at, assigned_at, properties(title), users_extended(email)`)
 
     if (filterEmail) query = query.eq('users_extended.email', filterEmail)
     if (filterProperty) query = query.eq('properties.title', filterProperty)
@@ -46,6 +49,7 @@ export default function ChipsPage() {
     if (!error && data) {
       setChips(
         data.map((chip: any) => ({
+          id: chip.id,
           serial: chip.serial,
           created_at: chip.created_at,
           assigned_at: chip.assigned_at,
@@ -54,7 +58,7 @@ export default function ChipsPage() {
         }))
       )
     } else {
-      console.error('Error fetching chips:', error)
+      toast.error('Failed to load chips')
     }
     setLoading(false)
   }
@@ -75,6 +79,24 @@ export default function ChipsPage() {
     fetchChips()
   }
 
+  const handleDelete = async (serial: string) => {
+    const { error } = await supabase.from('chips').delete().eq('serial', serial)
+    error ? toast.error('Delete failed') : toast.success('Chip deleted')
+    fetchChips()
+  }
+
+  const handleInactivate = async (serial: string) => {
+    const { error } = await supabase.from('chips').update({ is_active: false }).eq('serial', serial)
+    error ? toast.error('Inactivate failed') : toast.success('Chip inactivated')
+    fetchChips()
+  }
+
+  const handleHide = async (serial: string) => {
+    const { error } = await supabase.from('chips').update({ hidden: true }).eq('serial', serial)
+    error ? toast.error('Hide failed') : toast.success('Chip hidden')
+    fetchChips()
+  }
+
   useEffect(() => {
     fetchChips()
   }, [])
@@ -86,7 +108,6 @@ export default function ChipsPage() {
 
       {/* Create & Assign Chips */}
       <div className="flex gap-8 mb-6">
-        {/* Create Chips */}
         <div className="flex-1 bg-gray-800 p-4 rounded border border-gray-700">
           <h2 className="text-xl font-semibold mb-2">Create Chips</h2>
           <input
@@ -112,7 +133,6 @@ export default function ChipsPage() {
           </button>
         </div>
 
-        {/* Assign Chips */}
         <div className="flex-1 bg-gray-800 p-4 rounded border border-gray-700">
           <h2 className="text-xl font-semibold mb-2">Assign Chips</h2>
           <input
@@ -179,27 +199,50 @@ export default function ChipsPage() {
               <th className="p-2 border border-gray-700">Created</th>
               <th className="p-2 border border-gray-700">Assigned</th>
               <th className="p-2 border border-gray-700">Serial #</th>
+              <th className="p-2 border border-gray-700">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {chips.length === 0 && (
+            {paginatedChips.length === 0 && (
               <tr>
-                <td colSpan={5} className="p-4 text-center text-gray-400">
+                <td colSpan={6} className="p-4 text-center text-gray-400">
                   No chips found.
                 </td>
               </tr>
             )}
-            {chips.map((chip, idx) => (
-              <tr key={idx} className="hover:bg-gray-800">
+            {paginatedChips.map((chip) => (
+              <tr key={chip.serial} className="hover:bg-gray-800">
                 <td className="p-2 border border-gray-700">{chip.property_title}</td>
                 <td className="p-2 border border-gray-700">{chip.user_email || '-'}</td>
                 <td className="p-2 border border-gray-700">{chip.created_at.slice(0, 10)}</td>
                 <td className="p-2 border border-gray-700">{chip.assigned_at?.slice(0, 10) || '-'}</td>
                 <td className="p-2 border border-gray-700">{chip.serial}</td>
+                <td className="p-2 border border-gray-700 space-x-2">
+                  <button onClick={() => handleDelete(chip.serial)} className="text-red-500">Delete</button>
+                  <button onClick={() => handleInactivate(chip.serial)} className="text-yellow-400">Inactivate</button>
+                  <button onClick={() => handleHide(chip.serial)} className="text-gray-400">Hide</button>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="mt-6 flex justify-center items-center gap-4">
+        <button
+          onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+          className="px-4 py-2 bg-gray-700 text-white rounded"
+        >
+          Prev
+        </button>
+        <span>Page {currentPage} of {totalPages}</span>
+        <button
+          onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+          className="px-4 py-2 bg-gray-700 text-white rounded"
+        >
+          Next
+        </button>
       </div>
     </div>
   )
