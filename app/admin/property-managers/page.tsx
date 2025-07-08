@@ -1,98 +1,164 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 import Link from 'next/link'
+import { v4 as uuidv4 } from 'uuid'
 
-export default function PropertyManagerDetails() {
-  const { id } = useParams()
-  const [manager, setManager] = useState<any>(null)
-  const [transactions, setTransactions] = useState<any[]>([])
+export default function PropertyManagersPage() {
+  const router = useRouter()
+  const [managers, setManagers] = useState<any[]>([])
+  const [filters, setFilters] = useState({ name: '', city: '', state: '', activeOnly: true })
+  const [newManager, setNewManager] = useState({
+    name: '',
+    contact_name: '',
+    phone: '',
+    email: '',
+    city: '',
+    state: ''
+  })
+
+  const fetchManagers = async () => {
+    const { data, error } = await supabase.from('property_managers').select('*')
+    if (!error && data) setManagers(data)
+  }
 
   useEffect(() => {
-    const fetchManager = async () => {
-      const { data, error } = await supabase.from('property_managers').select('*').eq('id', id).single()
-      if (!error && data) setManager(data)
+    fetchManagers()
+  }, [])
+
+  const handleAdd = async () => {
+    const newId = uuidv4()
+    const { error } = await supabase.from('property_managers').insert({ id: newId, ...newManager })
+    if (!error) {
+      setNewManager({ name: '', contact_name: '', phone: '', email: '', city: '', state: '' })
+      fetchManagers()
     }
+  }
 
-    const fetchTransactions = async () => {
-      const { data, error } = await supabase
-        .from('property_transactions')
-        .select('amount, notes, transaction_category, date, properties(title)')
-        .eq('payee_type', 'property_manager')
-        .eq('payee_id', id)
-        .order('date', { ascending: false })
-      if (!error && data) setTransactions(data)
-    }
+  const handleToggleActive = async (id: string, isActive: boolean) => {
+    const { error } = await supabase
+      .from('property_managers')
+      .update({ is_active: !isActive })
+      .eq('id', id)
+    if (!error) fetchManagers()
+  }
 
-    if (id) {
-      fetchManager()
-      fetchTransactions()
-    }
-  }, [id])
-
-  if (!manager) return <div className="p-6 text-white">Loading manager details...</div>
-
-  const inactiveClass = !manager.is_active ? 'line-through text-red-400 font-semibold' : ''
+  const filtered = managers.filter((m) => {
+    return (
+      (!filters.name || m.name.toLowerCase().includes(filters.name.toLowerCase())) &&
+      (!filters.city || m.city?.toLowerCase().includes(filters.city.toLowerCase())) &&
+      (!filters.state || m.state?.toLowerCase().includes(filters.state.toLowerCase())) &&
+      (!filters.activeOnly || m.is_active)
+    )
+  })
 
   return (
     <main className="min-h-screen bg-[#0B1D33] text-white px-6 py-10">
-      <div className="max-w-5xl mx-auto border border-white/20 rounded-lg p-6 space-y-6">
-        <h1 className="text-2xl font-bold">Property Manager Details</h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-          <p className={inactiveClass}><strong>Name:</strong> {manager.name}</p>
-          <p className={inactiveClass}><strong>Contact:</strong> {manager.contact_name}</p>
-          <p className={inactiveClass}><strong>Phone:</strong> {manager.phone}</p>
-          <p className={inactiveClass}><strong>Email:</strong> {manager.email}</p>
-          <p className={inactiveClass}><strong>City:</strong> {manager.city}</p>
-          <p className={inactiveClass}><strong>State:</strong> {manager.state}</p>
-          <p className={inactiveClass}><strong>Status:</strong> {manager.is_active ? 'Active' : 'Inactive'}</p>
-          <p className={inactiveClass}><strong>Years of Experience:</strong> {manager.years_experience}</p>
-          <p className={inactiveClass}><strong>Management Fee:</strong> {manager.management_fee}</p>
-          <p className={inactiveClass}><strong>Services Offered:</strong> {manager.service_types?.join(', ')}</p>
-          <p className={inactiveClass}><strong>Preferred Contact (Owners):</strong> {manager.owner_communication}</p>
-          <p className={inactiveClass}><strong>Preferred Contact (Tenants):</strong> {manager.tenant_communication}</p>
-          <p className={inactiveClass}><strong>Compliance States:</strong> {manager.compliance_states?.join(', ')}</p>
-          <p className={inactiveClass}><strong>Reporting Frequency:</strong> {manager.reporting_frequency}</p>
-          <p className={inactiveClass}><strong>Reporting Type:</strong> {manager.reporting_type}</p>
-          <p className={inactiveClass}><strong>References:</strong> {manager.references?.join(', ')}</p>
-          <p className={inactiveClass}><strong>Notes:</strong> {manager.notes}</p>
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-2xl font-bold mb-6">Manage Property Managers</h1>
+
+        <div className="border border-white/20 rounded-lg p-6 space-y-4 mb-10">
+          <h2 className="text-lg font-semibold">Add New Property Manager</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {Object.entries(newManager).map(([key, value]) => (
+              <input
+                key={key}
+                type="text"
+                placeholder={key.replace('_', ' ')}
+                className="p-2 rounded bg-white/10 text-white border border-white/20"
+                value={value}
+                onChange={(e) => setNewManager({ ...newManager, [key]: e.target.value })}
+              />
+            ))}
+          </div>
+          <button onClick={handleAdd} className="mt-4 px-4 py-2 bg-emerald-500 rounded hover:bg-emerald-600">
+            Add Manager
+          </button>
         </div>
 
-        <div className="pt-4 space-x-4">
-          <Link href="/admin/property-managers" className="text-blue-400 hover:underline">← Back</Link>
-          <Link href={`/admin/property-managers/${id}/edit`} className="text-emerald-400 hover:underline">Edit</Link>
+        <div className="border border-white/20 rounded-lg p-6 space-y-4 mb-10">
+          <h2 className="text-lg font-semibold">Filters</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <input
+              type="text"
+              placeholder="Filter by Name"
+              className="p-2 rounded bg-white/10 text-white border border-white/20"
+              value={filters.name}
+              onChange={(e) => setFilters({ ...filters, name: e.target.value })}
+            />
+            <input
+              type="text"
+              placeholder="Filter by City"
+              className="p-2 rounded bg-white/10 text-white border border-white/20"
+              value={filters.city}
+              onChange={(e) => setFilters({ ...filters, city: e.target.value })}
+            />
+            <input
+              type="text"
+              placeholder="Filter by State"
+              className="p-2 rounded bg-white/10 text-white border border-white/20"
+              value={filters.state}
+              onChange={(e) => setFilters({ ...filters, state: e.target.value })}
+            />
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={filters.activeOnly}
+                onChange={(e) => setFilters({ ...filters, activeOnly: e.target.checked })}
+              />
+              <span>Active Only</span>
+            </label>
+          </div>
         </div>
 
-        <div className="pt-10">
-          <h2 className="text-xl font-bold mb-4">Payment Transactions</h2>
-          {transactions.length === 0 ? (
-            <p className="text-sm text-gray-300">No transactions recorded for this property manager.</p>
-          ) : (
-            <table className="w-full text-sm border border-white/10 rounded-lg overflow-hidden">
-              <thead className="bg-white/10">
-                <tr>
-                  <th className="text-left px-4 py-2">Date</th>
-                  <th className="text-left px-4 py-2">Amount</th>
-                  <th className="text-left px-4 py-2">Category</th>
-                  <th className="text-left px-4 py-2">Notes</th>
-                  <th className="text-left px-4 py-2">Property</th>
+        <div className="border border-white/20 rounded-lg overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-white/10">
+              <tr>
+                <th className="text-left px-4 py-2">Name</th>
+                <th className="text-left px-4 py-2">Contact</th>
+                <th className="text-left px-4 py-2">Phone</th>
+                <th className="text-left px-4 py-2">Email</th>
+                <th className="text-left px-4 py-2">City</th>
+                <th className="text-left px-4 py-2">State</th>
+                <th className="text-left px-4 py-2">Status</th>
+                <th className="text-left px-4 py-2">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((m) => (
+                <tr key={m.id} className="border-t border-white/10 hover:bg-white/5">
+                  <td className="px-4 py-2">
+                    <Link href={`/admin/property-managers/${m.id}`} className="text-blue-400 hover:underline">
+                      {m.name}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-2">{m.contact_name}</td>
+                  <td className="px-4 py-2">{m.phone}</td>
+                  <td className="px-4 py-2">{m.email}</td>
+                  <td className="px-4 py-2">{m.city}</td>
+                  <td className="px-4 py-2">{m.state}</td>
+                  <td className="px-4 py-2">{m.is_active ? 'Active' : 'Inactive'}</td>
+                  <td className="px-4 py-2 space-x-2">
+                    <Link
+                      href={`/admin/property-managers/${m.id}/edit`}
+                      className="text-emerald-400 hover:underline"
+                    >
+                      Edit
+                    </Link>
+                    <button
+                      onClick={() => handleToggleActive(m.id, m.is_active)}
+                      className="text-red-400 hover:underline"
+                    >
+                      {m.is_active ? 'Inactivate' : 'Activate'}
+                    </button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {transactions.map((tx, i) => (
-                  <tr key={i} className="border-t border-white/5">
-                    <td className="px-4 py-2">{new Date(tx.date).toLocaleDateString()}</td>
-                    <td className="px-4 py-2">${tx.amount.toFixed(2)}</td>
-                    <td className="px-4 py-2">{tx.transaction_category}</td>
-                    <td className="px-4 py-2">{tx.notes}</td>
-                    <td className="px-4 py-2">{tx.properties?.title}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </main>
