@@ -97,7 +97,7 @@ export default function ChipsPage() {
   return (
     <div className="p-6 bg-gray-900 min-h-screen text-white">
       <Toaster />
-      <h1 className="text-3xl font-bold mb-4">Manage Chips</h1>
+      <h1 className="text-3xl font-bold mb-6">Manage Chips</h1>
 
       <div className="flex gap-8 mb-6">
         <div className="border border-white p-4 rounded w-1/2">
@@ -139,6 +139,7 @@ export default function ChipsPage() {
       </div>
 
       {/* Chip Table */}
+      <h2 className="text-2xl font-semibold mt-6 mb-2">Chip Details</h2>
       <table className="w-full table-auto border border-white">
         <thead>
           <tr className="bg-gray-800">
