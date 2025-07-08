@@ -1,4 +1,4 @@
-import { glossaryData } from '../../lib/glossary'
+import { glossary } from '../../lib/glossary'
 
 export default function GlossaryPage() {
   return (
