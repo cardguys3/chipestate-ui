@@ -25,6 +25,7 @@ function SortableImage({ url, index, onRemove }: { url: string; index: number; o
   )
 }
 
+
 export default function NewPropertyPage() {
   const [form, setForm] = useState<any>({})
   const [imageFiles, setImageFiles] = useState<File[]>([])
