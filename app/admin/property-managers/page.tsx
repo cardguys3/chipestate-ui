@@ -131,7 +131,7 @@ export default function PropertyManagersPage() {
               {filtered.map((m) => (
                 <tr key={m.id} className="border-t border-white/10 hover:bg-white/5">
                   <td className="px-4 py-2">
-                    <Link href={`/admin/property-managers/${m.id}`} className="text-blue-400 hover:underline">
+                    <Link href={`/admin/property-managers/${m.id}/details`} className="text-blue-400 hover:underline">
                       {m.name}
                     </Link>
                   </td>
