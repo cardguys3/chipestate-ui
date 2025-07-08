@@ -18,7 +18,10 @@ type Chip = {
 };
 
 export default function ChipsPage() {
-  const supabase = createBrowserClient<any>();
+  const supabase = createBrowserClient<any>(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
   const [chips, setChips] = useState<Chip[]>([]);
   const [properties, setProperties] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
