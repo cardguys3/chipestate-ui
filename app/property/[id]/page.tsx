@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 import Image from 'next/image'
 
@@ -12,7 +12,6 @@ const supabase = createBrowserClient(
 
 export default function PropertyDetailsPage() {
   const { id } = useParams()
-  const router = useRouter()
   const [property, setProperty] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [mainImage, setMainImage] = useState<string>('')
@@ -42,15 +41,10 @@ export default function PropertyDetailsPage() {
     fetchProperty()
   }, [id])
 
-  const getImageUrl = (url: string | null) => {
-    if (!url) return '/default-image.png'
-    return url.startsWith('http')
+  const resolveImageUrl = (url: string): string => {
+    return url?.startsWith('http')
       ? url
       : `https://ajburehyunbvpuhnyjbo.supabase.co/storage/v1/object/public/property-images/${url}`
-  }
-
-  const handleImageChange = (url: string) => {
-    setMainImage(url)
   }
 
   if (loading) {
@@ -73,7 +67,7 @@ export default function PropertyDetailsPage() {
         {/* Main Image */}
         {mainImage ? (
           <Image
-            src={getImageUrl(mainImage)}
+            src={resolveImageUrl(mainImage)}
             alt={property.title}
             width={1200}
             height={600}
@@ -91,12 +85,12 @@ export default function PropertyDetailsPage() {
             {property.image_urls.map((url: string, index: number) => (
               <Image
                 key={index}
-                src={getImageUrl(url)}
+                src={resolveImageUrl(url)}
                 alt={`Thumbnail ${index + 1}`}
                 width={120}
                 height={80}
                 className={`rounded cursor-pointer border ${url === mainImage ? 'border-emerald-400' : 'border-transparent'}`}
-                onClick={() => handleImageChange(url)}
+                onClick={() => setMainImage(url)}
               />
             ))}
           </div>
@@ -122,8 +116,8 @@ export default function PropertyDetailsPage() {
               ${property.reserve_balance?.toLocaleString()} (
               {Math.round(
                 ((property.reserve_balance || 0) / (property.current_value || 1)) * 100
-              )}
-              %)
+              )}%
+              )
             </p>
           </div>
           <div>
