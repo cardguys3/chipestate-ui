@@ -2,7 +2,7 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 import { v4 as uuidv4 } from 'uuid'
@@ -23,6 +23,7 @@ export default function AddPropertyPage() {
   const [addressLine2, setAddressLine2] = useState('')
   const [reservePct, setReservePct] = useState('')
   const [propertyManagerId, setPropertyManagerId] = useState('')
+  const [propertyManagers, setPropertyManagers] = useState<any[]>([])
   const [isOccupied, setIsOccupied] = useState(false)
   const [isHidden, setIsHidden] = useState(false)
   const [isActive, setIsActive] = useState(true)
@@ -30,6 +31,14 @@ export default function AddPropertyPage() {
   const [imageUrls, setImageUrls] = useState<string[]>([])
   const [newImageUrl, setNewImageUrl] = useState('')
   const [uploading, setUploading] = useState(false)
+
+  useEffect(() => {
+    const fetchManagers = async () => {
+      const { data } = await supabase.from('property_managers').select('id, name').eq('is_active', true)
+      if (data) setPropertyManagers(data)
+    }
+    fetchManagers()
+  }, [])
 
   const handleImageDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
@@ -96,22 +105,27 @@ export default function AddPropertyPage() {
 
   return (
     <main className="bg-[#0B1D33] text-white min-h-screen p-6">
-      <div className="max-w-4xl mx-auto space-y-4">
+      <div className="max-w-4xl mx-auto space-y-4 border border-gray-600 p-6 rounded-xl">
         <h1 className="text-2xl font-bold mb-4">Add New Property</h1>
 
-        <input type="text" placeholder="Title" className="w-full p-2 text-black" value={title} onChange={e => setTitle(e.target.value)} />
-        <textarea placeholder="Description" className="w-full p-2 text-black" value={description} onChange={e => setDescription(e.target.value)} />
+        <input type="text" placeholder="Title" className="w-full p-2 bg-[#0B1D33] border border-gray-600 rounded" value={title} onChange={e => setTitle(e.target.value)} />
+        <textarea placeholder="Description" className="w-full p-2 bg-[#0B1D33] border border-gray-600 rounded" value={description} onChange={e => setDescription(e.target.value)} />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <input type="number" placeholder="Purchase Price" className="p-2 text-black" value={purchasePrice} onChange={e => setPurchasePrice(e.target.value)} />
-          <input type="number" placeholder="Reserve %" className="p-2 text-black" value={reservePct} onChange={e => setReservePct(e.target.value)} />
-          <input type="text" placeholder="City" className="p-2 text-black" value={city} onChange={e => setCity(e.target.value)} />
-          <input type="text" placeholder="State" className="p-2 text-black" value={state} onChange={e => setState(e.target.value)} />
-          <input type="text" placeholder="ZIP" className="p-2 text-black" value={zip} onChange={e => setZip(e.target.value)} />
-          <input type="text" placeholder="Address Line 2" className="p-2 text-black" value={addressLine2} onChange={e => setAddressLine2(e.target.value)} />
+          <input type="number" placeholder="Purchase Price" className="p-2 bg-[#0B1D33] border border-gray-600 rounded" value={purchasePrice} onChange={e => setPurchasePrice(e.target.value)} />
+          <input type="number" placeholder="Reserve %" className="p-2 bg-[#0B1D33] border border-gray-600 rounded" value={reservePct} onChange={e => setReservePct(e.target.value)} />
+          <input type="text" placeholder="City" className="p-2 bg-[#0B1D33] border border-gray-600 rounded" value={city} onChange={e => setCity(e.target.value)} />
+          <input type="text" placeholder="State" className="p-2 bg-[#0B1D33] border border-gray-600 rounded" value={state} onChange={e => setState(e.target.value)} />
+          <input type="text" placeholder="ZIP" className="p-2 bg-[#0B1D33] border border-gray-600 rounded" value={zip} onChange={e => setZip(e.target.value)} />
+          <input type="text" placeholder="Address Line 2" className="p-2 bg-[#0B1D33] border border-gray-600 rounded" value={addressLine2} onChange={e => setAddressLine2(e.target.value)} />
         </div>
 
-        <input type="text" placeholder="Property Manager ID" className="w-full p-2 text-black" value={propertyManagerId} onChange={e => setPropertyManagerId(e.target.value)} />
+        <select className="w-full p-2 bg-[#0B1D33] border border-gray-600 rounded" value={propertyManagerId} onChange={e => setPropertyManagerId(e.target.value)}>
+          <option value="">Select Property Manager</option>
+          {propertyManagers.map(pm => (
+            <option key={pm.id} value={pm.id}>{pm.name}</option>
+          ))}
+        </select>
 
         <div className="flex items-center gap-4">
           <label><input type="checkbox" checked={isOccupied} onChange={e => setIsOccupied(e.target.checked)} /> Occupied</label>
@@ -140,13 +154,16 @@ export default function AddPropertyPage() {
         </div>
 
         <div className="flex gap-2">
-          <input type="text" className="flex-1 p-2 text-black" placeholder="Paste image URL" value={newImageUrl} onChange={e => setNewImageUrl(e.target.value)} />
+          <input type="text" className="flex-1 p-2 bg-[#0B1D33] border border-gray-600 rounded" placeholder="Paste image URL" value={newImageUrl} onChange={e => setNewImageUrl(e.target.value)} />
           <button onClick={handleAddImageUrl} className="bg-emerald-600 px-4 py-2 rounded">Add URL</button>
         </div>
 
-        <button disabled={uploading} onClick={handleSubmit} className="bg-blue-600 px-6 py-2 rounded font-bold">
-          {uploading ? 'Uploading...' : 'Save Property'}
-        </button>
+        <div className="flex gap-4">
+          <button disabled={uploading} onClick={handleSubmit} className="bg-blue-600 px-6 py-2 rounded font-bold">
+            {uploading ? 'Uploading...' : 'Save Property'}
+          </button>
+          <button onClick={() => router.push('/admin/properties')} className="bg-gray-500 px-6 py-2 rounded font-bold">Cancel</button>
+        </div>
       </div>
     </main>
   )
