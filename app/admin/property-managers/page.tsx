@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 export default function PropertyManagersPage() {
   const router = useRouter()
@@ -53,6 +54,11 @@ export default function PropertyManagersPage() {
     }
   }
 
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase.from('property_managers').delete().eq('id', id)
+    if (!error) router.refresh()
+  }
+
   const filteredManagers = managers.filter((m) =>
     m.name.toLowerCase().includes(filter.toLowerCase()) ||
     m.city?.toLowerCase().includes(filter.toLowerCase()) ||
@@ -64,7 +70,6 @@ export default function PropertyManagersPage() {
       <div className="max-w-6xl mx-auto">
         <h1 className="text-2xl font-bold mb-6">Manage Property Managers</h1>
 
-        {/* Add Manager Form */}
         <div className="border border-white/20 rounded-lg p-6 space-y-4 mb-10">
           <h2 className="text-lg font-semibold mb-4">Add New Manager</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -82,7 +87,6 @@ export default function PropertyManagersPage() {
           <button onClick={handleSubmit} className="bg-emerald-600 px-4 py-2 rounded font-semibold">Save Manager</button>
         </div>
 
-        {/* Filters */}
         <div className="mb-6">
           <input
             value={filter}
@@ -92,7 +96,6 @@ export default function PropertyManagersPage() {
           />
         </div>
 
-        {/* Table */}
         <div className="overflow-x-auto border border-white/10 rounded-lg">
           <table className="w-full text-sm">
             <thead className="bg-white/10">
@@ -104,25 +107,31 @@ export default function PropertyManagersPage() {
                 <th className="px-4 py-2 text-left">City</th>
                 <th className="px-4 py-2 text-left">State</th>
                 <th className="px-4 py-2 text-left">Status</th>
+                <th className="px-4 py-2 text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredManagers.map((m) => (
                 <tr key={m.id} className="border-t border-white/5 hover:bg-white/5">
-                  <td className="px-4 py-2">{m.name}</td>
+                  <td className="px-4 py-2">
+                    <Link href={`/admin/property-managers/${m.id}`} className="text-emerald-400 hover:underline">{m.name}</Link>
+                  </td>
                   <td className="px-4 py-2">{m.contact_name}</td>
                   <td className="px-4 py-2">{m.email}</td>
                   <td className="px-4 py-2">{m.phone}</td>
                   <td className="px-4 py-2">{m.city}</td>
                   <td className="px-4 py-2">{m.state}</td>
                   <td className="px-4 py-2">{m.is_active ? 'Active' : 'Inactive'}</td>
+                  <td className="px-4 py-2 space-x-2">
+                    <Link href={`/admin/property-managers/${m.id}/edit`} className="text-blue-400 hover:underline">Edit</Link>
+                    <button onClick={() => handleDelete(m.id)} className="text-red-400 hover:underline">Delete</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        {/* Pagination Placeholder */}
         <div className="text-sm text-center text-gray-400 mt-6">Pagination coming soon...</div>
       </div>
     </main>
