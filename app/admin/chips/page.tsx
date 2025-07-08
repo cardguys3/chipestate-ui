@@ -1,211 +1,206 @@
 'use client'
+
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
+import toast, { Toaster } from 'react-hot-toast'
 
-const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+type Chip = {
+  id: string
+  serial: string
+  property_title: string
+  user_email?: string
+  created_at: string
+  assigned_at?: string
+}
 
-export default function AdminChipsPage() {
-  const router = useRouter()
-
-  const [chips, setChips] = useState<any[]>([])
+export default function ChipsPage() {
+  const [chips, setChips] = useState<Chip[]>([])
   const [loading, setLoading] = useState(true)
-  const [propertyFilter, setPropertyFilter] = useState('')
-  const [userFilter, setUserFilter] = useState('')
-  const [dateFilter, setDateFilter] = useState('')
+  const [propertyId, setPropertyId] = useState('')
+  const [chipCount, setChipCount] = useState(1)
+  const [assignEmail, setAssignEmail] = useState('')
+  const [assignProperty, setAssignProperty] = useState('')
+  const [filterEmail, setFilterEmail] = useState('')
+  const [filterProperty, setFilterProperty] = useState('')
+  const [filterDate, setFilterDate] = useState('')
 
-  const [propertyOptions, setPropertyOptions] = useState<any[]>([])
-  const [userOptions, setUserOptions] = useState<any[]>([])
-
-  useEffect(() => {
-    fetchChips()
-    fetchProperties()
-    fetchUsers()
-  }, [])
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
   const fetchChips = async () => {
     setLoading(true)
-    const { data, error } = await supabase
+    let query = supabase
       .from('chips')
-      .select('serial, created_at, assigned_at, user_email, is_active, property_id, properties(title)')
-      .order('created_at', { ascending: false })
+      .select(
+        `serial, created_at, assigned_at, properties(title), users_extended(email)`
+      )
 
-    if (!error) setChips(data || [])
+    if (filterEmail) query = query.eq('users_extended.email', filterEmail)
+    if (filterProperty) query = query.eq('properties.title', filterProperty)
+    if (filterDate) query = query.gte('created_at', filterDate)
+
+    const { data, error } = await query
+
+    if (!error && data) {
+      setChips(
+        data.map((chip: any) => ({
+          serial: chip.serial,
+          created_at: chip.created_at,
+          assigned_at: chip.assigned_at,
+          property_title: chip.properties?.title ?? 'Unknown',
+          user_email: chip.users_extended?.email ?? '',
+        }))
+      )
+    } else {
+      console.error('Error fetching chips:', error)
+    }
     setLoading(false)
   }
 
-  const fetchProperties = async () => {
-    const { data } = await supabase.from('properties').select('id, title')
-    setPropertyOptions(data || [])
-  }
-
-  const fetchUsers = async () => {
-    const { data } = await supabase.from('users_extended').select('email')
-    setUserOptions(data || [])
-  }
-
-  const handleCreateChips = async (propertyId: string, quantity: number) => {
-    const chipsToInsert = Array.from({ length: quantity }, () => ({
-      property_id: propertyId,
-      serial: crypto.randomUUID()
-    }))
-    await supabase.from('chips').insert(chipsToInsert)
+  const handleCreate = async () => {
+    const { error } = await supabase.functions.invoke('create-chips', {
+      body: { property_id: propertyId, count: chipCount },
+    })
+    error ? toast.error('Failed to create chips') : toast.success('Chips created')
     fetchChips()
   }
 
-  const handleAssignChips = async (propertyId: string, userEmail: string) => {
-    const { data: chipsToAssign } = await supabase
-      .from('chips')
-      .select('id')
-      .eq('property_id', propertyId)
-      .is('user_email', null)
-      .limit(1)
-
-    if (chipsToAssign && chipsToAssign.length > 0) {
-      await supabase
-        .from('chips')
-        .update({ user_email: userEmail, assigned_at: new Date() })
-        .eq('id', chipsToAssign[0].id)
-      fetchChips()
-    }
-  }
-
-  const handleUpdateChip = async (serial: string, updates: any) => {
-    await supabase.from('chips').update(updates).eq('serial', serial)
+  const handleAssign = async () => {
+    const { error } = await supabase.functions.invoke('assign-chips', {
+      body: { property_id: assignProperty, email: assignEmail },
+    })
+    error ? toast.error('Failed to assign chips') : toast.success('Chips assigned')
     fetchChips()
   }
 
-  const filteredChips = chips.filter((chip) =>
-    (!propertyFilter || chip.properties?.title === propertyFilter) &&
-    (!userFilter || chip.user_email === userFilter) &&
-    (!dateFilter || chip.created_at?.startsWith(dateFilter))
-  )
+  useEffect(() => {
+    fetchChips()
+  }, [])
 
   return (
-    <main className="min-h-screen bg-[#0B1D33] text-white p-6">
+    <div className="p-8 text-white bg-gray-900 min-h-screen">
+      <Toaster />
       <h1 className="text-3xl font-bold mb-6">Manage Chips</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <select
-          value={propertyFilter}
-          onChange={(e) => setPropertyFilter(e.target.value)}
-          className="bg-gray-800 border border-gray-600 p-2 rounded text-white"
-        >
-          <option value="">Filter by Property</option>
-          {propertyOptions.map((p) => (
-            <option key={p.id} value={p.title}>{p.title}</option>
-          ))}
-        </select>
-
-        <select
-          value={userFilter}
-          onChange={(e) => setUserFilter(e.target.value)}
-          className="bg-gray-800 border border-gray-600 p-2 rounded text-white"
-        >
-          <option value="">Filter by Owner</option>
-          {userOptions.map((u) => (
-            <option key={u.email} value={u.email}>{u.email}</option>
-          ))}
-        </select>
-
-        <input
-          type="date"
-          value={dateFilter}
-          onChange={(e) => setDateFilter(e.target.value)}
-          className="bg-gray-800 border border-gray-600 p-2 rounded text-white"
-        />
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-6 mb-10">
+      {/* Create & Assign Chips */}
+      <div className="flex gap-8 mb-6">
         {/* Create Chips */}
-        <div>
+        <div className="flex-1 bg-gray-800 p-4 rounded border border-gray-700">
           <h2 className="text-xl font-semibold mb-2">Create Chips</h2>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              const form = e.target as HTMLFormElement
-              const propertyId = form.property.value
-              const quantity = parseInt(form.quantity.value)
-              handleCreateChips(propertyId, quantity)
-            }}
-            className="bg-white/5 border border-white/10 rounded p-4 space-y-4"
+          <input
+            type="text"
+            placeholder="Property ID"
+            value={propertyId}
+            onChange={(e) => setPropertyId(e.target.value)}
+            className="w-full p-2 mb-2 bg-gray-700 text-white rounded"
+          />
+          <input
+            type="number"
+            min={1}
+            placeholder="Quantity"
+            value={chipCount}
+            onChange={(e) => setChipCount(parseInt(e.target.value))}
+            className="w-full p-2 mb-2 bg-gray-700 text-white rounded"
+          />
+          <button
+            onClick={handleCreate}
+            className="bg-emerald-600 hover:bg-emerald-500 text-white p-2 w-full rounded"
           >
-            <select name="property" required className="bg-gray-800 text-white w-full p-2 rounded">
-              <option value="">Select Property</option>
-              {propertyOptions.map((p) => (
-                <option key={p.id} value={p.id}>{p.title}</option>
-              ))}
-            </select>
-            <input name="quantity" type="number" min="1" placeholder="Chip Quantity" required className="bg-gray-800 text-white w-full p-2 rounded" />
-            <button type="submit" className="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded text-white">
-              Create Chips
-            </button>
-          </form>
+            Create Chips
+          </button>
         </div>
 
         {/* Assign Chips */}
-        <div>
+        <div className="flex-1 bg-gray-800 p-4 rounded border border-gray-700">
           <h2 className="text-xl font-semibold mb-2">Assign Chips</h2>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              const form = e.target as HTMLFormElement
-              const propertyId = form.assign_property.value
-              const userEmail = form.user.value
-              handleAssignChips(propertyId, userEmail)
-            }}
-            className="bg-white/5 border border-white/10 rounded p-4 space-y-4"
+          <input
+            type="text"
+            placeholder="User Email"
+            value={assignEmail}
+            onChange={(e) => setAssignEmail(e.target.value)}
+            className="w-full p-2 mb-2 bg-gray-700 text-white rounded"
+          />
+          <input
+            type="text"
+            placeholder="Property ID"
+            value={assignProperty}
+            onChange={(e) => setAssignProperty(e.target.value)}
+            className="w-full p-2 mb-2 bg-gray-700 text-white rounded"
+          />
+          <button
+            onClick={handleAssign}
+            className="bg-blue-600 hover:bg-blue-500 text-white p-2 w-full rounded"
           >
-            <select name="assign_property" required className="bg-gray-800 text-white w-full p-2 rounded">
-              <option value="">Select Property</option>
-              {propertyOptions.map((p) => (
-                <option key={p.id} value={p.id}>{p.title}</option>
-              ))}
-            </select>
-            <select name="user" required className="bg-gray-800 text-white w-full p-2 rounded">
-              <option value="">Select User</option>
-              {userOptions.map((u) => (
-                <option key={u.email} value={u.email}>{u.email}</option>
-              ))}
-            </select>
-            <button type="submit" className="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded text-white">
-              Assign Chips
-            </button>
-          </form>
+            Assign Chips
+          </button>
         </div>
       </div>
 
-      <table className="w-full border border-white/10 rounded overflow-hidden text-sm">
-        <thead className="bg-gray-700 text-white">
-          <tr>
-            <th className="p-2 text-left">Property</th>
-            <th className="p-2 text-left">Owner</th>
-            <th className="p-2 text-left">Created</th>
-            <th className="p-2 text-left">Assigned</th>
-            <th className="p-2 text-left">Serial</th>
-            <th className="p-2 text-left">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredChips.map((chip, idx) => (
-            <tr key={idx} className="border-t border-gray-800">
-              <td className="p-2">{chip.properties?.title || 'Unknown'}</td>
-              <td className="p-2">{chip.user_email || '-'}</td>
-              <td className="p-2">{chip.created_at?.split('T')[0]}</td>
-              <td className="p-2">{chip.assigned_at?.split('T')[0] || '-'}</td>
-              <td className="p-2">{chip.serial}</td>
-              <td className="p-2 space-x-2">
-                <button onClick={() => handleUpdateChip(chip.serial, { is_active: false })} className="text-red-400 hover:underline">Inactivate</button>
-                <button onClick={() => handleUpdateChip(chip.serial, { hidden: true })} className="text-yellow-400 hover:underline">Hide</button>
-                <button onClick={() => handleUpdateChip(chip.serial, { deleted: true })} className="text-gray-400 hover:underline">Delete</button>
-              </td>
+      {/* Filters */}
+      <div className="flex gap-4 mb-6">
+        <input
+          type="text"
+          placeholder="Filter Email"
+          value={filterEmail}
+          onChange={(e) => setFilterEmail(e.target.value)}
+          className="p-2 rounded bg-gray-700 text-white"
+        />
+        <input
+          type="text"
+          placeholder="Filter Property"
+          value={filterProperty}
+          onChange={(e) => setFilterProperty(e.target.value)}
+          className="p-2 rounded bg-gray-700 text-white"
+        />
+        <input
+          type="date"
+          placeholder="Filter Date"
+          value={filterDate}
+          onChange={(e) => setFilterDate(e.target.value)}
+          className="p-2 rounded bg-gray-700 text-white"
+        />
+        <button
+          onClick={fetchChips}
+          className="bg-purple-700 hover:bg-purple-600 p-2 rounded text-white"
+        >
+          Apply Filters
+        </button>
+      </div>
+
+      {/* Chips Table */}
+      <div className="overflow-x-auto">
+        <table className="w-full table-auto border-collapse border border-gray-700 text-sm">
+          <thead>
+            <tr className="bg-gray-800 text-white">
+              <th className="p-2 border border-gray-700">Property</th>
+              <th className="p-2 border border-gray-700">Owner</th>
+              <th className="p-2 border border-gray-700">Created</th>
+              <th className="p-2 border border-gray-700">Assigned</th>
+              <th className="p-2 border border-gray-700">Serial #</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </main>
+          </thead>
+          <tbody>
+            {chips.length === 0 && (
+              <tr>
+                <td colSpan={5} className="p-4 text-center text-gray-400">
+                  No chips found.
+                </td>
+              </tr>
+            )}
+            {chips.map((chip, idx) => (
+              <tr key={idx} className="hover:bg-gray-800">
+                <td className="p-2 border border-gray-700">{chip.property_title}</td>
+                <td className="p-2 border border-gray-700">{chip.user_email || '-'}</td>
+                <td className="p-2 border border-gray-700">{chip.created_at.slice(0, 10)}</td>
+                <td className="p-2 border border-gray-700">{chip.assigned_at?.slice(0, 10) || '-'}</td>
+                <td className="p-2 border border-gray-700">{chip.serial}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   )
 }
