@@ -106,8 +106,8 @@ export default function ChipsPage() {
       <Toaster />
       <h1 className="text-3xl font-bold mb-6">Manage Chips</h1>
 
-      {/* Create & Assign Chips */}
-      <div className="flex gap-8 mb-6">
+      {/* Create & Assign Chips Section */}
+      <div className="flex gap-6 mb-6">
         <div className="flex-1 bg-gray-800 p-4 rounded border border-gray-700">
           <h2 className="text-xl font-semibold mb-2">Create Chips</h2>
           <input
@@ -159,7 +159,7 @@ export default function ChipsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex gap-4 mb-6">
+      <div className="flex gap-4 mb-4">
         <input
           type="text"
           placeholder="Filter Email"
