@@ -5,7 +5,7 @@ import { createServerClient } from '@supabase/ssr'
 import { redirect } from 'next/navigation'
 
 export default async function AdminPage() {
-  const cookieStore = await getCookies() // ✅ MUST await this!
+  const cookieStore = await getCookies()
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -46,6 +46,7 @@ export default async function AdminPage() {
           <AdminCard title="Users" href="/admin/users" />
           <AdminCard title="Properties" href="/admin/properties" />
           <AdminCard title="Chips" href="/admin/chips" />
+          <AdminCard title="Property Managers" href="/admin/property-managers" />
           <AdminCard title="Financials" href="/admin/financials" />
           <AdminCard title="Approvals" href="/admin/approvals" />
           <AdminCard title="Analytics" href="/admin/analytics" />
