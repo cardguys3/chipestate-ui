@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+
 import { createBrowserClient } from '@supabase/ssr'
 import toast, { Toaster } from 'react-hot-toast'
 
