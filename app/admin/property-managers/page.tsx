@@ -22,13 +22,8 @@ export default function PropertyManagersPage() {
 
   useEffect(() => {
     const fetchManagers = async () => {
-      const { data, error } = await supabase
-        .from('property_managers')
-        .select('*')
-        .order('name')
-      if (!error && data) {
-        setManagers(data)
-      }
+      const { data, error } = await supabase.from('property_managers').select('*').order('name')
+      if (!error && data) setManagers(data)
       setLoading(false)
     }
     fetchManagers()
@@ -36,30 +31,32 @@ export default function PropertyManagersPage() {
 
   const handleChange = (e: any) => {
     const { name, value, type, checked } = e.target
-    setForm((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }))
+    setForm((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }))
   }
 
   const handleSubmit = async () => {
     const { error } = await supabase.from('property_managers').insert({ ...form })
     if (!error) {
       router.refresh()
-      setForm({
-        name: '', contact_name: '', phone: '', email: '', city: '', state: '', is_active: true,
-      })
+      setForm({ name: '', contact_name: '', phone: '', email: '', city: '', state: '', is_active: true })
     } else {
       console.error('Insert failed:', error.message)
     }
   }
 
   const toggleActiveStatus = async (id: string, currentStatus: boolean) => {
-    const { error } = await supabase
-      .from('property_managers')
-      .update({ is_active: !currentStatus })
-      .eq('id', id)
-    if (!error) router.refresh()
+    const { data: props } = await supabase.from('properties').select('title').eq('property_manager_id', id)
+    if (!currentStatus && props && props.length > 0) {
+      alert(`Error: Cannot inactivate manager. Still assigned to properties:\n\n${props.map(p => '- ' + p.title).join('\n')}`)
+      return
+    }
+    const { error } = await supabase.from('property_managers').update({ is_active: !currentStatus }).eq('id', id)
+    if (!error) {
+      alert('Success: This property manager was ' + (currentStatus ? 'inactivated' : 'activated'))
+      router.refresh()
+    } else {
+      alert('Error updating status.')
+    }
   }
 
   const filteredManagers = managers.filter((m) =>
@@ -115,7 +112,7 @@ export default function PropertyManagersPage() {
             </thead>
             <tbody>
               {filteredManagers.map((m) => (
-                <tr key={m.id} className={`border-t border-white/5 hover:bg-white/5 ${!m.is_active ? 'text-red-400 font-semibold' : ''}`}>
+                <tr key={m.id} className={`border-t border-white/5 hover:bg-white/5 ${!m.is_active ? 'text-red-400 font-semibold line-through' : ''}`}>
                   <td className="px-4 py-2">
                     <Link href={`/admin/property-managers/${m.id}/details`} className="text-emerald-400 hover:underline">{m.name}</Link>
                   </td>
