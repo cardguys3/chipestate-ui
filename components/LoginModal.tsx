@@ -89,7 +89,7 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
 
         {/* ✅ Login assistance link */}
         <p className="mt-4 text-center text-sm">
-          <a href="/reset-password" className="text-blue-600 hover:underline">
+          <a href="/forgot-password" className="text-blue-600 hover:underline">
             Login assistance
           </a>
         </p>
