@@ -1,249 +1,179 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
-import { createBrowserClient } from '@supabase/ssr'
-import toast, { Toaster } from 'react-hot-toast'
+import { useEffect, useState } from 'react';
+import { createBrowserClient } from '@supabase/ssr';
+import toast, { Toaster } from 'react-hot-toast';
 
 type Chip = {
-  id: string
-  serial: string
-  property_title: string
-  user_email?: string
-  created_at: string
-  assigned_at?: string
-}
+  id: string;
+  serial: string;
+  property_id: string;
+  user_id: string | null;
+  created_at: string;
+  assigned_at: string | null;
+  is_active: boolean;
+  is_hidden: boolean;
+  property_title: string;
+  user_email: string | null;
+};
 
 export default function ChipsPage() {
-  const [chips, setChips] = useState<Chip[]>([])
-  const [loading, setLoading] = useState(true)
-  const [propertyId, setPropertyId] = useState('')
-  const [chipCount, setChipCount] = useState(1)
-  const [assignEmail, setAssignEmail] = useState('')
-  const [assignProperty, setAssignProperty] = useState('')
-  const [filterEmail, setFilterEmail] = useState('')
-  const [filterProperty, setFilterProperty] = useState('')
-  const [filterDate, setFilterDate] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
-
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-
-  const pageSize = 10
-  const totalPages = Math.ceil(chips.length / pageSize)
-  const paginatedChips = chips.slice((currentPage - 1) * pageSize, currentPage * pageSize)
-
-  const fetchChips = async () => {
-    setLoading(true)
-    let query = supabase
-      .from('chips')
-      .select(`id, serial, created_at, assigned_at, properties(title), users_extended(email)`)
-
-    if (filterEmail) query = query.eq('users_extended.email', filterEmail)
-    if (filterProperty) query = query.eq('properties.title', filterProperty)
-    if (filterDate) query = query.gte('created_at', filterDate)
-
-    const { data, error } = await query
-
-    if (!error && data) {
-      setChips(
-        data.map((chip: any) => ({
-          id: chip.id,
-          serial: chip.serial,
-          created_at: chip.created_at,
-          assigned_at: chip.assigned_at,
-          property_title: chip.properties?.title ?? 'Unknown',
-          user_email: chip.users_extended?.email ?? '',
-        }))
-      )
-    } else {
-      toast.error('Failed to load chips')
-    }
-    setLoading(false)
-  }
-
-  const handleCreate = async () => {
-    const { error } = await supabase.functions.invoke('create-chips', {
-      body: { property_id: propertyId, count: chipCount },
-    })
-    error ? toast.error('Failed to create chips') : toast.success('Chips created')
-    fetchChips()
-  }
-
-  const handleAssign = async () => {
-    const { error } = await supabase.functions.invoke('assign-chips', {
-      body: { property_id: assignProperty, email: assignEmail },
-    })
-    error ? toast.error('Failed to assign chips') : toast.success('Chips assigned')
-    fetchChips()
-  }
-
-  const handleDelete = async (serial: string) => {
-    const { error } = await supabase.from('chips').delete().eq('serial', serial)
-    error ? toast.error('Delete failed') : toast.success('Chip deleted')
-    fetchChips()
-  }
-
-  const handleInactivate = async (serial: string) => {
-    const { error } = await supabase.from('chips').update({ is_active: false }).eq('serial', serial)
-    error ? toast.error('Inactivate failed') : toast.success('Chip inactivated')
-    fetchChips()
-  }
-
-  const handleHide = async (serial: string) => {
-    const { error } = await supabase.from('chips').update({ hidden: true }).eq('serial', serial)
-    error ? toast.error('Hide failed') : toast.success('Chip hidden')
-    fetchChips()
-  }
+  const supabase = createBrowserClient<any>();
+  const [chips, setChips] = useState<Chip[]>([]);
+  const [properties, setProperties] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
+  const [propertyId, setPropertyId] = useState('');
+  const [chipCount, setChipCount] = useState(1);
+  const [selectedUserId, setSelectedUserId] = useState('');
+  const [assignPropertyId, setAssignPropertyId] = useState('');
+  const [assignCount, setAssignCount] = useState(1);
+  const [filterProperty, setFilterProperty] = useState('');
+  const [filterUser, setFilterUser] = useState('');
+  const [filterDate, setFilterDate] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [jumpPage, setJumpPage] = useState('');
+  const pageSize = 10;
 
   useEffect(() => {
-    fetchChips()
-  }, [])
+    fetchAll();
+  }, []);
+
+  async function fetchAll() {
+    const [chipRes, propertyRes, userRes] = await Promise.all([
+      supabase.from('chips_view').select('*'),
+      supabase.from('properties').select('id, title'),
+      supabase.from('users_extended').select('id, email'),
+    ]);
+
+    setChips(chipRes.data || []);
+    setProperties(propertyRes.data || []);
+    setUsers(userRes.data || []);
+  }
+
+  const filteredChips = chips.filter((chip) => {
+    const matchesProperty = !filterProperty || chip.property_id === filterProperty;
+    const matchesUser = !filterUser || chip.user_id === filterUser;
+    const matchesDate = !filterDate || chip.created_at.startsWith(filterDate);
+    return matchesProperty && matchesUser && matchesDate;
+  });
+
+  const paginatedChips = filteredChips.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const totalPages = Math.ceil(filteredChips.length / pageSize);
+
+  async function createChips() {
+    if (!propertyId || chipCount < 1) return;
+    const { error } = await supabase.rpc('bulk_create_chips', {
+      property_uuid: propertyId,
+      count: chipCount,
+    });
+    error ? toast.error('Create failed') : toast.success('Chips created');
+    fetchAll();
+  }
+
+  async function assignChips() {
+    if (!assignPropertyId || !selectedUserId || assignCount < 1) return;
+    const { error } = await supabase.rpc('bulk_assign_chips', {
+      property_uuid: assignPropertyId,
+      user_uuid: selectedUserId,
+      count: assignCount,
+    });
+    error ? toast.error('Assign failed') : toast.success('Chips assigned');
+    fetchAll();
+  }
 
   return (
-    <div className="p-8 text-white bg-gray-900 min-h-screen">
+    <div className="p-6 bg-gray-900 min-h-screen text-white">
       <Toaster />
-      <h1 className="text-3xl font-bold mb-6">Manage Chips</h1>
+      <h1 className="text-3xl font-bold mb-4">Manage Chips</h1>
 
-      {/* Create & Assign Chips Section */}
-      <div className="flex gap-6 mb-6">
-        <div className="flex-1 bg-gray-800 p-4 rounded border border-gray-700">
-          <h2 className="text-xl font-semibold mb-2">Create Chips</h2>
-          <input
-            type="text"
-            placeholder="Property ID"
-            value={propertyId}
-            onChange={(e) => setPropertyId(e.target.value)}
-            className="w-full p-2 mb-2 bg-gray-700 text-white rounded"
-          />
-          <input
-            type="number"
-            min={1}
-            placeholder="Quantity"
-            value={chipCount}
-            onChange={(e) => setChipCount(parseInt(e.target.value))}
-            className="w-full p-2 mb-2 bg-gray-700 text-white rounded"
-          />
-          <button
-            onClick={handleCreate}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white p-2 w-full rounded"
-          >
-            Create Chips
-          </button>
+      {/* Create + Assign section */}
+      <div className="flex gap-8 mb-6">
+        <div className="border border-white p-4 rounded w-1/2">
+          <h2 className="text-xl mb-2 font-semibold">Create Chips</h2>
+          <select value={propertyId} onChange={(e) => setPropertyId(e.target.value)} className="w-full p-2 mb-2 text-black">
+            <option value="">Select Property</option>
+            {properties.map(p => (
+              <option key={p.id} value={p.id}>{p.title}</option>
+            ))}
+          </select>
+          <input type="number" value={chipCount} onChange={(e) => setChipCount(Number(e.target.value))} className="w-full p-2 mb-2 text-black" min={1} />
+          <button onClick={createChips} className="bg-emerald-500 px-4 py-2 rounded hover:bg-emerald-600 w-full">Create</button>
         </div>
 
-        <div className="flex-1 bg-gray-800 p-4 rounded border border-gray-700">
-          <h2 className="text-xl font-semibold mb-2">Assign Chips</h2>
-          <input
-            type="text"
-            placeholder="User Email"
-            value={assignEmail}
-            onChange={(e) => setAssignEmail(e.target.value)}
-            className="w-full p-2 mb-2 bg-gray-700 text-white rounded"
-          />
-          <input
-            type="text"
-            placeholder="Property ID"
-            value={assignProperty}
-            onChange={(e) => setAssignProperty(e.target.value)}
-            className="w-full p-2 mb-2 bg-gray-700 text-white rounded"
-          />
-          <button
-            onClick={handleAssign}
-            className="bg-blue-600 hover:bg-blue-500 text-white p-2 w-full rounded"
-          >
-            Assign Chips
-          </button>
+        <div className="border border-white p-4 rounded w-1/2">
+          <h2 className="text-xl mb-2 font-semibold">Assign Chips</h2>
+          <select value={assignPropertyId} onChange={(e) => setAssignPropertyId(e.target.value)} className="w-full p-2 mb-2 text-black">
+            <option value="">Select Property</option>
+            {properties.map(p => (
+              <option key={p.id} value={p.id}>{p.title}</option>
+            ))}
+          </select>
+          <select value={selectedUserId} onChange={(e) => setSelectedUserId(e.target.value)} className="w-full p-2 mb-2 text-black">
+            <option value="">Select User</option>
+            {users.map(u => (
+              <option key={u.id} value={u.id}>{u.email}</option>
+            ))}
+          </select>
+          <input type="number" value={assignCount} onChange={(e) => setAssignCount(Number(e.target.value))} className="w-full p-2 mb-2 text-black" min={1} />
+          <button onClick={assignChips} className="bg-emerald-500 px-4 py-2 rounded hover:bg-emerald-600 w-full">Assign</button>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="flex gap-4 mb-4">
-        <input
-          type="text"
-          placeholder="Filter Email"
-          value={filterEmail}
-          onChange={(e) => setFilterEmail(e.target.value)}
-          className="p-2 rounded bg-gray-700 text-white"
-        />
-        <input
-          type="text"
-          placeholder="Filter Property"
-          value={filterProperty}
-          onChange={(e) => setFilterProperty(e.target.value)}
-          className="p-2 rounded bg-gray-700 text-white"
-        />
-        <input
-          type="date"
-          placeholder="Filter Date"
-          value={filterDate}
-          onChange={(e) => setFilterDate(e.target.value)}
-          className="p-2 rounded bg-gray-700 text-white"
-        />
-        <button
-          onClick={fetchChips}
-          className="bg-purple-700 hover:bg-purple-600 p-2 rounded text-white"
-        >
-          Apply Filters
-        </button>
+      <div className="mb-4 flex gap-4 items-center">
+        <select value={filterProperty} onChange={(e) => setFilterProperty(e.target.value)} className="text-black p-2">
+          <option value="">All Properties</option>
+          {properties.map(p => (
+            <option key={p.id} value={p.id}>{p.title}</option>
+          ))}
+        </select>
+        <select value={filterUser} onChange={(e) => setFilterUser(e.target.value)} className="text-black p-2">
+          <option value="">All Users</option>
+          {users.map(u => (
+            <option key={u.id} value={u.id}>{u.email}</option>
+          ))}
+        </select>
+        <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="text-black p-2" placeholder="Filter Date" />
       </div>
 
-      {/* Chips Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full table-auto border-collapse border border-gray-700 text-sm">
-          <thead>
-            <tr className="bg-gray-800 text-white">
-              <th className="p-2 border border-gray-700">Property</th>
-              <th className="p-2 border border-gray-700">Owner</th>
-              <th className="p-2 border border-gray-700">Created</th>
-              <th className="p-2 border border-gray-700">Assigned</th>
-              <th className="p-2 border border-gray-700">Serial #</th>
-              <th className="p-2 border border-gray-700">Actions</th>
+      {/* Chip table */}
+      <table className="w-full table-auto border border-white">
+        <thead>
+          <tr className="bg-gray-800">
+            <th className="p-2">Property</th>
+            <th className="p-2">Owner</th>
+            <th className="p-2">Created</th>
+            <th className="p-2">Assigned</th>
+            <th className="p-2">Serial #</th>
+          </tr>
+        </thead>
+        <tbody>
+          {paginatedChips.map((chip) => (
+            <tr key={chip.id} className="border-t border-gray-700">
+              <td className="p-2">{chip.property_title}</td>
+              <td className="p-2">{chip.user_email ?? '—'}</td>
+              <td className="p-2">{chip.created_at}</td>
+              <td className="p-2">{chip.assigned_at ?? '—'}</td>
+              <td className="p-2">{chip.serial}</td>
             </tr>
-          </thead>
-          <tbody>
-            {paginatedChips.length === 0 && (
-              <tr>
-                <td colSpan={6} className="p-4 text-center text-gray-400">
-                  No chips found.
-                </td>
-              </tr>
-            )}
-            {paginatedChips.map((chip) => (
-              <tr key={chip.serial} className="hover:bg-gray-800">
-                <td className="p-2 border border-gray-700">{chip.property_title}</td>
-                <td className="p-2 border border-gray-700">{chip.user_email || '-'}</td>
-                <td className="p-2 border border-gray-700">{chip.created_at.slice(0, 10)}</td>
-                <td className="p-2 border border-gray-700">{chip.assigned_at?.slice(0, 10) || '-'}</td>
-                <td className="p-2 border border-gray-700">{chip.serial}</td>
-                <td className="p-2 border border-gray-700 space-x-2">
-                  <button onClick={() => handleDelete(chip.serial)} className="text-red-500">Delete</button>
-                  <button onClick={() => handleInactivate(chip.serial)} className="text-yellow-400">Inactivate</button>
-                  <button onClick={() => handleHide(chip.serial)} className="text-gray-400">Hide</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </table>
 
-      {/* Pagination Controls */}
-      <div className="mt-6 flex justify-center items-center gap-4">
-        <button
-          onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-          className="px-4 py-2 bg-gray-700 text-white rounded"
-        >
-          Prev
-        </button>
+      {/* Pagination */}
+      <div className="mt-4 flex items-center gap-4">
+        <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="px-3 py-1 bg-white text-black rounded disabled:opacity-50">Previous</button>
         <span>Page {currentPage} of {totalPages}</span>
-        <button
-          onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-          className="px-4 py-2 bg-gray-700 text-white rounded"
-        >
-          Next
-        </button>
+        <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} className="px-3 py-1 bg-white text-black rounded disabled:opacity-50">Next</button>
+        <input
+          type="number"
+          value={jumpPage}
+          onChange={(e) => setJumpPage(e.target.value)}
+          placeholder="Go to page"
+          className="p-1 text-black w-24"
+        />
+        <button onClick={() => setCurrentPage(Number(jumpPage))} className="px-2 py-1 bg-blue-500 rounded">Go</button>
       </div>
     </div>
-  )
+  );
 }
