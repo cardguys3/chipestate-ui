@@ -1,96 +1,170 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
-import { supabase } from '@/lib/supabaseClient'
-import Link from 'next/link'
+import { useParams, useRouter } from 'next/navigation'
+import { createBrowserClient } from '@supabase/ssr'
 
-export default function PropertyManagerDetails() {
+const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
+export default function EditPropertyPage() {
+  const router = useRouter()
   const { id } = useParams()
-  const [manager, setManager] = useState<any>(null)
-  const [transactions, setTransactions] = useState<any[]>([])
+  const [form, setForm] = useState<any>(null)
+  const [imageUrls, setImageUrls] = useState<string[]>([])
+  const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const fetchManager = async () => {
-      const { data, error } = await supabase.from('property_managers').select('*').eq('id', id).single()
-      if (!error && data) setManager(data)
-    }
+    if (!id) return
 
-    const fetchTransactions = async () => {
+    const fetchProperty = async () => {
       const { data, error } = await supabase
-        .from('property_transactions')
-        .select('amount, notes, transaction_category, date, properties(title)')
-        .eq('payee_type', 'property_manager')
-        .eq('payee_id', id)
-        .order('date', { ascending: false })
-      if (!error && data) setTransactions(data)
+        .from('properties')
+        .select('*')
+        .eq('id', id)
+        .single()
+
+      if (error) {
+        setError('Failed to load property.')
+      } else {
+        setForm(data)
+        setImageUrls(data.image_urls || [])
+      }
     }
 
-    if (id) {
-      fetchManager()
-      fetchTransactions()
-    }
+    fetchProperty()
   }, [id])
 
-  if (!manager) return <div className="p-6 text-white">Loading manager details...</div>
+  const handleChange = (e: any) => {
+    const { name, value, type, checked } = e.target
+    setForm({ ...form, [name]: type === 'checkbox' ? checked : value })
+  }
 
-  const inactiveClass = !manager.is_active ? 'line-through text-red-400 font-semibold' : ''
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    setUploading(true)
+
+    for (const file of files) {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Date.now()}-${file.name}`
+      const filePath = `${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('property-images')
+        .upload(filePath, file, { upsert: true })
+
+      if (!uploadError) {
+        const { data: publicUrlData } = supabase.storage
+          .from('property-images')
+          .getPublicUrl(filePath)
+        const newUrl = publicUrlData?.publicUrl
+        if (newUrl) setImageUrls(prev => [...prev, newUrl])
+      }
+    }
+    setUploading(false)
+  }
+
+  const handleImageDelete = (url: string) => {
+    setImageUrls(prev => prev.filter(u => u !== url))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    const { error: updateError } = await supabase
+      .from('properties')
+      .update({
+        ...form,
+        purchase_price: Number(form.purchase_price),
+        current_value: Number(form.current_value),
+        total_chips: Number(form.total_chips),
+        chips_available: Number(form.chips_available),
+        reserve_balance: Number(form.reserve_balance),
+        image_urls: imageUrls,
+      })
+      .eq('id', id)
+
+    if (updateError) {
+      setError(updateError.message)
+    } else {
+      router.push('/admin/properties')
+    }
+  }
+
+  if (!form) return <p className="p-6 text-white">Loading...</p>
 
   return (
-    <main className="min-h-screen bg-[#0B1D33] text-white px-6 py-10">
-      <div className="max-w-5xl mx-auto border border-white/20 rounded-lg p-6 space-y-6">
-        <h1 className="text-2xl font-bold">Property Manager Details</h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-          <p className={inactiveClass}><strong>Name:</strong> {manager.name}</p>
-          <p className={inactiveClass}><strong>Contact:</strong> {manager.contact_name}</p>
-          <p className={inactiveClass}><strong>Phone:</strong> {manager.phone}</p>
-          <p className={inactiveClass}><strong>Email:</strong> {manager.email}</p>
-          <p className={inactiveClass}><strong>City:</strong> {manager.city}</p>
-          <p className={inactiveClass}><strong>State:</strong> {manager.state}</p>
-          <p className={inactiveClass}><strong>Status:</strong> {manager.is_active ? 'Active' : 'Inactive'}</p>
-          <p className={inactiveClass}><strong>Years of Experience:</strong> {manager.years_experience}</p>
-          <p className={inactiveClass}><strong>Management Fee:</strong> {manager.management_fee}</p>
-          <p className={inactiveClass}><strong>Services Offered:</strong> {manager.service_types?.join(', ')}</p>
-          <p className={inactiveClass}><strong>Preferred Contact (Owners):</strong> {manager.owner_communication}</p>
-          <p className={inactiveClass}><strong>Preferred Contact (Tenants):</strong> {manager.tenant_communication}</p>
-          <p className={inactiveClass}><strong>Compliance States:</strong> {manager.compliance_states?.join(', ')}</p>
+    <main className="min-h-screen bg-[#0B1D33] text-white px-8 py-10">
+      <h1 className="text-2xl font-bold mb-6">Edit Property</h1>
+      {error && <p className="text-red-500 mb-4">{error}</p>}
+      <form onSubmit={handleSubmit} className="bg-[#1e2a3c] p-6 rounded-lg border border-gray-700 shadow-md space-y-4 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {[ 'title', 'address_line1', 'address_line2', 'city', 'state', 'zip', 'property_type', 'sub_type', 'purchase_price', 'current_value', 'total_chips', 'chips_available', 'manager_name', 'reserve_balance' ].map(field => (
+            <input
+              key={field}
+              name={field}
+              value={form[field] || ''}
+              onChange={handleChange}
+              placeholder={field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+              className="p-2 rounded bg-[#102134] border border-gray-600 w-full"
+              required={['title','address_line1','city','state','zip','property_type','sub_type','purchase_price','current_value','total_chips','chips_available','manager_name','reserve_balance'].includes(field)}
+            />
+          ))}
         </div>
 
-        <div className="pt-4 space-x-4">
-          <Link href="/admin/property-managers" className="text-blue-400 hover:underline">← Back</Link>
-          <Link href={`/admin/property-managers/${id}/edit`} className="text-emerald-400 hover:underline">Edit</Link>
+        <label className="flex items-center gap-2">
+          <input type="checkbox" name="occupied" checked={form.occupied} onChange={handleChange} className="accent-blue-500" />
+          Occupied?
+        </label>
+
+        <div className="flex gap-4">
+          <label className="flex items-center gap-2">
+            <input type="checkbox" name="is_active" checked={form.is_active} onChange={handleChange} className="accent-green-500" />
+            Active
+          </label>
+          <label className="flex items-center gap-2">
+            <input type="checkbox" name="is_hidden" checked={form.is_hidden} onChange={handleChange} className="accent-yellow-500" />
+            Hidden
+          </label>
         </div>
 
-        <div className="pt-10">
-          <h2 className="text-xl font-bold mb-4">Payment Transactions</h2>
-          {transactions.length === 0 ? (
-            <p className="text-sm text-gray-300">No transactions recorded for this property manager.</p>
-          ) : (
-            <table className="w-full text-sm border border-white/10 rounded-lg overflow-hidden">
-              <thead className="bg-white/10">
-                <tr>
-                  <th className="text-left px-4 py-2">Date</th>
-                  <th className="text-left px-4 py-2">Amount</th>
-                  <th className="text-left px-4 py-2">Category</th>
-                  <th className="text-left px-4 py-2">Notes</th>
-                  <th className="text-left px-4 py-2">Property</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transactions.map((tx, i) => (
-                  <tr key={i} className="border-t border-white/5">
-                    <td className="px-4 py-2">{new Date(tx.date).toLocaleDateString()}</td>
-                    <td className="px-4 py-2">${tx.amount.toFixed(2)}</td>
-                    <td className="px-4 py-2">{tx.transaction_category}</td>
-                    <td className="px-4 py-2">{tx.notes}</td>
-                    <td className="px-4 py-2">{tx.properties?.title}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+        <div className="mt-6">
+          <label className="block text-sm font-semibold mb-2">Upload Images</label>
+          <input type="file" accept="image/*" multiple onChange={handleImageUpload} className="bg-[#102134] p-2 rounded border border-gray-600" />
+          {uploading && <p className="text-sm text-gray-400 mt-1">Uploading...</p>}
+
+          <div className="mt-4 space-y-2">
+            {imageUrls.map((url, idx) => (
+              <div key={idx} className="flex items-center gap-4">
+                <img src={url} alt="Property Image" className="w-32 h-24 rounded border border-gray-600 object-cover" />
+                <input
+                  type="text"
+                  value={url}
+                  onChange={(e) => {
+                    const newUrls = [...imageUrls]
+                    newUrls[idx] = e.target.value
+                    setImageUrls(newUrls)
+                  }}
+                  className="flex-1 p-2 rounded bg-[#102134] border border-gray-600 text-white"
+                />
+                <button type="button" onClick={() => handleImageDelete(url)} className="text-red-400 hover:text-red-600">Remove</button>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+
+        <div className="flex justify-between pt-6 gap-4">
+          <button type="submit" className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2 rounded w-1/2">
+            Save Changes
+          </button>
+          <button type="button" onClick={() => router.push('/admin/properties')} className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded w-1/2">
+            Cancel Changes
+          </button>
+        </div>
+      </form>
     </main>
   )
 }
