@@ -36,8 +36,8 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <section className="mt-16 px-4 text-center">
+    <main className="min-h-screen bg-gray-50 pt-0 pb-0">
+      <section className="px-4 text-center">
         <h1 className="text-4xl font-extrabold text-blue-800 mb-4">
           Welcome to ChipEstate
         </h1>
@@ -46,7 +46,7 @@ export default function Home() {
         </p>
       </section>
 
-      <section className="mt-12 px-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+      <section className="px-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
         {loading ? (
           <p className="col-span-full text-center text-gray-500">Loading properties...</p>
         ) : properties.length === 0 ? (
