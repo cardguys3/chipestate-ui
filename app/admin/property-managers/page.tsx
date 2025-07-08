@@ -54,8 +54,8 @@ export default function PropertyManagersPage() {
     }
   }
 
-  const handleDelete = async (id: string) => {
-    const { error } = await supabase.from('property_managers').delete().eq('id', id)
+  const handleInactivate = async (id: string) => {
+    const { error } = await supabase.from('property_managers').update({ is_active: false }).eq('id', id)
     if (!error) router.refresh()
   }
 
@@ -124,7 +124,7 @@ export default function PropertyManagersPage() {
                   <td className="px-4 py-2">{m.is_active ? 'Active' : 'Inactive'}</td>
                   <td className="px-4 py-2 space-x-2">
                     <Link href={`/admin/property-managers/${m.id}/edit`} className="text-blue-400 hover:underline">Edit</Link>
-                    <button onClick={() => handleDelete(m.id)} className="text-red-400 hover:underline">Delete</button>
+                    <button onClick={() => handleInactivate(m.id)} className="text-red-400 hover:underline">Inactivate</button>
                   </td>
                 </tr>
               ))}
