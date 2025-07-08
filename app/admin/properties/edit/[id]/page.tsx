@@ -13,7 +13,7 @@ export default function EditPropertyPage() {
   const router = useRouter()
   const { id } = useParams()
   const [form, setForm] = useState<any>(null)
-  const [imageUrl, setImageUrl] = useState<string | null>(null)
+  const [imageUrls, setImageUrls] = useState<string[]>([])
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -31,7 +31,7 @@ export default function EditPropertyPage() {
         setError('Failed to load property.')
       } else {
         setForm(data)
-        setImageUrl(data.image_url)
+        setImageUrls(data.image_urls || [])
       }
     }
 
@@ -44,32 +44,31 @@ export default function EditPropertyPage() {
   }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const files = Array.from(e.target.files || [])
     setUploading(true)
 
-    const fileExt = file.name.split('.').pop()
-    const fileName = `${Date.now()}.${fileExt}`
-    const filePath = `${fileName}`
+    for (const file of files) {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Date.now()}-${file.name}`
+      const filePath = `${fileName}`
 
-    const { error: uploadError } = await supabase.storage
-      .from('property-images')
-      .upload(filePath, file, { upsert: true })
+      const { error: uploadError } = await supabase.storage
+        .from('property-images')
+        .upload(filePath, file, { upsert: true })
 
-    if (uploadError) {
-      alert('Upload failed: ' + uploadError.message)
-      setUploading(false)
-      return
+      if (!uploadError) {
+        const { data: publicUrlData } = supabase.storage
+          .from('property-images')
+          .getPublicUrl(filePath)
+        const newUrl = publicUrlData?.publicUrl
+        if (newUrl) setImageUrls(prev => [...prev, newUrl])
+      }
     }
-
-    const { data: publicUrlData } = supabase.storage
-      .from('property-images')
-      .getPublicUrl(filePath)
-
-    const newUrl = publicUrlData?.publicUrl || null
-    setImageUrl(newUrl)
-    setForm({ ...form, image_url: newUrl })
     setUploading(false)
+  }
+
+  const handleImageDelete = (url: string) => {
+    setImageUrls(prev => prev.filter(u => u !== url))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -84,7 +83,7 @@ export default function EditPropertyPage() {
         total_chips: Number(form.total_chips),
         chips_available: Number(form.chips_available),
         reserve_balance: Number(form.reserve_balance),
-        image_url: imageUrl,
+        image_urls: imageUrls,
       })
       .eq('id', id)
 
@@ -98,89 +97,70 @@ export default function EditPropertyPage() {
   if (!form) return <p className="p-6 text-white">Loading...</p>
 
   return (
-    <main className="min-h-screen bg-[#0e1a2b] p-6 max-w-3xl mx-auto text-white">
-      <h1 className="text-2xl font-bold mb-4">Edit Property</h1>
+    <main className="min-h-screen bg-[#0e1a2b] text-white px-8 py-10">
+      <h1 className="text-2xl font-bold mb-6">Edit Property</h1>
       {error && <p className="text-red-500 mb-4">{error}</p>}
-      <form onSubmit={handleSubmit} className="space-y-4 bg-[#1e2a3c] p-6 rounded-lg border border-gray-700 shadow-md">
-        {[
-          { name: 'title', label: 'Title*' },
-          { name: 'address_line1', label: 'Address Line 1*' },
-          { name: 'address_line2', label: 'Address Line 2' },
-          { name: 'city', label: 'City*' },
-          { name: 'state', label: 'State*' },
-          { name: 'zip', label: 'Zip*' },
-          { name: 'property_type', label: 'Property Type*' },
-          { name: 'sub_type', label: 'Sub-type*' },
-          { name: 'purchase_price', label: 'Purchase Price*' },
-          { name: 'current_value', label: 'Current Value*' },
-          { name: 'total_chips', label: 'Total Chips*' },
-          { name: 'chips_available', label: 'Chips Available*' },
-          { name: 'manager_name', label: 'Manager Name*' },
-          { name: 'reserve_balance', label: 'Reserve Balance*' },
-        ].map((field) => (
-          <div key={field.name}>
-            <label className="block text-sm font-medium mb-1">{field.label}</label>
+      <form onSubmit={handleSubmit} className="bg-[#1e2a3c] p-6 rounded-lg border border-gray-700 shadow-md space-y-4 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {[ 'title', 'address_line1', 'address_line2', 'city', 'state', 'zip', 'property_type', 'sub_type', 'purchase_price', 'current_value', 'total_chips', 'chips_available', 'manager_name', 'reserve_balance' ].map(field => (
             <input
-              name={field.name}
-              value={form[field.name] || ''}
+              key={field}
+              name={field}
+              value={form[field] || ''}
               onChange={handleChange}
-              className="w-full p-2 rounded bg-[#102134] border border-gray-600 text-white"
-              required={field.label.includes('*')}
+              placeholder={field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+              className="p-2 rounded bg-[#102134] border border-gray-600 w-full"
+              required={['title','address_line1','city','state','zip','property_type','sub_type','purchase_price','current_value','total_chips','chips_available','manager_name','reserve_balance'].includes(field)}
             />
-          </div>
-        ))}
+          ))}
+        </div>
 
         <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            name="occupied"
-            checked={form.occupied}
-            onChange={handleChange}
-            className="accent-blue-500"
-          />
+          <input type="checkbox" name="occupied" checked={form.occupied} onChange={handleChange} className="accent-blue-500" />
           Occupied?
         </label>
 
-        <div className="mt-4">
-          <label className="block mb-1 text-sm font-semibold">Property Image</label>
-          <label className="cursor-pointer inline-block px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded text-white">
-            {uploading ? 'Uploading...' : 'Upload New Image'}
-            <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+        <div className="flex gap-4">
+          <label className="flex items-center gap-2">
+            <input type="checkbox" name="is_active" checked={form.is_active} onChange={handleChange} className="accent-green-500" />
+            Active
           </label>
-          <p className="text-sm text-gray-300 mt-2">or provide an external image URL:</p>
-          <input
-            type="url"
-            name="image_url"
-            value={imageUrl || ''}
-            onChange={(e) => {
-              setImageUrl(e.target.value)
-              setForm({ ...form, image_url: e.target.value })
-            }}
-            placeholder="https://example.com/image.jpg"
-            className="w-full p-2 mt-1 rounded bg-[#102134] border border-gray-600 text-white"
-          />
-          {imageUrl && (
-            <img
-              src={imageUrl}
-              alt="Preview"
-              className="mt-2 rounded border border-gray-600 w-full max-w-xs"
-              onError={(e) => (e.currentTarget.style.display = 'none')}
-            />
-          )}
+          <label className="flex items-center gap-2">
+            <input type="checkbox" name="is_hidden" checked={form.is_hidden} onChange={handleChange} className="accent-yellow-500" />
+            Hidden
+          </label>
         </div>
 
-        <div className="flex justify-between pt-4 gap-4">
-          <button
-            type="submit"
-            className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2 rounded w-1/2"
-          >
+        <div className="mt-6">
+          <label className="block text-sm font-semibold mb-2">Upload Images</label>
+          <input type="file" accept="image/*" multiple onChange={handleImageUpload} className="bg-[#102134] p-2 rounded border border-gray-600" />
+          {uploading && <p className="text-sm text-gray-400 mt-1">Uploading...</p>}
+
+          <div className="mt-4 space-y-2">
+            {imageUrls.map((url, idx) => (
+              <div key={idx} className="flex items-center gap-4">
+                <img src={url} alt="Property Image" className="w-32 h-24 rounded border border-gray-600 object-cover" />
+                <input
+                  type="text"
+                  value={url}
+                  onChange={(e) => {
+                    const newUrls = [...imageUrls]
+                    newUrls[idx] = e.target.value
+                    setImageUrls(newUrls)
+                  }}
+                  className="flex-1 p-2 rounded bg-[#102134] border border-gray-600 text-white"
+                />
+                <button type="button" onClick={() => handleImageDelete(url)} className="text-red-400 hover:text-red-600">Remove</button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex justify-between pt-6 gap-4">
+          <button type="submit" className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2 rounded w-1/2">
             Save Changes
           </button>
-          <button
-            type="button"
-            onClick={() => router.push('/admin/properties')}
-            className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded w-1/2"
-          >
+          <button type="button" onClick={() => router.push('/admin/properties')} className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded w-1/2">
             Cancel Changes
           </button>
         </div>
