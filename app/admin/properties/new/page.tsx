@@ -48,8 +48,8 @@ export default function NewPropertyPage() {
     setImageFiles(prev => [...prev, ...files])
   }
 
-  const handleImageInputChange = (e: any) => {
-    setImageFiles(prev => [...prev, ...Array.from(e.target.files)])
+    const handleImageInputChange = (e: any) => {
+    setImageFiles(prev => [...prev, ...[...e.target.files]])
   }
 
   const handleImageUrlAdd = () => {
