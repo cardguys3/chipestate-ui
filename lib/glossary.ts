@@ -5,11 +5,13 @@ export const glossary = [
   },
   {
     term: 'Cap Rate',
-    definition: 'Cap Rate is how much income a property makes compared to its cost. A 6% cap rate means you earn 6% per year of the price you paid.'
+    definition: 'Cap Rate is how much income a property makes compared to its cost. A 6% cap rate means you earn 6% per year of the price you paid.',
+    formula: 'Cap Rate = Net Operating Income / Property Value'
   },
   {
     term: 'Rental Yield',
-    definition: 'Rental yield is how much rental income you get in a year compared to the property value. It helps you understand if the rent makes the property worth it.'
+    definition: 'Rental yield is how much rental income you get in a year compared to the property value. It helps you understand if the rent makes the property worth it.',
+    formula: 'Rental Yield = Annual Rent / Property Value'
   },
   {
     term: 'Reserve Fund',
@@ -17,7 +19,8 @@ export const glossary = [
   },
   {
     term: 'Reserve Balancing',
-    definition: 'ChipEstate uses a tiered system to keep reserves healthy. Smaller properties need a bigger safety cushion. Reserves range from 8% (for under $150K homes) to 4% (for over $2.5M). If the reserve drops too low, some rent may go into rebuilding it before being sent out to chipholders.'
+    definition: 'ChipEstate uses a tiered system to keep reserves healthy. Smaller properties need a bigger safety cushion. Reserves range from 8% (for under $150K homes) to 4% (for over $2.5M). If the reserve drops too low, some rent may go into rebuilding it before being sent out to chipholders.',
+    formula: 'Reserve Target = Property Value × Tiered Reserve Percentage'
   },
   {
     term: 'Occupancy',
@@ -25,7 +28,8 @@ export const glossary = [
   },
   {
     term: 'Vacancy Rate',
-    definition: 'Vacancy rate is the percent of time a property is empty. A high vacancy means it hasn’t been rented much.'
+    definition: 'Vacancy rate is the percent of time a property is empty. A high vacancy means it hasn’t been rented much.',
+    formula: 'Vacancy Rate = Days Vacant / Total Days Available'
   },
   {
     term: 'Property Manager',
@@ -37,7 +41,8 @@ export const glossary = [
   },
   {
     term: 'Net Rent',
-    definition: 'Net rent is the money left over after expenses like taxes and repairs are taken out of the rent payments.'
+    definition: 'Net rent is the money left over after expenses like taxes and repairs are taken out of the rent payments.',
+    formula: 'Net Rent = Gross Rent - Operating Expenses'
   },
   {
     term: 'Distributions',
@@ -49,7 +54,8 @@ export const glossary = [
   },
   {
     term: 'Appreciation',
-    definition: 'Appreciation means the property’s value is going up over time.'
+    definition: 'Appreciation means the property’s value is going up over time.',
+    formula: 'Appreciation = (New Value - Old Value) / Old Value'
   },
   {
     term: 'Transaction Fee',
