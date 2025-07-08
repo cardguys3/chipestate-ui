@@ -8,7 +8,7 @@ export default function GlossaryPage() {
         <p className="text-gray-300 mb-8">Explore key financial and real estate terms used throughout ChipEstate.</p>
 
         <div className="space-y-6">
-          {glossaryData.map((entry, index) => (
+          {glossary.map((entry, index) => (
             <div key={index} className="border border-white/10 rounded-lg p-5 bg-white/5 hover:bg-white/10 transition">
               <h2 className="text-xl font-semibold text-white mb-2">{entry.term}</h2>
               <p className="text-sm text-gray-300">{entry.definition}</p>
