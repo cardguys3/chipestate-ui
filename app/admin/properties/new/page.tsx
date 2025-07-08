@@ -1,201 +1,148 @@
+-- This document is the Property Details Page.
+-- The request pertains to updating the Add Property page, so no changes needed here.
+
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { useParams } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
-import { v4 as uuidv4 } from 'uuid'
-import { DndContext, closestCenter } from '@dnd-kit/core'
-import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
 
-const residentialSubtypes = ['Single Family', 'Multi-Family', 'Townhouse', 'Condo']
-const commercialSubtypes = ['Office', 'Retail', 'Industrial', 'Mixed-Use']
+const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
-function SortableImage({ url, index, onRemove }: { url: string; index: number; onRemove: (idx: number) => void }) {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: url })
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  }
-  return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="relative">
-      <img src={url} alt="Preview" className="w-24 h-16 object-cover rounded border" />
-      <button type="button" onClick={() => onRemove(index)} className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 text-xs">×</button>
-    </div>
-  )
-}
+export default function PropertyDetailsPage() {
+  const { id } = useParams()
+  const [property, setProperty] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [mainImage, setMainImage] = useState<string>('')
 
+  useEffect(() => {
+    const fetchProperty = async () => {
+      const { data, error } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('id', id)
+        .single()
 
-export default function NewPropertyPage() {
-  const [form, setForm] = useState<any>({})
-  const [imageFiles, setImageFiles] = useState<File[]>([])
-  const [imageUrls, setImageUrls] = useState<string[]>([])
-  const [imageInputUrl, setImageInputUrl] = useState('')
-  const router = useRouter()
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-
-  const handleChange = (e: any) => {
-    const { name, value } = e.target
-    setForm((prev: any) => ({ ...prev, [name]: value }))
-  }
-
-  const handleDrop = (e: any) => {
-    e.preventDefault()
-    const files = [...e.dataTransfer.files].filter((file) => file.type.startsWith('image/'))
-    setImageFiles(prev => [...prev, ...files])
-  }
-
-    const handleImageInputChange = (e: any) => {
-    setImageFiles(prev => [...prev, ...[...e.target.files]])
-  }
-
-  const handleImageUrlAdd = () => {
-    if (imageInputUrl) {
-      setImageUrls(prev => [...prev, imageInputUrl])
-      setImageInputUrl('')
-    }
-  }
-
-  const handleRemoveImage = (index: number) => {
-    setImageUrls(prev => prev.filter((_, i) => i !== index))
-  }
-
-  const handleDragEnd = (event: any) => {
-    const { active, over } = event
-    if (active.id !== over.id) {
-      const oldIndex = imageUrls.indexOf(active.id)
-      const newIndex = imageUrls.indexOf(over.id)
-      setImageUrls((items) => arrayMove(items, oldIndex, newIndex))
-    }
-  }
-
-  const handleSubmit = async (e: any) => {
-    e.preventDefault()
-
-    const uploadedUrls: string[] = [...imageUrls]
-    for (const file of imageFiles) {
-      const filename = `images/${uuidv4()}-${file.name}`
-      const { data, error } = await supabase.storage.from('property-images').upload(filename, file)
       if (error) {
-        console.error('Upload error:', error.message)
-        continue
+        console.error('Error loading property:', error.message)
+      } else {
+        setProperty(data)
+        if (data.image_urls?.length > 0) {
+          setMainImage(resolveImageUrl(data.image_urls[0]))
+        } else if (data.image_url) {
+          setMainImage(resolveImageUrl(data.image_url))
+        }
       }
-      uploadedUrls.push(data.path)
+
+      setLoading(false)
     }
 
-    const mainImage = uploadedUrls[0] || null
+    fetchProperty()
+  }, [id])
 
-    const { data: insertedProperties, error } = await supabase
-      .from('properties')
-      .insert([{ ...form, image_url: mainImage, image_urls: uploadedUrls }])
-      .select()
-
-    if (error || !insertedProperties || insertedProperties.length === 0) {
-      console.error('Property creation failed:', error)
-      return
-    }
-
-    const propertyId = insertedProperties[0].id
-    const chipCount = parseInt(form.chips)
-
-    const chipRows = Array.from({ length: chipCount }, (_, index) => ({
-      id: uuidv4(),
-      property_id: propertyId,
-      chip_number: index + 1,
-      created_at: new Date().toISOString(),
-    }))
-
-    const { error: chipError } = await supabase.from('chips').insert(chipRows)
-    if (chipError) {
-      console.error('Chip creation failed:', chipError.message)
-    }
-
-    router.push('/admin/properties')
+  const resolveImageUrl = (url: string): string => {
+    if (!url) return ''
+    if (url.startsWith('http')) return url
+    return `https://ajburehyunbvpuhnyjbo.supabase.co/storage/v1/object/public/property-images/${url}`
   }
 
-  const handleCancel = () => {
-    router.push('/admin/properties')
+  if (loading) {
+    return <main className="min-h-screen bg-[#0B1D33] text-white p-8">Loading...</main>
+  }
+
+  if (!property) {
+    return (
+      <main className="min-h-screen bg-[#0B1D33] text-white p-8">
+        <p>Property not found.</p>
+      </main>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-[#0a2540] text-white px-6 py-8">
-      <div className="max-w-2xl mx-auto bg-[#102a4d] p-8 rounded border border-gray-500 shadow-lg">
-        <h1 className="text-3xl font-bold mb-6">Add New Property</h1>
-        <form onSubmit={handleSubmit} onDrop={handleDrop} onDragOver={(e) => e.preventDefault()} className="space-y-5">
-          {/* Property Name */}
-          <div>
-            <label className="block mb-1 font-medium">Property Name <span className="text-red-500">*</span></label>
-            <input type="text" name="name" required onChange={handleChange} className="w-full p-2 text-white bg-[#0a2540] border border-gray-500 rounded" />
-          </div>
+    <main className="min-h-screen bg-[#0B1D33] text-white p-6">
+      <div className="max-w-5xl mx-auto border border-gray-600 rounded-xl p-6">
+        <h1 className="text-3xl font-bold mb-4 border-b pb-2">{property.title}</h1>
 
-          {/* Address */}
-          <div>
-            <label className="block mb-1 font-medium">Address <span className="text-red-500">*</span></label>
-            <input type="text" name="address" required onChange={handleChange} className="w-full p-2 text-white bg-[#0a2540] border border-gray-500 rounded" />
+        {/* Main Image */}
+        {mainImage ? (
+          <img
+            src={mainImage}
+            alt={property.title}
+            className="rounded-lg mb-4 object-cover w-full h-80 border"
+          />
+        ) : (
+          <div className="h-80 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 mb-4">
+            No image available
           </div>
+        )}
 
-          {/* Property Type and Subtype */}
-          <div>
-            <label className="block mb-1 font-medium">Property Type <span className="text-red-500">*</span></label>
-            <select name="type" required onChange={handleChange} className="w-full p-2 bg-[#0a2540] text-white border border-gray-500 rounded">
-              <option value="" disabled>Select Type</option>
-              <option value="Residential">Residential</option>
-              <option value="Commercial">Commercial</option>
-            </select>
+        {/* Thumbnails */}
+        {property.image_urls?.length > 0 && (
+          <div className="flex gap-3 mb-6 overflow-x-auto">
+            {property.image_urls.map((url: string, index: number) => {
+              const resolved = resolveImageUrl(url)
+              return (
+                <img
+                  key={index}
+                  src={resolved}
+                  alt={`Thumbnail ${index + 1}`}
+                  className={`rounded cursor-pointer border w-[120px] h-[80px] object-cover ${resolved === mainImage ? 'border-emerald-400' : 'border-transparent'}`}
+                  onClick={() => setMainImage(resolved)}
+                />
+              )
+            })}
           </div>
-          {(form.type === 'Residential' || form.type === 'Commercial') && (
-            <div>
-              <label className="block mb-1 font-medium">Subtype <span className="text-red-500">*</span></label>
-              <select name="subtype" required onChange={handleChange} className="w-full p-2 bg-[#0a2540] text-white border border-gray-500 rounded">
-                <option value="" disabled>Select Subtype</option>
-                {(form.type === 'Residential' ? residentialSubtypes : commercialSubtypes).map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </div>
-          )}
+        )}
 
-          {/* Property Price */}
+        {/* Property Details */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm">
           <div>
-            <label className="block mb-1 font-medium">Property Price <span className="text-red-500">*</span></label>
-            <input type="number" name="price" required onChange={handleChange} className="w-full p-2 text-white bg-[#0a2540] border border-gray-500 rounded" />
+            <p className="text-gray-400">Current Price</p>
+            <p className="text-white font-medium">${property.current_value?.toLocaleString()}</p>
           </div>
-
-          {/* Chips */}
           <div>
-            <label className="block mb-1 font-medium">Number of Chips <span className="text-red-500">*</span></label>
-            <input type="number" name="chips" required onChange={handleChange} className="w-full p-2 text-white bg-[#0a2540] border border-gray-500 rounded" />
+            <p className="text-gray-400">Purchase Price</p>
+            <p className="text-white font-medium">${property.purchase_price?.toLocaleString()}</p>
           </div>
-
-          {/* Drag & Drop Image Upload + URL */}
           <div>
-            <label className="block mb-2 font-medium">Upload Images</label>
-            <input type="file" accept="image/*" multiple onChange={handleImageInputChange} className="mb-2" />
-            <div className="flex items-center gap-2 mb-4">
-              <input type="text" placeholder="Image URL" value={imageInputUrl} onChange={(e) => setImageInputUrl(e.target.value)} className="flex-1 p-2 bg-[#0a2540] border border-gray-500 rounded text-white" />
-              <button type="button" onClick={handleImageUrlAdd} className="bg-blue-600 px-3 py-1 rounded">Add</button>
-            </div>
-            <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-              <SortableContext items={imageUrls} strategy={verticalListSortingStrategy}>
-                <div className="flex gap-3 flex-wrap">
-                  {imageUrls.map((url, index) => (
-                    <SortableImage key={url} url={url} index={index} onRemove={handleRemoveImage} />
-                  ))}
-                </div>
-              </SortableContext>
-            </DndContext>
+            <p className="text-gray-400">Cap Rate</p>
+            <p className="text-white font-medium">{property.cap_rate || 'N/A'}%</p>
           </div>
-
-          {/* Action Buttons */}
-          <div className="flex justify-between pt-6">
-            <button type="button" onClick={handleCancel} className="bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded">Cancel</button>
-            <button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-4 rounded">Save Property</button>
+          <div>
+            <p className="text-gray-400">Operating Reserve</p>
+            <p className="text-white font-medium">
+              ${property.reserve_balance?.toLocaleString()} (
+              {Math.round(
+                ((property.reserve_balance || 0) / (property.current_value || 1)) * 100
+              )}%
+              )
+            </p>
           </div>
-        </form>
+          <div>
+            <p className="text-gray-400">Chips Available</p>
+            <p className="text-white font-medium">{property.chips_available}</p>
+          </div>
+          <div>
+            <p className="text-gray-400">Total Chips</p>
+            <p className="text-white font-medium">{property.total_chips}</p>
+          </div>
+          <div>
+            <p className="text-gray-400">Market Cap</p>
+            <p className="text-white font-medium">
+              ${property.market_cap ? property.market_cap.toLocaleString() : 'N/A'}
+            </p>
+          </div>
+          <div>
+            <p className="text-gray-400">Status</p>
+            <p className={`font-medium ${property.is_active ? 'text-green-400' : 'text-red-400'}`}>
+              {property.is_active ? 'Active' : 'Inactive'}
+            </p>
+          </div>
+        </div>
       </div>
-    </div>
+    </main>
   )
 }
