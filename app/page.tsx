@@ -1,14 +1,19 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 import PropertyCard from '@/components/PropertyCard'
 import Footer from '@/components/Footer'
 import ChatBubble from '@/components/ChatBubble'
+import LoginModal from '@/components/LoginModal'
 
 export default function Home() {
+  const router = useRouter()
   const [properties, setProperties] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [showLogin, setShowLogin] = useState(false)
+  const [user, setUser] = useState<any>(null)
 
   useEffect(() => {
     async function fetchProperties() {
@@ -16,7 +21,7 @@ export default function Home() {
         .from('properties')
         .select('*')
         .eq('is_active', true)
-        .eq('is_hidden', false) // ✅ Hide hidden properties
+        .eq('is_hidden', false)
 
       if (error) {
         console.error('Error loading properties:', error.message)
@@ -26,7 +31,13 @@ export default function Home() {
       setLoading(false)
     }
 
+    async function fetchUser() {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+    }
+
     fetchProperties()
+    fetchUser()
   }, [])
 
   const getImageUrl = (url: string | null) => {
@@ -34,6 +45,14 @@ export default function Home() {
     return url.startsWith('http')
       ? url
       : `https://ajburehyunbvpuhnyjbo.supabase.co/storage/v1/object/public/property-images/${url}`
+  }
+
+  const handleCardClick = (id: string) => {
+    if (user) {
+      router.push(`/property/${id}`)
+    } else {
+      setShowLogin(true)
+    }
   }
 
   return (
@@ -54,7 +73,11 @@ export default function Home() {
           <p className="col-span-full text-center text-gray-500">No active properties found.</p>
         ) : (
           properties.map((property) => (
-            <div key={property.id} className="[perspective:1000px]">
+            <div
+              key={property.id}
+              className="[perspective:1000px] cursor-pointer"
+              onClick={() => handleCardClick(property.id)}
+            >
               <div className="relative w-full h-[300px] [transform-style:preserve-3d] transition-transform duration-700 hover:[transform:rotateY(180deg)]">
                 {/* Front */}
                 <div className="absolute w-full h-full bg-white rounded-lg shadow overflow-hidden backface-hidden">
@@ -87,6 +110,7 @@ export default function Home() {
       </section>
 
       <ChatBubble />
+      {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
     </main>
   )
 }
