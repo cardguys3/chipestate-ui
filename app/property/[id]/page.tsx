@@ -31,6 +31,8 @@ export default function PropertyDetailsPage() {
         setProperty(data)
         if (data.image_urls?.length > 0) {
           setMainImage(data.image_urls[0])
+        } else if (data.image_url) {
+          setMainImage(data.image_url)
         }
       }
 
@@ -39,6 +41,13 @@ export default function PropertyDetailsPage() {
 
     fetchProperty()
   }, [id])
+
+  const getImageUrl = (url: string | null) => {
+    if (!url) return '/default-image.png'
+    return url.startsWith('http')
+      ? url
+      : `https://ajburehyunbvpuhnyjbo.supabase.co/storage/v1/object/public/property-images/${url}`
+  }
 
   const handleImageChange = (url: string) => {
     setMainImage(url)
@@ -64,7 +73,7 @@ export default function PropertyDetailsPage() {
         {/* Main Image */}
         {mainImage ? (
           <Image
-            src={mainImage}
+            src={getImageUrl(mainImage)}
             alt={property.title}
             width={1200}
             height={600}
@@ -77,19 +86,21 @@ export default function PropertyDetailsPage() {
         )}
 
         {/* Thumbnails */}
-        <div className="flex gap-3 mb-6 overflow-x-auto">
-          {property.image_urls?.map((url: string, index: number) => (
-            <Image
-              key={index}
-              src={url}
-              alt={`Thumbnail ${index + 1}`}
-              width={120}
-              height={80}
-              className={`rounded cursor-pointer border ${url === mainImage ? 'border-emerald-400' : 'border-transparent'}`}
-              onClick={() => handleImageChange(url)}
-            />
-          ))}
-        </div>
+        {property.image_urls?.length > 0 && (
+          <div className="flex gap-3 mb-6 overflow-x-auto">
+            {property.image_urls.map((url: string, index: number) => (
+              <Image
+                key={index}
+                src={getImageUrl(url)}
+                alt={`Thumbnail ${index + 1}`}
+                width={120}
+                height={80}
+                className={`rounded cursor-pointer border ${url === mainImage ? 'border-emerald-400' : 'border-transparent'}`}
+                onClick={() => handleImageChange(url)}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Property Details */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm">
