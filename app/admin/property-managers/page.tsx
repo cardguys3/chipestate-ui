@@ -54,8 +54,11 @@ export default function PropertyManagersPage() {
     }
   }
 
-  const handleInactivate = async (id: string) => {
-    const { error } = await supabase.from('property_managers').update({ is_active: false }).eq('id', id)
+  const toggleActiveStatus = async (id: string, currentStatus: boolean) => {
+    const { error } = await supabase
+      .from('property_managers')
+      .update({ is_active: !currentStatus })
+      .eq('id', id)
     if (!error) router.refresh()
   }
 
@@ -112,7 +115,7 @@ export default function PropertyManagersPage() {
             </thead>
             <tbody>
               {filteredManagers.map((m) => (
-                <tr key={m.id} className="border-t border-white/5 hover:bg-white/5">
+                <tr key={m.id} className={`border-t border-white/5 hover:bg-white/5 ${!m.is_active ? 'text-red-400 font-semibold' : ''}`}>
                   <td className="px-4 py-2">
                     <Link href={`/admin/property-managers/${m.id}/details`} className="text-emerald-400 hover:underline">{m.name}</Link>
                   </td>
@@ -124,7 +127,9 @@ export default function PropertyManagersPage() {
                   <td className="px-4 py-2">{m.is_active ? 'Active' : 'Inactive'}</td>
                   <td className="px-4 py-2 space-x-2">
                     <Link href={`/admin/property-managers/${m.id}/edit`} className="text-blue-400 hover:underline">Edit</Link>
-                    <button onClick={() => handleInactivate(m.id)} className="text-red-400 hover:underline">Inactivate</button>
+                    <button onClick={() => toggleActiveStatus(m.id, m.is_active)} className="text-yellow-400 hover:underline">
+                      {m.is_active ? 'Inactivate' : 'Activate'}
+                    </button>
                   </td>
                 </tr>
               ))}
