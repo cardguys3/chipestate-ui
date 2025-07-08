@@ -15,6 +15,7 @@ export default function PropertyDetailsPage() {
   const router = useRouter()
   const [property, setProperty] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [mainImage, setMainImage] = useState<string>('')
 
   useEffect(() => {
     const fetchProperty = async () => {
@@ -28,6 +29,9 @@ export default function PropertyDetailsPage() {
         console.error('Error loading property:', error.message)
       } else {
         setProperty(data)
+        if (data.image_urls?.length > 0) {
+          setMainImage(data.image_urls[0])
+        }
       }
 
       setLoading(false)
@@ -35,6 +39,10 @@ export default function PropertyDetailsPage() {
 
     fetchProperty()
   }, [id])
+
+  const handleImageChange = (url: string) => {
+    setMainImage(url)
+  }
 
   if (loading) {
     return <main className="min-h-screen bg-[#0B1D33] text-white p-8">Loading...</main>
@@ -49,24 +57,41 @@ export default function PropertyDetailsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0B1D33] text-white p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-4">{property.title}</h1>
+    <main className="min-h-screen bg-[#0B1D33] text-white p-6">
+      <div className="max-w-5xl mx-auto border border-gray-600 rounded-xl p-6">
+        <h1 className="text-3xl font-bold mb-4 border-b pb-2">{property.title}</h1>
 
-        {property.image_url ? (
+        {/* Main Image */}
+        {mainImage ? (
           <Image
-            src={property.image_url}
+            src={mainImage}
             alt={property.title}
-            width={800}
-            height={400}
-            className="rounded-lg mb-6 object-cover w-full h-64"
+            width={1200}
+            height={600}
+            className="rounded-lg mb-4 object-cover w-full h-80 border"
           />
         ) : (
-          <div className="h-64 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 mb-6">
+          <div className="h-80 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 mb-4">
             No image available
           </div>
         )}
 
+        {/* Thumbnails */}
+        <div className="flex gap-3 mb-6 overflow-x-auto">
+          {property.image_urls?.map((url: string, index: number) => (
+            <Image
+              key={index}
+              src={url}
+              alt={`Thumbnail ${index + 1}`}
+              width={120}
+              height={80}
+              className={`rounded cursor-pointer border ${url === mainImage ? 'border-emerald-400' : 'border-transparent'}`}
+              onClick={() => handleImageChange(url)}
+            />
+          ))}
+        </div>
+
+        {/* Property Details */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm">
           <div>
             <p className="text-gray-400">Current Price</p>
@@ -106,11 +131,7 @@ export default function PropertyDetailsPage() {
           </div>
           <div>
             <p className="text-gray-400">Status</p>
-            <p
-              className={`font-medium ${
-                property.is_active ? 'text-green-400' : 'text-red-400'
-              }`}
-            >
+            <p className={`font-medium ${property.is_active ? 'text-green-400' : 'text-red-400'}`}>
               {property.is_active ? 'Active' : 'Inactive'}
             </p>
           </div>
