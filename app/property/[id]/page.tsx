@@ -29,9 +29,9 @@ export default function PropertyDetailsPage() {
       } else {
         setProperty(data)
         if (data.image_urls?.length > 0) {
-          setMainImage(data.image_urls[0])
+          setMainImage(resolveImageUrl(data.image_urls[0]))
         } else if (data.image_url) {
-          setMainImage(data.image_url)
+          setMainImage(resolveImageUrl(data.image_url))
         }
       }
 
@@ -42,9 +42,9 @@ export default function PropertyDetailsPage() {
   }, [id])
 
   const resolveImageUrl = (url: string): string => {
-    return url?.startsWith('http')
-      ? url
-      : `https://ajburehyunbvpuhnyjbo.supabase.co/storage/v1/object/public/property-images/${url}`
+    if (!url) return ''
+    if (url.startsWith('http')) return url
+    return `https://ajburehyunbvpuhnyjbo.supabase.co/storage/v1/object/public/property-images/${url}`
   }
 
   if (loading) {
@@ -67,7 +67,7 @@ export default function PropertyDetailsPage() {
         {/* Main Image */}
         {mainImage ? (
           <Image
-            src={resolveImageUrl(mainImage)}
+            src={mainImage}
             alt={property.title}
             width={1200}
             height={600}
@@ -82,17 +82,20 @@ export default function PropertyDetailsPage() {
         {/* Thumbnails */}
         {property.image_urls?.length > 0 && (
           <div className="flex gap-3 mb-6 overflow-x-auto">
-            {property.image_urls.map((url: string, index: number) => (
-              <Image
-                key={index}
-                src={resolveImageUrl(url)}
-                alt={`Thumbnail ${index + 1}`}
-                width={120}
-                height={80}
-                className={`rounded cursor-pointer border ${url === mainImage ? 'border-emerald-400' : 'border-transparent'}`}
-                onClick={() => setMainImage(url)}
-              />
-            ))}
+            {property.image_urls.map((url: string, index: number) => {
+              const resolved = resolveImageUrl(url)
+              return (
+                <Image
+                  key={index}
+                  src={resolved}
+                  alt={`Thumbnail ${index + 1}`}
+                  width={120}
+                  height={80}
+                  className={`rounded cursor-pointer border ${resolved === mainImage ? 'border-emerald-400' : 'border-transparent'}`}
+                  onClick={() => setMainImage(resolved)}
+                />
+              )
+            })}
           </div>
         )}
 
