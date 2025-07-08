@@ -2,189 +2,70 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { createBrowserClient } from '@supabase/ssr'
+import { supabase } from '@/lib/supabaseClient'
 
-const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
-
-export default function EditPropertyPage() {
-  const router = useRouter()
+export default function EditPropertyManagerPage() {
   const { id } = useParams()
-  const [form, setForm] = useState<any>(null)
-  const [imageUrl, setImageUrl] = useState<string | null>(null)
-  const [uploading, setUploading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
+  const [formData, setFormData] = useState<any>({})
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!id) return
-
-    const fetchProperty = async () => {
-      const { data, error } = await supabase
-        .from('properties')
-        .select('*')
-        .eq('id', id)
-        .single()
-
-      if (error) {
-        setError('Failed to load property.')
-      } else {
-        setForm(data)
-        setImageUrl(data.image_url)
-      }
+    const fetchManager = async () => {
+      const { data, error } = await supabase.from('property_managers').select('*').eq('id', id).single()
+      if (!error && data) setFormData(data)
+      setLoading(false)
     }
-
-    fetchProperty()
+    if (id) fetchManager()
   }, [id])
 
   const handleChange = (e: any) => {
     const { name, value, type, checked } = e.target
-    setForm({ ...form, [name]: type === 'checkbox' ? checked : value })
+    setFormData((prev: any) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }))
   }
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setUploading(true)
-
-    const fileExt = file.name.split('.').pop()
-    const fileName = `${Date.now()}.${fileExt}`
-    const filePath = `${fileName}`
-
-    const { error: uploadError } = await supabase.storage
-      .from('property-images')
-      .upload(filePath, file, { upsert: true })
-
-    if (uploadError) {
-      alert('Upload failed: ' + uploadError.message)
-      setUploading(false)
-      return
-    }
-
-    const { data: publicUrlData } = supabase.storage
-      .from('property-images')
-      .getPublicUrl(filePath)
-
-    const newUrl = publicUrlData?.publicUrl || null
-    setImageUrl(newUrl)
-    setForm({ ...form, image_url: newUrl })
-    setUploading(false)
+  const handleSubmit = async () => {
+    const { error } = await supabase.from('property_managers').update(formData).eq('id', id)
+    if (!error) router.push('/admin/property-managers')
+    else alert('Error updating property manager')
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    const { error: updateError } = await supabase
-      .from('properties')
-      .update({
-        ...form,
-        purchase_price: Number(form.purchase_price),
-        current_value: Number(form.current_value),
-        total_chips: Number(form.total_chips),
-        chips_available: Number(form.chips_available),
-        reserve_balance: Number(form.reserve_balance),
-        image_url: imageUrl,
-      })
-      .eq('id', id)
-
-    if (updateError) {
-      setError(updateError.message)
-    } else {
-      router.push('/admin/properties')
-    }
-  }
-
-  if (!form) return <p className="p-6 text-white">Loading...</p>
+  if (loading) return <div className="p-6 text-white">Loading...</div>
 
   return (
-    <main className="min-h-screen bg-[#0e1a2b] p-6 max-w-3xl mx-auto text-white">
-      <h1 className="text-2xl font-bold mb-4">Edit Property</h1>
-      {error && <p className="text-red-500 mb-4">{error}</p>}
-      <form onSubmit={handleSubmit} className="space-y-4 bg-[#1e2a3c] p-6 rounded-lg border border-gray-700 shadow-md">
-        {[
-          { name: 'title', label: 'Title*' },
-          { name: 'address_line1', label: 'Address Line 1*' },
-          { name: 'address_line2', label: 'Address Line 2' },
-          { name: 'city', label: 'City*' },
-          { name: 'state', label: 'State*' },
-          { name: 'zip', label: 'Zip*' },
-          { name: 'property_type', label: 'Property Type*' },
-          { name: 'sub_type', label: 'Sub-type*' },
-          { name: 'purchase_price', label: 'Purchase Price*' },
-          { name: 'current_value', label: 'Current Value*' },
-          { name: 'total_chips', label: 'Total Chips*' },
-          { name: 'chips_available', label: 'Chips Available*' },
-          { name: 'manager_name', label: 'Manager Name*' },
-          { name: 'reserve_balance', label: 'Reserve Balance*' },
-        ].map((field) => (
-          <div key={field.name}>
-            <label className="block text-sm font-medium mb-1">{field.label}</label>
-            <input
-              name={field.name}
-              value={form[field.name] || ''}
-              onChange={handleChange}
-              className="w-full p-2 rounded bg-[#102134] border border-gray-600 text-white"
-              required={field.label.includes('*')}
-            />
-          </div>
-        ))}
+    <main className="min-h-screen bg-[#0B1D33] text-white px-6 py-10">
+      <div className="max-w-4xl mx-auto border border-white/20 rounded-lg p-6 space-y-6">
+        <h1 className="text-2xl font-bold mb-4">Edit Property Manager</h1>
 
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            name="occupied"
-            checked={form.occupied}
-            onChange={handleChange}
-            className="accent-blue-500"
-          />
-          Occupied?
-        </label>
-
-        <div className="mt-4">
-          <label className="block mb-1 text-sm font-semibold">Property Image</label>
-          <label className="cursor-pointer inline-block px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded text-white">
-            {uploading ? 'Uploading...' : 'Upload New Image'}
-            <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-black">
+          <input name="name" value={formData.name || ''} onChange={handleChange} placeholder="Manager Name*" className="p-2 rounded border" />
+          <input name="contact_name" value={formData.contact_name || ''} onChange={handleChange} placeholder="Contact Name" className="p-2 rounded border" />
+          <input name="email" value={formData.email || ''} onChange={handleChange} placeholder="Email*" className="p-2 rounded border" />
+          <input name="phone" value={formData.phone || ''} onChange={handleChange} placeholder="Phone*" className="p-2 rounded border" />
+          <input name="address" value={formData.address || ''} onChange={handleChange} placeholder="Address" className="p-2 rounded border" />
+          <input name="city" value={formData.city || ''} onChange={handleChange} placeholder="City" className="p-2 rounded border" />
+          <input name="state" value={formData.state || ''} onChange={handleChange} placeholder="State" className="p-2 rounded border" />
+          <input name="years_experience" value={formData.years_experience || ''} onChange={handleChange} placeholder="Years of Experience" className="p-2 rounded border" />
+          <input name="management_fee" value={formData.management_fee || ''} onChange={handleChange} placeholder="Management Fee" className="p-2 rounded border" />
+          <input name="reporting_frequency" value={formData.reporting_frequency || ''} onChange={handleChange} placeholder="Reporting Frequency" className="p-2 rounded border" />
+          <input name="reporting_type" value={formData.reporting_type || ''} onChange={handleChange} placeholder="Reporting Type" className="p-2 rounded border" />
+          <input name="owner_communication" value={formData.owner_communication || ''} onChange={handleChange} placeholder="Preferred Contact (Owner)" className="p-2 rounded border" />
+          <input name="tenant_communication" value={formData.tenant_communication || ''} onChange={handleChange} placeholder="Preferred Contact (Tenant)" className="p-2 rounded border" />
+          <input name="compliance_states" value={formData.compliance_states || ''} onChange={handleChange} placeholder="Compliance States (comma-separated)" className="p-2 rounded border" />
+          <input name="services_offered" value={formData.services_offered || ''} onChange={handleChange} placeholder="Services Offered (comma-separated)" className="p-2 rounded border" />
+          <textarea name="references" value={formData.references || ''} onChange={handleChange} placeholder="References" className="p-2 rounded border col-span-2" />
+          <textarea name="notes" value={formData.notes || ''} onChange={handleChange} placeholder="Notes" className="p-2 rounded border col-span-2" />
+          <label className="flex items-center space-x-2 col-span-2">
+            <input type="checkbox" name="is_active" checked={formData.is_active} onChange={handleChange} className="accent-blue-600" />
+            <span>Active</span>
           </label>
-          <p className="text-sm text-gray-300 mt-2">or provide an external image URL:</p>
-          <input
-            type="url"
-            name="image_url"
-            value={imageUrl || ''}
-            onChange={(e) => {
-              setImageUrl(e.target.value)
-              setForm({ ...form, image_url: e.target.value })
-            }}
-            placeholder="https://example.com/image.jpg"
-            className="w-full p-2 mt-1 rounded bg-[#102134] border border-gray-600 text-white"
-          />
-          {imageUrl && (
-            <img
-              src={imageUrl}
-              alt="Preview"
-              className="mt-2 rounded border border-gray-600 w-full max-w-xs"
-              onError={(e) => (e.currentTarget.style.display = 'none')}
-            />
-          )}
         </div>
 
-        <div className="flex justify-between pt-4 gap-4">
-          <button
-            type="submit"
-            className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2 rounded w-1/2"
-          >
-            Save Changes
-          </button>
-          <button
-            type="button"
-            onClick={() => router.push('/admin/properties')}
-            className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded w-1/2"
-          >
-            Cancel Changes
-          </button>
+        <div className="pt-4 flex justify-between">
+          <button onClick={() => router.push('/admin/property-managers')} className="bg-gray-500 hover:bg-gray-600 px-4 py-2 rounded text-white">Cancel</button>
+          <button onClick={handleSubmit} className="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded text-white">Save Changes</button>
         </div>
-      </form>
+      </div>
     </main>
   )
 }
