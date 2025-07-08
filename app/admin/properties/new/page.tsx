@@ -1,5 +1,5 @@
--- This document is the Property Details Page.
--- The request pertains to updating the Add Property page, so no changes needed here.
+// This document is the Property Details Page.
+// The request pertains to updating the Add Property page, so no changes needed here.
 
 'use client'
 
