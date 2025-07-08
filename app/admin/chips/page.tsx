@@ -100,16 +100,18 @@ export default function ChipsPage() {
       <h1 className="text-3xl font-bold mb-6">Manage Chips</h1>
 
       <div className="flex gap-8 mb-6">
+        {/* Create Chips */}
         <div className="border border-white p-4 rounded w-1/2">
           <h2 className="text-xl mb-2 font-semibold">Create Chips</h2>
           <select value={propertyId} onChange={(e) => setPropertyId(e.target.value)} className="w-full p-2 mb-2 bg-gray-800 text-white border border-gray-500 rounded">
             <option value="">Select Property</option>
             {properties.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
           </select>
-          <input type="number" value={chipCount} onChange={(e) => setChipCount(Number(e.target.value))} className="w-full p-2 mb-2 bg-gray-800 text-white border border-gray-500 rounded" min={1} />
+          <input type="number" value={chipCount} onChange={(e) => setChipCount(Number(e.target.value))} min={1} className="w-full p-2 mb-2 bg-gray-800 text-white border border-gray-500 rounded" />
           <button onClick={createChips} className="bg-emerald-500 px-4 py-2 rounded hover:bg-emerald-600 w-full">Create</button>
         </div>
 
+        {/* Assign Chips */}
         <div className="border border-white p-4 rounded w-1/2">
           <h2 className="text-xl mb-2 font-semibold">Assign Chips</h2>
           <select value={assignPropertyId} onChange={(e) => setAssignPropertyId(e.target.value)} className="w-full p-2 mb-2 bg-gray-800 text-white border border-gray-500 rounded">
@@ -120,7 +122,7 @@ export default function ChipsPage() {
             <option value="">Select User</option>
             {users.map(u => <option key={u.id} value={u.id}>{u.email}</option>)}
           </select>
-          <input type="number" value={assignCount} onChange={(e) => setAssignCount(Number(e.target.value))} className="w-full p-2 mb-2 bg-gray-800 text-white border border-gray-500 rounded" min={1} />
+          <input type="number" value={assignCount} onChange={(e) => setAssignCount(Number(e.target.value))} min={1} className="w-full p-2 mb-2 bg-gray-800 text-white border border-gray-500 rounded" />
           <button onClick={assignChips} className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 w-full">Assign</button>
         </div>
       </div>
@@ -138,7 +140,7 @@ export default function ChipsPage() {
         <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="bg-gray-800 text-white p-2 border border-gray-500 rounded" placeholder="Filter Date" />
       </div>
 
-      {/* Chip Table */}
+      {/* Chip Details */}
       <h2 className="text-2xl font-semibold mt-6 mb-2">Chip Details</h2>
       <table className="w-full table-auto border border-white">
         <thead>
@@ -171,9 +173,9 @@ export default function ChipsPage() {
 
       {/* Pagination */}
       <div className="mt-4 flex items-center gap-4">
-        <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="px-3 py-1 bg-white text-black rounded disabled:opacity-50">Previous</button>
+        <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => Math.max(1, p - 1))} className="px-3 py-1 bg-white text-black rounded disabled:opacity-50">Previous</button>
         <span>Page {currentPage} of {totalPages}</span>
-        <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} className="px-3 py-1 bg-white text-black rounded disabled:opacity-50">Next</button>
+        <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} className="px-3 py-1 bg-white text-black rounded disabled:opacity-50">Next</button>
         <input
           type="number"
           value={jumpPage}
@@ -181,7 +183,10 @@ export default function ChipsPage() {
           placeholder="Go to page"
           className="p-1 bg-gray-800 text-white w-24 rounded border border-gray-500"
         />
-        <button onClick={() => setCurrentPage(Number(jumpPage))} className="px-2 py-1 bg-blue-500 rounded">Go</button>
+        <button onClick={() => {
+          const page = Number(jumpPage)
+          if (page >= 1 && page <= totalPages) setCurrentPage(page)
+        }} className="px-2 py-1 bg-blue-500 rounded">Go</button>
       </div>
     </div>
   )
