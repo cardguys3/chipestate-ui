@@ -73,9 +73,9 @@ export default function Home() {
                   <h3 className="text-lg font-bold mb-2">Property Details</h3>
                   <ul className="text-sm space-y-1">
                     <li><strong>Type:</strong> {property.property_type}</li>
-                    <li><strong>Subtype:</strong> {property.property_subtype}</li>
+                    <li><strong>Subtype:</strong> {property.sub_type}</li>
                     <li><strong>Return:</strong> {property.projected_return}</li>
-                    <li><strong>Status:</strong> {property.occupied}</li>
+                    <li><strong>Occupied:</strong> {property.occupied}</li>
                     <li><strong>Yield:</strong> {property.rental_yield}</li>
                   </ul>
                 </div>
