@@ -44,7 +44,8 @@ export default function NewPropertyPage() {
 
   const handleDrop = (e: any) => {
     e.preventDefault()
-    const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'))
+    const files = Array.from(e.dataTransfer.files).filter((file: File) => file.type.startsWith('image/'))
+
     setImageFiles(prev => [...prev, ...files])
   }
 
