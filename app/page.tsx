@@ -69,7 +69,6 @@ export default function Home() {
       </section>
 
       <ChatBubble />
-      <Footer />
     </main>
   )
 }
