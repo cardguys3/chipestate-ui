@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
-import Image from 'next/image'
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -66,11 +65,9 @@ export default function PropertyDetailsPage() {
 
         {/* Main Image */}
         {mainImage ? (
-          <Image
+          <img
             src={mainImage}
             alt={property.title}
-            width={1200}
-            height={600}
             className="rounded-lg mb-4 object-cover w-full h-80 border"
           />
         ) : (
@@ -85,13 +82,11 @@ export default function PropertyDetailsPage() {
             {property.image_urls.map((url: string, index: number) => {
               const resolved = resolveImageUrl(url)
               return (
-                <Image
+                <img
                   key={index}
                   src={resolved}
                   alt={`Thumbnail ${index + 1}`}
-                  width={120}
-                  height={80}
-                  className={`rounded cursor-pointer border ${resolved === mainImage ? 'border-emerald-400' : 'border-transparent'}`}
+                  className={`rounded cursor-pointer border w-[120px] h-[80px] object-cover ${resolved === mainImage ? 'border-emerald-400' : 'border-transparent'}`}
                   onClick={() => setMainImage(resolved)}
                 />
               )
