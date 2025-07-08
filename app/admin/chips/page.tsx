@@ -1,3 +1,4 @@
+// app/admin/chips/page.tsx
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -61,7 +62,7 @@ export default function ChipsPage() {
   })
 
   const paginatedChips = filteredChips.slice((currentPage - 1) * pageSize, currentPage * pageSize)
-  const totalPages = Math.ceil(filteredChips.length / pageSize)
+  const totalPages = Math.max(1, Math.ceil(filteredChips.length / pageSize))
 
   async function createChips() {
     if (!propertyId || chipCount < 1) return
@@ -74,8 +75,8 @@ export default function ChipsPage() {
       toast.error('Create failed')
     } else {
       toast.success('Chips created')
+      fetchAll()
     }
-    fetchAll()
   }
 
   async function assignChips() {
@@ -90,8 +91,8 @@ export default function ChipsPage() {
       toast.error('Assign failed')
     } else {
       toast.success('Chips assigned')
+      fetchAll()
     }
-    fetchAll()
   }
 
   return (
