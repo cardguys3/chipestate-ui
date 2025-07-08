@@ -30,7 +30,8 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
     }
 
     if (data.user && ADMIN_EMAILS.includes(data.user.email || '')) {
-      router.push('/admin')
+      onClose()              // ✅ Hide the modal
+      router.push('/admin') // ✅ Redirect
     } else {
       setError('Access denied: not an admin')
       await supabase.auth.signOut()
@@ -85,6 +86,13 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
+
+        {/* ✅ Login assistance link */}
+        <p className="mt-4 text-center text-sm">
+          <a href="/reset-password" className="text-blue-600 hover:underline">
+            Login assistance
+          </a>
+        </p>
       </div>
     </div>
   )
