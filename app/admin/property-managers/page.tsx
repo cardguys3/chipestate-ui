@@ -1,140 +1,99 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
-export default function PropertyManagersPage() {
-  const router = useRouter()
-  const [managers, setManagers] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState('')
-  const [form, setForm] = useState({
-    name: '',
-    contact_name: '',
-    phone: '',
-    email: '',
-    city: '',
-    state: '',
-    is_active: true,
-  })
+export default function PropertyManagerDetails() {
+  const { id } = useParams()
+  const [manager, setManager] = useState<any>(null)
+  const [transactions, setTransactions] = useState<any[]>([])
 
   useEffect(() => {
-    const fetchManagers = async () => {
-      const { data, error } = await supabase.from('property_managers').select('*').order('name')
-      if (!error && data) setManagers(data)
-      setLoading(false)
+    const fetchManager = async () => {
+      const { data, error } = await supabase.from('property_managers').select('*').eq('id', id).single()
+      if (!error && data) setManager(data)
     }
-    fetchManagers()
-  }, [])
 
-  const handleChange = (e: any) => {
-    const { name, value, type, checked } = e.target
-    setForm((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }))
-  }
-
-  const handleSubmit = async () => {
-    const { error } = await supabase.from('property_managers').insert({ ...form })
-    if (!error) {
-      router.refresh()
-      setForm({ name: '', contact_name: '', phone: '', email: '', city: '', state: '', is_active: true })
-    } else {
-      console.error('Insert failed:', error.message)
+    const fetchTransactions = async () => {
+      const { data, error } = await supabase
+        .from('property_transactions')
+        .select('amount, notes, transaction_category, date, properties(title)')
+        .eq('payee_type', 'property_manager')
+        .eq('payee_id', id)
+        .order('date', { ascending: false })
+      if (!error && data) setTransactions(data)
     }
-  }
 
-  const toggleActiveStatus = async (id: string, currentStatus: boolean) => {
-    const { data: props } = await supabase.from('properties').select('title').eq('property_manager_id', id)
-    if (!currentStatus && props && props.length > 0) {
-      alert(`Error: Cannot inactivate manager. Still assigned to properties:\n\n${props.map(p => '- ' + p.title).join('\n')}`)
-      return
+    if (id) {
+      fetchManager()
+      fetchTransactions()
     }
-    const { error } = await supabase.from('property_managers').update({ is_active: !currentStatus }).eq('id', id)
-    if (!error) {
-      alert('Success: This property manager was ' + (currentStatus ? 'inactivated' : 'activated'))
-      router.refresh()
-    } else {
-      alert('Error updating status.')
-    }
-  }
+  }, [id])
 
-  const filteredManagers = managers.filter((m) =>
-    m.name.toLowerCase().includes(filter.toLowerCase()) ||
-    m.city?.toLowerCase().includes(filter.toLowerCase()) ||
-    m.state?.toLowerCase().includes(filter.toLowerCase())
-  )
+  if (!manager) return <div className="p-6 text-white">Loading manager details...</div>
+
+  const inactiveClass = !manager.is_active ? 'line-through text-red-400 font-semibold' : ''
 
   return (
     <main className="min-h-screen bg-[#0B1D33] text-white px-6 py-10">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">Manage Property Managers</h1>
-
-        <div className="border border-white/20 rounded-lg p-6 space-y-4 mb-10">
-          <h2 className="text-lg font-semibold mb-4">Add New Manager</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            <input name="name" value={form.name} onChange={handleChange} className="p-2 rounded bg-[#0B1D33] border border-gray-600 text-white" placeholder="Company Name" />
-            <input name="contact_name" value={form.contact_name} onChange={handleChange} className="p-2 rounded bg-[#0B1D33] border border-gray-600 text-white" placeholder="Contact Name" />
-            <input name="phone" value={form.phone} onChange={handleChange} className="p-2 rounded bg-[#0B1D33] border border-gray-600 text-white" placeholder="Phone Number" />
-            <input name="email" value={form.email} onChange={handleChange} className="p-2 rounded bg-[#0B1D33] border border-gray-600 text-white" placeholder="Email Address" />
-            <input name="city" value={form.city} onChange={handleChange} className="p-2 rounded bg-[#0B1D33] border border-gray-600 text-white" placeholder="City" />
-            <input name="state" value={form.state} onChange={handleChange} className="p-2 rounded bg-[#0B1D33] border border-gray-600 text-white" placeholder="State" />
-          </div>
-          <label className="flex items-center space-x-2">
-            <input type="checkbox" name="is_active" checked={form.is_active} onChange={handleChange} />
-            <span>Active</span>
-          </label>
-          <button onClick={handleSubmit} className="bg-emerald-600 px-4 py-2 rounded font-semibold">Save Manager</button>
+      <div className="max-w-5xl mx-auto border border-white/20 rounded-lg p-6 space-y-6">
+        <h1 className="text-2xl font-bold">Property Manager Details</h1>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+          <p className={inactiveClass}><strong>Name:</strong> {manager.name}</p>
+          <p className={inactiveClass}><strong>Contact:</strong> {manager.contact_name}</p>
+          <p className={inactiveClass}><strong>Phone:</strong> {manager.phone}</p>
+          <p className={inactiveClass}><strong>Email:</strong> {manager.email}</p>
+          <p className={inactiveClass}><strong>City:</strong> {manager.city}</p>
+          <p className={inactiveClass}><strong>State:</strong> {manager.state}</p>
+          <p className={inactiveClass}><strong>Status:</strong> {manager.is_active ? 'Active' : 'Inactive'}</p>
+          <p className={inactiveClass}><strong>Years of Experience:</strong> {manager.years_experience}</p>
+          <p className={inactiveClass}><strong>Management Fee:</strong> {manager.management_fee}</p>
+          <p className={inactiveClass}><strong>Services Offered:</strong> {manager.service_types?.join(', ')}</p>
+          <p className={inactiveClass}><strong>Preferred Contact (Owners):</strong> {manager.owner_communication}</p>
+          <p className={inactiveClass}><strong>Preferred Contact (Tenants):</strong> {manager.tenant_communication}</p>
+          <p className={inactiveClass}><strong>Compliance States:</strong> {manager.compliance_states?.join(', ')}</p>
+          <p className={inactiveClass}><strong>Reporting Frequency:</strong> {manager.reporting_frequency}</p>
+          <p className={inactiveClass}><strong>Reporting Type:</strong> {manager.reporting_type}</p>
+          <p className={inactiveClass}><strong>References:</strong> {manager.references?.join(', ')}</p>
+          <p className={inactiveClass}><strong>Notes:</strong> {manager.notes}</p>
         </div>
 
-        <div className="mb-6">
-          <input
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="w-full p-2 rounded bg-[#0B1D33] border border-white/10 text-white"
-            placeholder="Search managers by name, city, or state..."
-          />
+        <div className="pt-4 space-x-4">
+          <Link href="/admin/property-managers" className="text-blue-400 hover:underline">← Back</Link>
+          <Link href={`/admin/property-managers/${id}/edit`} className="text-emerald-400 hover:underline">Edit</Link>
         </div>
 
-        <div className="overflow-x-auto border border-white/10 rounded-lg">
-          <table className="w-full text-sm">
-            <thead className="bg-white/10">
-              <tr>
-                <th className="px-4 py-2 text-left">Name</th>
-                <th className="px-4 py-2 text-left">Contact</th>
-                <th className="px-4 py-2 text-left">Email</th>
-                <th className="px-4 py-2 text-left">Phone</th>
-                <th className="px-4 py-2 text-left">City</th>
-                <th className="px-4 py-2 text-left">State</th>
-                <th className="px-4 py-2 text-left">Status</th>
-                <th className="px-4 py-2 text-left">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredManagers.map((m) => (
-                <tr key={m.id} className={`border-t border-white/5 hover:bg-white/5 ${!m.is_active ? 'text-red-400 font-semibold line-through' : ''}`}>
-                  <td className="px-4 py-2">
-                    <Link href={`/admin/property-managers/${m.id}/details`} className="text-emerald-400 hover:underline">{m.name}</Link>
-                  </td>
-                  <td className="px-4 py-2">{m.contact_name}</td>
-                  <td className="px-4 py-2">{m.email}</td>
-                  <td className="px-4 py-2">{m.phone}</td>
-                  <td className="px-4 py-2">{m.city}</td>
-                  <td className="px-4 py-2">{m.state}</td>
-                  <td className="px-4 py-2">{m.is_active ? 'Active' : 'Inactive'}</td>
-                  <td className="px-4 py-2 space-x-2">
-                    <Link href={`/admin/property-managers/${m.id}/edit`} className="text-blue-400 hover:underline">Edit</Link>
-                    <button onClick={() => toggleActiveStatus(m.id, m.is_active)} className="text-yellow-400 hover:underline">
-                      {m.is_active ? 'Inactivate' : 'Activate'}
-                    </button>
-                  </td>
+        <div className="pt-10">
+          <h2 className="text-xl font-bold mb-4">Payment Transactions</h2>
+          {transactions.length === 0 ? (
+            <p className="text-sm text-gray-300">No transactions recorded for this property manager.</p>
+          ) : (
+            <table className="w-full text-sm border border-white/10 rounded-lg overflow-hidden">
+              <thead className="bg-white/10">
+                <tr>
+                  <th className="text-left px-4 py-2">Date</th>
+                  <th className="text-left px-4 py-2">Amount</th>
+                  <th className="text-left px-4 py-2">Category</th>
+                  <th className="text-left px-4 py-2">Notes</th>
+                  <th className="text-left px-4 py-2">Property</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {transactions.map((tx, i) => (
+                  <tr key={i} className="border-t border-white/5">
+                    <td className="px-4 py-2">{new Date(tx.date).toLocaleDateString()}</td>
+                    <td className="px-4 py-2">${tx.amount.toFixed(2)}</td>
+                    <td className="px-4 py-2">{tx.transaction_category}</td>
+                    <td className="px-4 py-2">{tx.notes}</td>
+                    <td className="px-4 py-2">{tx.properties?.title}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
-
-        <div className="text-sm text-center text-gray-400 mt-6">Pagination coming soon...</div>
       </div>
     </main>
   )
