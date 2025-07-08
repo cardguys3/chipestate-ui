@@ -22,6 +22,7 @@ export default function Home() {
         .select('*')
         .eq('is_active', true)
         .eq('is_hidden', false)
+        .limit(9) // <- LIMIT added here
 
       if (error) {
         console.error('Error loading properties:', error.message)
