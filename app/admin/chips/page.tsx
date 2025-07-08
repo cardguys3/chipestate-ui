@@ -69,7 +69,12 @@ export default function ChipsPage() {
       property_uuid: propertyId,
       count: chipCount,
     })
-    error ? toast.error('Create failed') : toast.success('Chips created')
+    if (error) {
+      console.error(error)
+      toast.error('Create failed')
+    } else {
+      toast.success('Chips created')
+    }
     fetchAll()
   }
 
@@ -80,7 +85,12 @@ export default function ChipsPage() {
       user_uuid: selectedUserId,
       count: assignCount,
     })
-    error ? toast.error('Assign failed') : toast.success('Chips assigned')
+    if (error) {
+      console.error(error)
+      toast.error('Assign failed')
+    } else {
+      toast.success('Chips assigned')
+    }
     fetchAll()
   }
 
@@ -111,7 +121,7 @@ export default function ChipsPage() {
             {users.map(u => <option key={u.id} value={u.id}>{u.email}</option>)}
           </select>
           <input type="number" value={assignCount} onChange={(e) => setAssignCount(Number(e.target.value))} className="w-full p-2 mb-2 bg-gray-800 text-white border border-gray-500 rounded" min={1} />
-          <button onClick={assignChips} className="bg-emerald-500 px-4 py-2 rounded hover:bg-emerald-600 w-full">Assign</button>
+          <button onClick={assignChips} className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 w-full">Assign</button>
         </div>
       </div>
 
@@ -128,7 +138,7 @@ export default function ChipsPage() {
         <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="bg-gray-800 text-white p-2 border border-gray-500 rounded" placeholder="Filter Date" />
       </div>
 
-      {/* Chip table */}
+      {/* Chip Table */}
       <table className="w-full table-auto border border-white">
         <thead>
           <tr className="bg-gray-800">
@@ -168,7 +178,7 @@ export default function ChipsPage() {
           value={jumpPage}
           onChange={(e) => setJumpPage(e.target.value)}
           placeholder="Go to page"
-          className="p-1 text-black w-24 rounded"
+          className="p-1 bg-gray-800 text-white w-24 rounded border border-gray-500"
         />
         <button onClick={() => setCurrentPage(Number(jumpPage))} className="px-2 py-1 bg-blue-500 rounded">Go</button>
       </div>
