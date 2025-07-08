@@ -1,147 +1,152 @@
-// This document is the Property Details Page.
-// The request pertains to updating the Add Property page, so no changes needed here.
+// Add Property Page with drag/drop, URL input, delete images, and property fields
 
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
+import { v4 as uuidv4 } from 'uuid'
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
-export default function PropertyDetailsPage() {
-  const { id } = useParams()
-  const [property, setProperty] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [mainImage, setMainImage] = useState<string>('')
+export default function AddPropertyPage() {
+  const router = useRouter()
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [purchasePrice, setPurchasePrice] = useState('')
+  const [city, setCity] = useState('')
+  const [state, setState] = useState('')
+  const [zip, setZip] = useState('')
+  const [addressLine2, setAddressLine2] = useState('')
+  const [reservePct, setReservePct] = useState('')
+  const [propertyManagerId, setPropertyManagerId] = useState('')
+  const [isOccupied, setIsOccupied] = useState(false)
+  const [isHidden, setIsHidden] = useState(false)
+  const [isActive, setIsActive] = useState(true)
+  const [imageFiles, setImageFiles] = useState<File[]>([])
+  const [imageUrls, setImageUrls] = useState<string[]>([])
+  const [newImageUrl, setNewImageUrl] = useState('')
+  const [uploading, setUploading] = useState(false)
 
-  useEffect(() => {
-    const fetchProperty = async () => {
-      const { data, error } = await supabase
-        .from('properties')
-        .select('*')
-        .eq('id', id)
-        .single()
+  const handleImageDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    const files = [...e.dataTransfer.files].filter(f => f.type.startsWith('image/'))
+    setImageFiles(prev => [...prev, ...files])
+  }
 
-      if (error) {
-        console.error('Error loading property:', error.message)
-      } else {
-        setProperty(data)
-        if (data.image_urls?.length > 0) {
-          setMainImage(resolveImageUrl(data.image_urls[0]))
-        } else if (data.image_url) {
-          setMainImage(resolveImageUrl(data.image_url))
-        }
+  const handleImageUpload = async () => {
+    const urls: string[] = []
+    setUploading(true)
+
+    for (const file of imageFiles) {
+      const fileName = `${uuidv4()}-${file.name}`
+      const { data, error } = await supabase.storage.from('property-images').upload(fileName, file)
+      if (!error) {
+        urls.push(fileName)
       }
-
-      setLoading(false)
     }
 
-    fetchProperty()
-  }, [id])
-
-  const resolveImageUrl = (url: string): string => {
-    if (!url) return ''
-    if (url.startsWith('http')) return url
-    return `https://ajburehyunbvpuhnyjbo.supabase.co/storage/v1/object/public/property-images/${url}`
+    setUploading(false)
+    return urls
   }
 
-  if (loading) {
-    return <main className="min-h-screen bg-[#0B1D33] text-white p-8">Loading...</main>
+  const handleAddImageUrl = () => {
+    if (newImageUrl.trim()) {
+      setImageUrls(prev => [...prev, newImageUrl.trim()])
+      setNewImageUrl('')
+    }
   }
 
-  if (!property) {
-    return (
-      <main className="min-h-screen bg-[#0B1D33] text-white p-8">
-        <p>Property not found.</p>
-      </main>
-    )
+  const removeImage = (index: number, source: 'upload' | 'url') => {
+    if (source === 'upload') {
+      setImageFiles(prev => prev.filter((_, i) => i !== index))
+    } else {
+      setImageUrls(prev => prev.filter((_, i) => i !== index))
+    }
+  }
+
+  const handleSubmit = async () => {
+    const uploadedImagePaths = await handleImageUpload()
+    const combinedImageUrls = [...uploadedImagePaths, ...imageUrls]
+    const primaryImage = combinedImageUrls[0] || ''
+
+    const { error } = await supabase.from('properties').insert({
+      title,
+      description,
+      purchase_price: Number(purchasePrice),
+      city,
+      state,
+      zip,
+      address_line2: addressLine2,
+      reserve_percentage: Number(reservePct),
+      property_manager_id: propertyManagerId || null,
+      property_occupied: isOccupied,
+      is_hidden: isHidden,
+      is_active: isActive,
+      image_url: primaryImage,
+      image_urls: combinedImageUrls
+    })
+
+    if (!error) router.push('/admin/properties')
+    else console.error('Error saving property:', error.message)
   }
 
   return (
-    <main className="min-h-screen bg-[#0B1D33] text-white p-6">
-      <div className="max-w-5xl mx-auto border border-gray-600 rounded-xl p-6">
-        <h1 className="text-3xl font-bold mb-4 border-b pb-2">{property.title}</h1>
+    <main className="bg-[#0B1D33] text-white min-h-screen p-6">
+      <div className="max-w-4xl mx-auto space-y-4">
+        <h1 className="text-2xl font-bold mb-4">Add New Property</h1>
 
-        {/* Main Image */}
-        {mainImage ? (
-          <img
-            src={mainImage}
-            alt={property.title}
-            className="rounded-lg mb-4 object-cover w-full h-80 border"
-          />
-        ) : (
-          <div className="h-80 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 mb-4">
-            No image available
-          </div>
-        )}
+        <input type="text" placeholder="Title" className="w-full p-2 text-black" value={title} onChange={e => setTitle(e.target.value)} />
+        <textarea placeholder="Description" className="w-full p-2 text-black" value={description} onChange={e => setDescription(e.target.value)} />
 
-        {/* Thumbnails */}
-        {property.image_urls?.length > 0 && (
-          <div className="flex gap-3 mb-6 overflow-x-auto">
-            {property.image_urls.map((url: string, index: number) => {
-              const resolved = resolveImageUrl(url)
-              return (
-                <img
-                  key={index}
-                  src={resolved}
-                  alt={`Thumbnail ${index + 1}`}
-                  className={`rounded cursor-pointer border w-[120px] h-[80px] object-cover ${resolved === mainImage ? 'border-emerald-400' : 'border-transparent'}`}
-                  onClick={() => setMainImage(resolved)}
-                />
-              )
-            })}
-          </div>
-        )}
-
-        {/* Property Details */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm">
-          <div>
-            <p className="text-gray-400">Current Price</p>
-            <p className="text-white font-medium">${property.current_value?.toLocaleString()}</p>
-          </div>
-          <div>
-            <p className="text-gray-400">Purchase Price</p>
-            <p className="text-white font-medium">${property.purchase_price?.toLocaleString()}</p>
-          </div>
-          <div>
-            <p className="text-gray-400">Cap Rate</p>
-            <p className="text-white font-medium">{property.cap_rate || 'N/A'}%</p>
-          </div>
-          <div>
-            <p className="text-gray-400">Operating Reserve</p>
-            <p className="text-white font-medium">
-              ${property.reserve_balance?.toLocaleString()} (
-              {Math.round(
-                ((property.reserve_balance || 0) / (property.current_value || 1)) * 100
-              )}%
-              )
-            </p>
-          </div>
-          <div>
-            <p className="text-gray-400">Chips Available</p>
-            <p className="text-white font-medium">{property.chips_available}</p>
-          </div>
-          <div>
-            <p className="text-gray-400">Total Chips</p>
-            <p className="text-white font-medium">{property.total_chips}</p>
-          </div>
-          <div>
-            <p className="text-gray-400">Market Cap</p>
-            <p className="text-white font-medium">
-              ${property.market_cap ? property.market_cap.toLocaleString() : 'N/A'}
-            </p>
-          </div>
-          <div>
-            <p className="text-gray-400">Status</p>
-            <p className={`font-medium ${property.is_active ? 'text-green-400' : 'text-red-400'}`}>
-              {property.is_active ? 'Active' : 'Inactive'}
-            </p>
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <input type="number" placeholder="Purchase Price" className="p-2 text-black" value={purchasePrice} onChange={e => setPurchasePrice(e.target.value)} />
+          <input type="number" placeholder="Reserve %" className="p-2 text-black" value={reservePct} onChange={e => setReservePct(e.target.value)} />
+          <input type="text" placeholder="City" className="p-2 text-black" value={city} onChange={e => setCity(e.target.value)} />
+          <input type="text" placeholder="State" className="p-2 text-black" value={state} onChange={e => setState(e.target.value)} />
+          <input type="text" placeholder="ZIP" className="p-2 text-black" value={zip} onChange={e => setZip(e.target.value)} />
+          <input type="text" placeholder="Address Line 2" className="p-2 text-black" value={addressLine2} onChange={e => setAddressLine2(e.target.value)} />
         </div>
+
+        <input type="text" placeholder="Property Manager ID" className="w-full p-2 text-black" value={propertyManagerId} onChange={e => setPropertyManagerId(e.target.value)} />
+
+        <div className="flex items-center gap-4">
+          <label><input type="checkbox" checked={isOccupied} onChange={e => setIsOccupied(e.target.checked)} /> Occupied</label>
+          <label><input type="checkbox" checked={isHidden} onChange={e => setIsHidden(e.target.checked)} /> Hidden</label>
+          <label><input type="checkbox" checked={isActive} onChange={e => setIsActive(e.target.checked)} /> Active</label>
+        </div>
+
+        <div onDrop={handleImageDrop} onDragOver={e => e.preventDefault()} className="border-2 border-dashed p-4 rounded text-center">
+          Drag & drop images here
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {imageFiles.map((file, index) => (
+            <div key={index} className="relative">
+              <img src={URL.createObjectURL(file)} className="w-24 h-24 object-cover rounded" />
+              <button onClick={() => removeImage(index, 'upload')} className="absolute top-0 right-0 text-red-500">✕</button>
+            </div>
+          ))}
+
+          {imageUrls.map((url, index) => (
+            <div key={index} className="relative">
+              <img src={url} className="w-24 h-24 object-cover rounded" />
+              <button onClick={() => removeImage(index, 'url')} className="absolute top-0 right-0 text-red-500">✕</button>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex gap-2">
+          <input type="text" className="flex-1 p-2 text-black" placeholder="Paste image URL" value={newImageUrl} onChange={e => setNewImageUrl(e.target.value)} />
+          <button onClick={handleAddImageUrl} className="bg-emerald-600 px-4 py-2 rounded">Add URL</button>
+        </div>
+
+        <button disabled={uploading} onClick={handleSubmit} className="bg-blue-600 px-6 py-2 rounded font-bold">
+          {uploading ? 'Uploading...' : 'Save Property'}
+        </button>
       </div>
     </main>
   )
