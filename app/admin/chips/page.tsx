@@ -1,4 +1,3 @@
-// app/admin/chips/page.tsx
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -64,6 +63,19 @@ export default function ChipsPage() {
   const paginatedChips = filteredChips.slice((currentPage - 1) * pageSize, currentPage * pageSize)
   const totalPages = Math.max(1, Math.ceil(filteredChips.length / pageSize))
 
+  function formatDateTime(dateStr: string | null) {
+    if (!dateStr) return '—'
+    const date = new Date(dateStr)
+    return date.toLocaleString('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      year: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    })
+  }
+
   async function createChips() {
     if (!propertyId || chipCount < 1) return
     const { error } = await supabase.rpc('bulk_create_chips', {
@@ -100,6 +112,7 @@ export default function ChipsPage() {
       <Toaster />
       <h1 className="text-3xl font-bold mb-6">Manage Chips</h1>
 
+      {/* Create + Assign Row */}
       <div className="flex gap-8 mb-6">
         {/* Create Chips */}
         <div className="border border-white p-4 rounded w-1/2">
@@ -159,8 +172,8 @@ export default function ChipsPage() {
             <tr key={chip.id} className="border-t border-gray-700">
               <td className="p-2">{chip.property_title}</td>
               <td className="p-2">{chip.user_email ?? '—'}</td>
-              <td className="p-2">{chip.created_at}</td>
-              <td className="p-2">{chip.assigned_at ?? '—'}</td>
+              <td className="p-2">{formatDateTime(chip.created_at)}</td>
+              <td className="p-2">{formatDateTime(chip.assigned_at)}</td>
               <td className="p-2">{chip.serial}</td>
               <td className="p-2 flex gap-2">
                 <button className="bg-red-600 text-white px-2 rounded text-sm">Delete</button>
