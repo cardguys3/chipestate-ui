@@ -119,6 +119,65 @@ export default function AdminChipsPage() {
         />
       </div>
 
+      <div className="grid md:grid-cols-2 gap-6 mb-10">
+        {/* Create Chips */}
+        <div>
+          <h2 className="text-xl font-semibold mb-2">Create Chips</h2>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              const form = e.target as HTMLFormElement
+              const propertyId = form.property.value
+              const quantity = parseInt(form.quantity.value)
+              handleCreateChips(propertyId, quantity)
+            }}
+            className="bg-white/5 border border-white/10 rounded p-4 space-y-4"
+          >
+            <select name="property" required className="bg-gray-800 text-white w-full p-2 rounded">
+              <option value="">Select Property</option>
+              {propertyOptions.map((p) => (
+                <option key={p.id} value={p.id}>{p.title}</option>
+              ))}
+            </select>
+            <input name="quantity" type="number" min="1" placeholder="Chip Quantity" required className="bg-gray-800 text-white w-full p-2 rounded" />
+            <button type="submit" className="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded text-white">
+              Create Chips
+            </button>
+          </form>
+        </div>
+
+        {/* Assign Chips */}
+        <div>
+          <h2 className="text-xl font-semibold mb-2">Assign Chips</h2>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              const form = e.target as HTMLFormElement
+              const propertyId = form.assign_property.value
+              const userEmail = form.user.value
+              handleAssignChips(propertyId, userEmail)
+            }}
+            className="bg-white/5 border border-white/10 rounded p-4 space-y-4"
+          >
+            <select name="assign_property" required className="bg-gray-800 text-white w-full p-2 rounded">
+              <option value="">Select Property</option>
+              {propertyOptions.map((p) => (
+                <option key={p.id} value={p.id}>{p.title}</option>
+              ))}
+            </select>
+            <select name="user" required className="bg-gray-800 text-white w-full p-2 rounded">
+              <option value="">Select User</option>
+              {userOptions.map((u) => (
+                <option key={u.email} value={u.email}>{u.email}</option>
+              ))}
+            </select>
+            <button type="submit" className="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded text-white">
+              Assign Chips
+            </button>
+          </form>
+        </div>
+      </div>
+
       <table className="w-full border border-white/10 rounded overflow-hidden text-sm">
         <thead className="bg-gray-700 text-white">
           <tr>
@@ -147,61 +206,6 @@ export default function AdminChipsPage() {
           ))}
         </tbody>
       </table>
-
-      <div className="mt-10">
-        <h2 className="text-xl font-semibold mb-2">Create Chips</h2>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            const form = e.target as HTMLFormElement
-            const propertyId = form.property.value
-            const quantity = parseInt(form.quantity.value)
-            handleCreateChips(propertyId, quantity)
-          }}
-          className="bg-white/5 border border-white/10 rounded p-4 mt-2 space-y-4"
-        >
-          <select name="property" required className="bg-gray-800 text-white w-full p-2 rounded">
-            <option value="">Select Property</option>
-            {propertyOptions.map((p) => (
-              <option key={p.id} value={p.id}>{p.title}</option>
-            ))}
-          </select>
-          <input name="quantity" type="number" min="1" placeholder="Chip Quantity" required className="bg-gray-800 text-white w-full p-2 rounded" />
-          <button type="submit" className="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded text-white">
-            Create Chips
-          </button>
-        </form>
-      </div>
-
-      <div className="mt-10">
-        <h2 className="text-xl font-semibold mb-2">Assign Chips</h2>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            const form = e.target as HTMLFormElement
-            const propertyId = form.assign_property.value
-            const userEmail = form.user.value
-            handleAssignChips(propertyId, userEmail)
-          }}
-          className="bg-white/5 border border-white/10 rounded p-4 mt-2 space-y-4"
-        >
-          <select name="assign_property" required className="bg-gray-800 text-white w-full p-2 rounded">
-            <option value="">Select Property</option>
-            {propertyOptions.map((p) => (
-              <option key={p.id} value={p.id}>{p.title}</option>
-            ))}
-          </select>
-          <select name="user" required className="bg-gray-800 text-white w-full p-2 rounded">
-            <option value="">Select User</option>
-            {userOptions.map((u) => (
-              <option key={u.email} value={u.email}>{u.email}</option>
-            ))}
-          </select>
-          <button type="submit" className="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded text-white">
-            Assign Chips
-          </button>
-        </form>
-      </div>
     </main>
   )
 }
