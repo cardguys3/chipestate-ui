@@ -16,6 +16,7 @@ export default function Home() {
         .from('properties')
         .select('*')
         .eq('is_active', true)
+        .eq('is_hidden', false) // ✅ Hide hidden properties
 
       if (error) {
         console.error('Error loading properties:', error.message)
@@ -69,13 +70,13 @@ export default function Home() {
                 </div>
 
                 {/* Back */}
-                <div className="absolute w-full h-full bg-blue-900 text-white rounded-lg p-4 [transform:rotateY(180deg)] backface-hidden">
-                  <h3 className="text-lg font-bold mb-2">Property Details</h3>
+                <div className="absolute w-full h-full bg-blue-900 text-white rounded-lg p-4 [transform:rotateY(180deg)] backface-hidden overflow-y-auto">
+                  <h2 className="text-xl font-bold mb-3 text-center">{property.title}</h2>
                   <ul className="text-sm space-y-1">
                     <li><strong>Type:</strong> {property.property_type}</li>
                     <li><strong>Subtype:</strong> {property.sub_type}</li>
                     <li><strong>Return:</strong> {property.projected_return}</li>
-                    <li><strong>Occupied:</strong> {property.occupied}</li>
+                    <li><strong>Occupied:</strong> {property.property_occupied ? 'Occupied' : 'Vacant'}</li>
                     <li><strong>Yield:</strong> {property.rental_yield}</li>
                   </ul>
                 </div>
