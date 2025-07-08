@@ -1,7 +1,5 @@
 'use client'
-
 import { useEffect, useState } from 'react'
-import { useSession } from '@supabase/auth-helpers-react'
 import { useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 
@@ -11,12 +9,10 @@ const supabase = createBrowserClient(
 )
 
 export default function AdminChipsPage() {
-  const session = useSession()
   const router = useRouter()
 
   const [chips, setChips] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-
   const [propertyFilter, setPropertyFilter] = useState('')
   const [userFilter, setUserFilter] = useState('')
   const [dateFilter, setDateFilter] = useState('')
@@ -25,15 +21,10 @@ export default function AdminChipsPage() {
   const [userOptions, setUserOptions] = useState<any[]>([])
 
   useEffect(() => {
-    if (!session?.user) {
-      router.push('/')
-      return
-    }
-
     fetchChips()
     fetchProperties()
     fetchUsers()
-  }, [session])
+  }, [])
 
   const fetchChips = async () => {
     setLoading(true)
@@ -82,8 +73,8 @@ export default function AdminChipsPage() {
     }
   }
 
-  const handleUpdateChip = async (id: string, updates: any) => {
-    await supabase.from('chips').update(updates).eq('id', id)
+  const handleUpdateChip = async (serial: string, updates: any) => {
+    await supabase.from('chips').update(updates).eq('serial', serial)
     fetchChips()
   }
 
@@ -148,9 +139,9 @@ export default function AdminChipsPage() {
               <td className="p-2">{chip.assigned_at?.split('T')[0] || '-'}</td>
               <td className="p-2">{chip.serial}</td>
               <td className="p-2 space-x-2">
-                <button onClick={() => handleUpdateChip(chip.id, { is_active: false })} className="text-red-400 hover:underline">Inactivate</button>
-                <button onClick={() => handleUpdateChip(chip.id, { hidden: true })} className="text-yellow-400 hover:underline">Hide</button>
-                <button onClick={() => handleUpdateChip(chip.id, { deleted: true })} className="text-gray-400 hover:underline">Delete</button>
+                <button onClick={() => handleUpdateChip(chip.serial, { is_active: false })} className="text-red-400 hover:underline">Inactivate</button>
+                <button onClick={() => handleUpdateChip(chip.serial, { hidden: true })} className="text-yellow-400 hover:underline">Hide</button>
+                <button onClick={() => handleUpdateChip(chip.serial, { deleted: true })} className="text-gray-400 hover:underline">Delete</button>
               </td>
             </tr>
           ))}
