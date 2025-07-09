@@ -52,9 +52,7 @@ export default function Header() {
             <Link href="/dashboard" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">Dashboard</Link>
             <Link href="/glossary" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">Glossary</Link>
             <Link href="/about" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">About</Link>
-            <Link href="/terms" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">Terms</Link>
-            <Link href="/privacy" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">Privacy</Link>
-
+           
             {userEmail ? (
               <>
                 {isAdmin && (
@@ -92,8 +90,6 @@ export default function Header() {
             <Link href="/dashboard" className="block hover:text-amber-600">Dashboard</Link>
             <Link href="/glossary" className="block hover:text-amber-600">Glossary</Link>
             <Link href="/about" className="block hover:text-amber-600">About</Link>
-            <Link href="/terms" className="block hover:text-amber-600">Terms</Link>
-            <Link href="/privacy" className="block hover:text-amber-600">Privacy</Link>
 
             {userEmail ? (
               <>
