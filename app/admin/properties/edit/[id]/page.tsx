@@ -1,4 +1,4 @@
-// Updated Edit Property Page with dropdowns, toggles, dollar formatting, and manager dropdown
+// Updated Edit Property Page with corrected toggle switch typing
 
 'use client'
 
@@ -190,7 +190,7 @@ export default function EditPropertyPage() {
               <span className="text-sm capitalize">{field.replace(/_/g, ' ')}</span>
               <Switch
                 checked={form[field]}
-                onChange={(value) => setForm(prev => ({ ...prev, [field]: value }))}
+                onChange={(value) => setForm((prev: typeof form) => ({ ...prev, [field]: value }))}
                 className={`${form[field] ? 'bg-emerald-600' : 'bg-gray-600'} relative inline-flex h-6 w-11 items-center rounded-full transition`}
               >
                 <span
