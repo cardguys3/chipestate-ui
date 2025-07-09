@@ -25,6 +25,7 @@ export default function AdminPropertiesPage() {
   const [allTypes, setAllTypes] = useState<string[]>([])
   const [allSubtypes, setAllSubtypes] = useState<string[]>([])
   const [allManagers, setAllManagers] = useState<string[]>([])
+  const [titleSearch, setTitleSearch] = useState('')
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -86,14 +87,25 @@ export default function AdminPropertiesPage() {
       <h1 className="text-2xl font-bold mb-4">Manage Properties</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-6 gap-4 mb-6">
-        <select
-          value={filter.title}
-          onChange={(e) => setFilter({ ...filter, title: e.target.value })}
-          className="p-2 rounded bg-[#1e2a3c] border border-gray-600"
-        >
-          <option value=''>Title</option>
-          {allTitles.map(t => <option key={t}>{t}</option>)}
-        </select>
+        <div>
+          <input
+            type="text"
+            placeholder="Search title..."
+            value={titleSearch}
+            onChange={(e) => setTitleSearch(e.target.value)}
+            className="w-full mb-2 p-2 rounded bg-[#1e2a3c] border border-gray-600"
+          />
+          <select
+            value={filter.title}
+            onChange={(e) => setFilter({ ...filter, title: e.target.value })}
+            className="w-full p-2 rounded bg-[#1e2a3c] border border-gray-600"
+          >
+            <option value=''>Title</option>
+            {allTitles.filter(t => t.toLowerCase().includes(titleSearch.toLowerCase())).map(t => (
+              <option key={t}>{t}</option>
+            ))}
+          </select>
+        </div>
         <select
           value={filter.property_type}
           onChange={(e) => setFilter({ ...filter, property_type: e.target.value })}
