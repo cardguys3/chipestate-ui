@@ -16,6 +16,7 @@ const subTypes: { [key: string]: string[] } = {
   Commercial: ['Office', 'Retail', 'Warehouse', 'Industrial']
 }
 
+
 function generateZillowUrl(address_line1: string, city: string, state: string, zip: string) {
   const clean = (str: string) => encodeURIComponent(str.trim().replace(/\s+/g, '-'))
   return `https://www.zillow.com/homes/${clean(address_line1)}-${clean(city)}-${clean(state)}-${zip}_rb/`
