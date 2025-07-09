@@ -1,3 +1,5 @@
+// Updated Edit Property Page with Zestimate autofill and restored full form UI
+
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -15,7 +17,6 @@ const subTypes: { [key: string]: string[] } = {
   Residential: ['Single Family', 'Multi Family', 'Townhouse', 'Condo'],
   Commercial: ['Office', 'Retail', 'Warehouse', 'Industrial']
 }
-
 
 function generateZillowUrl(address_line1: string, city: string, state: string, zip: string) {
   const clean = (str: string) => encodeURIComponent(str.trim().replace(/\s+/g, '-'))
@@ -75,7 +76,6 @@ export default function EditPropertyPage() {
         if (newUrl) setImageUrls(prev => [...prev, newUrl])
       }
     }
-
     setUploading(false)
   }
 
