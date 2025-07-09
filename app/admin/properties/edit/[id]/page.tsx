@@ -16,6 +16,7 @@ export default function EditPropertyPage() {
   const [imageUrls, setImageUrls] = useState<string[]>([])
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [newImageUrl, setNewImageUrl] = useState('')
 
   useEffect(() => {
     if (!id) return
@@ -67,6 +68,13 @@ export default function EditPropertyPage() {
     setUploading(false)
   }
 
+  const handleAddImageUrl = () => {
+    if (newImageUrl.trim()) {
+      setImageUrls(prev => [...prev, newImageUrl.trim()])
+      setNewImageUrl('')
+    }
+  }
+
   const handleImageDelete = (url: string) => {
     setImageUrls(prev => prev.filter(u => u !== url))
   }
@@ -100,27 +108,38 @@ export default function EditPropertyPage() {
     <main className="min-h-screen bg-[#0e1a2b] text-white px-8 py-10">
       <h1 className="text-2xl font-bold mb-6">Edit Property</h1>
       {error && <p className="text-red-500 mb-4">{error}</p>}
-      <form onSubmit={handleSubmit} className="bg-[#1e2a3c] p-6 rounded-lg border border-gray-700 shadow-md space-y-4 max-w-6xl mx-auto">
+      <form onSubmit={handleSubmit} className="bg-[#1e2a3c] p-6 rounded-lg border border-gray-700 shadow-md space-y-6 max-w-6xl mx-auto">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {[ 'title', 'address_line1', 'address_line2', 'city', 'state', 'zip', 'property_type', 'sub_type', 'purchase_price', 'current_value', 'total_chips', 'chips_available', 'manager_name', 'reserve_balance' ].map(field => (
-            <input
-              key={field}
-              name={field}
-              value={form[field] || ''}
-              onChange={handleChange}
-              placeholder={field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-              className="p-2 rounded bg-[#102134] border border-gray-600 w-full"
-              required={['title','address_line1','city','state','zip','property_type','sub_type','purchase_price','current_value','total_chips','chips_available','manager_name','reserve_balance'].includes(field)}
-            />
+          {[
+            'title', 'address_line1', 'address_line2', 'city', 'state', 'zip',
+            'property_type', 'sub_type', 'purchase_price', 'current_value',
+            'total_chips', 'chips_available', 'manager_name', 'reserve_balance'
+          ].map(field => (
+            <div key={field} className="flex flex-col">
+              <label htmlFor={field} className="mb-1 text-sm text-gray-300">
+                {field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+              </label>
+              <input
+                id={field}
+                name={field}
+                value={form[field] || ''}
+                onChange={handleChange}
+                className="p-2 rounded bg-[#102134] border border-gray-600 w-full"
+                required={[
+                  'title', 'address_line1', 'city', 'state', 'zip',
+                  'property_type', 'sub_type', 'purchase_price', 'current_value',
+                  'total_chips', 'chips_available', 'manager_name', 'reserve_balance'
+                ].includes(field)}
+              />
+            </div>
           ))}
         </div>
 
-        <label className="flex items-center gap-2">
-          <input type="checkbox" name="occupied" checked={form.occupied} onChange={handleChange} className="accent-blue-500" />
-          Occupied?
-        </label>
-
-        <div className="flex gap-4">
+        <div className="flex gap-4 mt-4">
+          <label className="flex items-center gap-2">
+            <input type="checkbox" name="occupied" checked={form.occupied} onChange={handleChange} className="accent-blue-500" />
+            Occupied?
+          </label>
           <label className="flex items-center gap-2">
             <input type="checkbox" name="is_active" checked={form.is_active} onChange={handleChange} className="accent-green-500" />
             Active
@@ -131,12 +150,25 @@ export default function EditPropertyPage() {
           </label>
         </div>
 
-        <div className="mt-6">
+        <div>
           <label className="block text-sm font-semibold mb-2">Upload Images</label>
           <input type="file" accept="image/*" multiple onChange={handleImageUpload} className="bg-[#102134] p-2 rounded border border-gray-600" />
           {uploading && <p className="text-sm text-gray-400 mt-1">Uploading...</p>}
 
-          <div className="mt-4 space-y-2">
+          <div className="flex mt-4 gap-2">
+            <input
+              type="text"
+              value={newImageUrl}
+              onChange={(e) => setNewImageUrl(e.target.value)}
+              placeholder="Add image URL manually"
+              className="flex-1 p-2 rounded bg-[#102134] border border-gray-600 text-white"
+            />
+            <button type="button" onClick={handleAddImageUrl} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded text-white">
+              Add URL
+            </button>
+          </div>
+
+          <div className="mt-4 space-y-3">
             {imageUrls.map((url, idx) => (
               <div key={idx} className="flex items-center gap-4">
                 <img src={url} alt="Property Image" className="w-32 h-24 rounded border border-gray-600 object-cover" />
