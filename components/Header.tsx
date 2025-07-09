@@ -49,6 +49,7 @@ export default function Header() {
           {/* Desktop Nav */}
           <nav className="hidden md:flex space-x-1 items-center text-base font-medium text-white">
             <Link href="/market" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">Market</Link>
+            <Link href="/dashboard" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">Dashboard</Link>
             <Link href="/glossary" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">Glossary</Link>
             <Link href="/about" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">About</Link>
             <Link href="/terms" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">Terms</Link>
@@ -88,6 +89,7 @@ export default function Header() {
         {isMenuOpen && (
           <div className="md:hidden px-4 pb-4 space-y-2 bg-blue-900 text-white shadow">
             <Link href="/market" className="block hover:text-amber-600">Market</Link>
+            <Link href="/dashboard" className="block hover:text-amber-600">Dashboard</Link>
             <Link href="/glossary" className="block hover:text-amber-600">Glossary</Link>
             <Link href="/about" className="block hover:text-amber-600">About</Link>
             <Link href="/terms" className="block hover:text-amber-600">Terms</Link>
