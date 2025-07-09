@@ -27,6 +27,8 @@ export default function DashboardPage() {
   const [properties, setProperties] = useState<any[]>([])
   const [recommendations, setRecommendations] = useState<any[]>([])
   const [earnings, setEarnings] = useState<any[]>([])
+  const [selectedProps, setSelectedProps] = useState<string[]>([])
+  const [timeRange, setTimeRange] = useState<number>(36)
 
   useEffect(() => {
     const loadData = async () => {
@@ -60,7 +62,15 @@ export default function DashboardPage() {
     loadData()
   }, [])
 
+  const filteredEarnings = earnings.filter(e => {
+    const inProperty = selectedProps.length === 0 || selectedProps.includes(e.property_id)
+    const dateLimit = new Date()
+    dateLimit.setMonth(dateLimit.getMonth() - timeRange)
+    return inProperty && new Date(e.month + '-01') >= dateLimit
+  })
+
   const netWorth = chips.reduce((sum, chip) => sum + (chip.current_value || 0), 0)
+  const totalPayout = filteredEarnings.reduce((sum, e) => sum + Number(e.total || 0), 0)
   const uniqueProperties = new Set(chips.map((chip) => chip.property_id)).size
 
   const getColor = (i: number) => {
@@ -70,10 +80,12 @@ export default function DashboardPage() {
     return colors[i % colors.length]
   }
 
+  const months = [...new Set(filteredEarnings.map(e => e.month))]
+
   const chipLineChart = {
-    labels: [...new Set(earnings.map(e => e.month))],
-    datasets: Array.from(new Set(earnings.map(e => e.chip_id))).map((chipId, index) => {
-      const chipEarnings = earnings.filter(e => e.chip_id === chipId)
+    labels: months,
+    datasets: Array.from(new Set(filteredEarnings.map(e => e.chip_id))).map((chipId, index) => {
+      const chipEarnings = filteredEarnings.filter(e => e.chip_id === chipId)
       return {
         label: `Chip ${chipId.slice(0, 6)}`,
         data: chipEarnings.map(e => e.total),
@@ -85,11 +97,12 @@ export default function DashboardPage() {
   }
 
   const propertyLineChart = {
-    labels: [...new Set(earnings.map(e => e.month))],
-    datasets: Array.from(new Set(earnings.map(e => e.property_id))).map((propId, index) => {
-      const propEarnings = earnings.filter(e => e.property_id === propId)
+    labels: months,
+    datasets: Array.from(new Set(filteredEarnings.map(e => e.property_id))).map((propId, index) => {
+      const propEarnings = filteredEarnings.filter(e => e.property_id === propId)
+      const title = properties.find(p => p.id === propId)?.title || `Property ${propId.slice(0, 6)}`
       return {
-        label: `Property ${propId.slice(0, 6)}`,
+        label: title,
         data: propEarnings.map(e => e.total),
         borderColor: getColor(index),
         backgroundColor: getColor(index) + '33',
@@ -120,24 +133,53 @@ export default function DashboardPage() {
 
       <section className="mb-10">
         <h2 className="text-xl font-semibold mb-2">📊 Account Overview</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <div className="bg-[#1e2a3c] rounded-xl p-4 shadow">Net Worth: ${netWorth.toLocaleString()}</div>
           <div className="bg-[#1e2a3c] rounded-xl p-4 shadow">Chips Owned: {chips.length}</div>
           <div className="bg-[#1e2a3c] rounded-xl p-4 shadow">Properties Owned: {uniqueProperties}</div>
+          <div className="bg-[#1e2a3c] rounded-xl p-4 shadow">Total Payouts: ${totalPayout.toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
         </div>
       </section>
 
       <section className="mb-10">
-        <h2 className="text-xl font-semibold mb-2">📈 Personal Earnings by Chip</h2>
-        <div className="bg-[#1e2a3c] p-6 rounded-xl">
-          <Line data={chipLineChart} />
-        </div>
-      </section>
+        <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
+          <select
+            multiple
+            className="bg-[#1e2a3c] text-white p-2 rounded-xl border border-gray-600"
+            value={selectedProps}
+            onChange={(e) => {
+              const options = Array.from(e.target.selectedOptions).map((o) => o.value)
+              setSelectedProps(options)
+            }}>
+            {properties.map((p) => (
+              <option key={p.id} value={p.id}>{p.title}</option>
+            ))}
+          </select>
 
-      <section className="mb-10">
-        <h2 className="text-xl font-semibold mb-2">🏘 Earnings by Property</h2>
-        <div className="bg-[#1e2a3c] p-6 rounded-xl">
-          <Line data={propertyLineChart} />
+          <div className="flex items-center gap-2">
+            <label htmlFor="monthsRange">Months:</label>
+            <input
+              id="monthsRange"
+              type="range"
+              min={6}
+              max={36}
+              value={timeRange}
+              onChange={(e) => setTimeRange(parseInt(e.target.value))}
+            />
+            <span>{timeRange} months</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-[#1e2a3c] p-6 rounded-xl">
+            <h2 className="text-xl font-semibold mb-2">📈 Personal Earnings by Chip</h2>
+            <Line data={chipLineChart} />
+          </div>
+
+          <div className="bg-[#1e2a3c] p-6 rounded-xl">
+            <h2 className="text-xl font-semibold mb-2">🏘 Earnings by Property</h2>
+            <Line data={propertyLineChart} />
+          </div>
         </div>
       </section>
 
