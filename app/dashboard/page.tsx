@@ -78,13 +78,21 @@ export default function DashboardPage() {
 
   return (
     <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-3xl font-bold">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+        <h1 className="text-3xl font-bold mb-4 md:mb-0">
           Welcome{user?.user_metadata?.first_name ? `, ${user.user_metadata.first_name}` : ''}!
         </h1>
-        <div className="space-x-4">
-          <Link href="/account" className="text-emerald-400 underline">Account</Link>
-          <Link href="/profile" className="text-emerald-400 underline">Profile</Link>
+        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+          <div className="text-lg font-semibold text-emerald-300">Quick Access</div>
+          <Link href="/account" className="bg-emerald-600 px-4 py-2 rounded-xl text-white hover:bg-emerald-700">
+            Account Details
+          </Link>
+          <Link href="/wallet/add-funds" className="bg-emerald-600 px-4 py-2 rounded-xl text-white hover:bg-emerald-700">
+            Add Funds
+          </Link>
+          <Link href="/wallet/cash-out" className="bg-emerald-600 px-4 py-2 rounded-xl text-white hover:bg-emerald-700">
+            Cash Out
+          </Link>
         </div>
       </div>
 
@@ -134,21 +142,6 @@ export default function DashboardPage() {
               </Link>
             </div>
           ))}
-        </div>
-      </section>
-
-      <section className="mb-10">
-        <h2 className="text-xl font-semibold mb-2">🔗 Quick Access</h2>
-        <div className="flex gap-4 flex-wrap">
-          <Link href="/account" className="bg-emerald-600 px-4 py-2 rounded-xl text-white hover:bg-emerald-700">
-            Account Details
-          </Link>
-          <Link href="/wallet/add-funds" className="bg-emerald-600 px-4 py-2 rounded-xl text-white hover:bg-emerald-700">
-            Add Funds
-          </Link>
-          <Link href="/wallet/cash-out" className="bg-emerald-600 px-4 py-2 rounded-xl text-white hover:bg-emerald-700">
-            Cash Out
-          </Link>
         </div>
       </section>
     </main>
