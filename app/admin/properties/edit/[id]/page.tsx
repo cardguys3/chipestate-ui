@@ -1,13 +1,22 @@
+// Updated Edit Property Page with dropdowns, toggles, dollar formatting, and manager dropdown
+
 'use client'
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
+import { Switch } from '@headlessui/react'
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
+
+const propertyTypes = ['Residential', 'Commercial']
+const subTypes: { [key: string]: string[] } = {
+  Residential: ['Single Family', 'Multi Family', 'Townhouse', 'Condo'],
+  Commercial: ['Office', 'Retail', 'Warehouse', 'Industrial']
+}
 
 export default function EditPropertyPage() {
   const router = useRouter()
@@ -17,6 +26,7 @@ export default function EditPropertyPage() {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [newImageUrl, setNewImageUrl] = useState('')
+  const [managers, setManagers] = useState<any[]>([])
 
   useEffect(() => {
     if (!id) return
@@ -36,7 +46,13 @@ export default function EditPropertyPage() {
       }
     }
 
+    const fetchManagers = async () => {
+      const { data } = await supabase.from('property_managers').select('id, name')
+      setManagers(data || [])
+    }
+
     fetchProperty()
+    fetchManagers()
   }, [id])
 
   const handleChange = (e: any) => {
@@ -49,7 +65,6 @@ export default function EditPropertyPage() {
     setUploading(true)
 
     for (const file of files) {
-      const fileExt = file.name.split('.').pop()
       const fileName = `${Date.now()}-${file.name}`
       const filePath = `${fileName}`
 
@@ -58,9 +73,7 @@ export default function EditPropertyPage() {
         .upload(filePath, file, { upsert: true })
 
       if (!uploadError) {
-        const { data: publicUrlData } = supabase.storage
-          .from('property-images')
-          .getPublicUrl(filePath)
+        const { data: publicUrlData } = supabase.storage.from('property-images').getPublicUrl(filePath)
         const newUrl = publicUrlData?.publicUrl
         if (newUrl) setImageUrls(prev => [...prev, newUrl])
       }
@@ -81,19 +94,15 @@ export default function EditPropertyPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    const { error: updateError } = await supabase
-      .from('properties')
-      .update({
-        ...form,
-        purchase_price: Number(form.purchase_price),
-        current_value: Number(form.current_value),
-        total_chips: Number(form.total_chips),
-        chips_available: Number(form.chips_available),
-        reserve_balance: Number(form.reserve_balance),
-        image_urls: imageUrls,
-      })
-      .eq('id', id)
+    const { error: updateError } = await supabase.from('properties').update({
+      ...form,
+      purchase_price: Number(form.purchase_price),
+      current_value: Number(form.current_value),
+      total_chips: Number(form.total_chips),
+      chips_available: Number(form.chips_available),
+      reserve_balance: Number(form.reserve_balance),
+      image_urls: imageUrls,
+    }).eq('id', id)
 
     if (updateError) {
       setError(updateError.message)
@@ -110,11 +119,7 @@ export default function EditPropertyPage() {
       {error && <p className="text-red-500 mb-4">{error}</p>}
       <form onSubmit={handleSubmit} className="bg-[#1e2a3c] p-6 rounded-lg border border-gray-700 shadow-md space-y-6 max-w-6xl mx-auto">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {[
-            'title', 'address_line1', 'address_line2', 'city', 'state', 'zip',
-            'property_type', 'sub_type', 'purchase_price', 'current_value',
-            'total_chips', 'chips_available', 'manager_name', 'reserve_balance'
-          ].map(field => (
+          {['title', 'address_line1', 'address_line2', 'city', 'state', 'zip'].map(field => (
             <div key={field} className="flex flex-col">
               <label htmlFor={field} className="mb-1 text-sm text-gray-300">
                 {field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
@@ -125,29 +130,75 @@ export default function EditPropertyPage() {
                 value={form[field] || ''}
                 onChange={handleChange}
                 className="p-2 rounded bg-[#102134] border border-gray-600 w-full"
-                required={[
-                  'title', 'address_line1', 'city', 'state', 'zip',
-                  'property_type', 'sub_type', 'purchase_price', 'current_value',
-                  'total_chips', 'chips_available', 'manager_name', 'reserve_balance'
-                ].includes(field)}
+                required
               />
             </div>
           ))}
+
+          <div className="flex flex-col">
+            <label className="text-sm">Property Type</label>
+            <select name="property_type" value={form.property_type} onChange={handleChange} className="p-2 rounded bg-[#102134] border border-gray-600 text-white">
+              <option value="">Select Property Type</option>
+              {propertyTypes.map(type => <option key={type} value={type}>{type}</option>)}
+            </select>
+          </div>
+
+          <div className="flex flex-col">
+            <label className="text-sm">Subtype</label>
+            <select name="sub_type" value={form.sub_type} onChange={handleChange} className="p-2 rounded bg-[#102134] border border-gray-600 text-white">
+              <option value="">Select Subtype</option>
+              {(subTypes[form.property_type] || []).map(sub => <option key={sub} value={sub}>{sub}</option>)}
+            </select>
+          </div>
+
+          {['purchase_price', 'current_value', 'total_chips', 'chips_available', 'reserve_balance'].map(field => (
+            <div key={field} className="flex flex-col">
+              <label htmlFor={field} className="mb-1 text-sm text-gray-300">
+                {field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+              </label>
+              <input
+                id={field}
+                name={field}
+                value={form[field] || ''}
+                onChange={handleChange}
+                className="p-2 rounded bg-[#102134] border border-gray-600 w-full text-right"
+                inputMode="decimal"
+              />
+            </div>
+          ))}
+
+          <div className="flex flex-col">
+            <label htmlFor="manager_id" className="text-sm">Property Manager</label>
+            <select
+              id="manager_id"
+              name="manager_id"
+              value={form.manager_id || ''}
+              onChange={handleChange}
+              className="p-2 rounded bg-[#102134] border border-gray-600 text-white"
+            >
+              <option value="">Select Property Manager</option>
+              {managers.map(m => (
+                <option key={m.id} value={m.id}>{m.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        <div className="flex gap-4 mt-4">
-          <label className="flex items-center gap-2">
-            <input type="checkbox" name="occupied" checked={form.occupied} onChange={handleChange} className="accent-blue-500" />
-            Occupied?
-          </label>
-          <label className="flex items-center gap-2">
-            <input type="checkbox" name="is_active" checked={form.is_active} onChange={handleChange} className="accent-green-500" />
-            Active
-          </label>
-          <label className="flex items-center gap-2">
-            <input type="checkbox" name="is_hidden" checked={form.is_hidden} onChange={handleChange} className="accent-yellow-500" />
-            Hidden
-          </label>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {['occupied', 'is_active', 'is_hidden'].map(field => (
+            <div key={field} className="flex items-center gap-4">
+              <span className="text-sm capitalize">{field.replace(/_/g, ' ')}</span>
+              <Switch
+                checked={form[field]}
+                onChange={(value) => setForm(prev => ({ ...prev, [field]: value }))}
+                className={`${form[field] ? 'bg-emerald-600' : 'bg-gray-600'} relative inline-flex h-6 w-11 items-center rounded-full transition`}
+              >
+                <span
+                  className={`${form[field] ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform bg-white rounded-full transition`}
+                />
+              </Switch>
+            </div>
+          ))}
         </div>
 
         <div>
