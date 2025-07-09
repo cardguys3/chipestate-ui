@@ -1,5 +1,3 @@
-// Updated Edit Property Page with Zillow deep link integration and full form restored
-
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -31,7 +29,6 @@ export default function EditPropertyPage() {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [newImageUrl, setNewImageUrl] = useState('')
-  const [managers, setManagers] = useState<any[]>([])
 
   useEffect(() => {
     if (!id) return
@@ -51,13 +48,7 @@ export default function EditPropertyPage() {
       }
     }
 
-    const fetchManagers = async () => {
-      const { data } = await supabase.from('property_managers').select('id, name')
-      setManagers(data || [])
-    }
-
     fetchProperty()
-    fetchManagers()
   }, [id])
 
   const handleChange = (e: any) => {
@@ -83,6 +74,7 @@ export default function EditPropertyPage() {
         if (newUrl) setImageUrls(prev => [...prev, newUrl])
       }
     }
+
     setUploading(false)
   }
 
@@ -99,8 +91,9 @@ export default function EditPropertyPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    const { manager_id, ...formToSave } = form
     const { error: updateError } = await supabase.from('properties').update({
-      ...form,
+      ...formToSave,
       purchase_price: Number(form.purchase_price),
       current_value: Number(form.current_value),
       total_chips: Number(form.total_chips),
@@ -134,43 +127,32 @@ export default function EditPropertyPage() {
         >
           View Zestimate on Zillow ↗
         </a>
+        <button
+          type="button"
+          onClick={async () => {
+            const full = `${form.address_line1} ${form.city} ${form.state} ${form.zip}`
+            const res = await fetch(`/api/zestimate?address=${encodeURIComponent(full)}`)
+            const json = await res.json()
+            if (json.zestimate) {
+              setForm((prev: typeof form) => ({ ...prev, current_value: json.zestimate.replace(/[^0-9.]/g, '') }))
+              alert(`Zestimate: ${json.zestimate}`)
+            } else {
+              alert('Zestimate not found')
+            }
+          }}
+          className="ml-4 text-sm text-emerald-400 underline hover:text-emerald-600"
+        >
+          Auto-fill Zestimate
+        </button>
       </div>
 
       <form onSubmit={handleSubmit} className="bg-[#1e2a3c] p-6 rounded-lg border border-gray-700 shadow-md space-y-6 max-w-6xl mx-auto">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {['title', 'address_line1', 'address_line2', 'city', 'state', 'zip'].map(field => (
-            <div key={field} className="flex flex-col">
-              <label htmlFor={field} className="mb-1 text-sm text-gray-300">
-                {field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-              </label>
-              <input
-                id={field}
-                name={field}
-                value={form[field] || ''}
-                onChange={handleChange}
-                className="p-2 rounded bg-[#102134] border border-gray-600 w-full"
-                required
-              />
-            </div>
-          ))}
-
-          <div className="flex flex-col">
-            <label className="text-sm">Property Type</label>
-            <select name="property_type" value={form.property_type} onChange={handleChange} className="p-2 rounded bg-[#102134] border border-gray-600 text-white">
-              <option value="">Select Property Type</option>
-              {propertyTypes.map(type => <option key={type} value={type}>{type}</option>)}
-            </select>
-          </div>
-
-          <div className="flex flex-col">
-            <label className="text-sm">Subtype</label>
-            <select name="sub_type" value={form.sub_type} onChange={handleChange} className="p-2 rounded bg-[#102134] border border-gray-600 text-white">
-              <option value="">Select Subtype</option>
-              {(subTypes[form.property_type] || []).map(sub => <option key={sub} value={sub}>{sub}</option>)}
-            </select>
-          </div>
-
-          {['purchase_price', 'current_value', 'total_chips', 'chips_available', 'reserve_balance'].map(field => (
+          {[
+            'title', 'address_line1', 'address_line2', 'city', 'state', 'zip',
+            'property_type', 'sub_type', 'purchase_price', 'current_value',
+            'total_chips', 'chips_available', 'reserve_balance'
+          ].map(field => (
             <div key={field} className="flex flex-col">
               <label htmlFor={field} className="mb-1 text-sm text-gray-300">
                 {field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
@@ -181,26 +163,14 @@ export default function EditPropertyPage() {
                 value={form[field] || ''}
                 onChange={handleChange}
                 className="p-2 rounded bg-[#102134] border border-gray-600 w-full text-right"
-                inputMode="decimal"
+                inputMode={
+                  ['purchase_price', 'current_value', 'total_chips', 'chips_available', 'reserve_balance'].includes(field)
+                    ? 'decimal'
+                    : 'text'
+                }
               />
             </div>
           ))}
-
-          <div className="flex flex-col">
-            <label htmlFor="manager_id" className="text-sm">Property Manager</label>
-            <select
-              id="manager_id"
-              name="manager_id"
-              value={form.manager_id || ''}
-              onChange={handleChange}
-              className="p-2 rounded bg-[#102134] border border-gray-600 text-white"
-            >
-              <option value="">Select Property Manager</option>
-              {managers.map(m => (
-                <option key={m.id} value={m.id}>{m.name}</option>
-              ))}
-            </select>
-          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
