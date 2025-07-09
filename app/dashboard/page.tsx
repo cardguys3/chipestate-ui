@@ -50,8 +50,8 @@ export default function DashboardPage() {
       setRecommendations(recs)
 
       const { data: earningsData } = await supabase
-        .from('chip_earnings_view') // Replace with actual table/view
-        .select('month, amount')
+        .from('chip_earnings_monthly')
+        .select('*')
         .eq('user_id', user.id)
         .order('month', { ascending: true })
       setEarnings(earningsData || [])
@@ -63,17 +63,39 @@ export default function DashboardPage() {
   const netWorth = chips.reduce((sum, chip) => sum + (chip.current_value || 0), 0)
   const uniqueProperties = new Set(chips.map((chip) => chip.property_id)).size
 
-  const earningsChart = {
-    labels: earnings.map((e) => e.month),
-    datasets: [
-      {
-        label: 'Earnings (Dividends)',
-        data: earnings.map((e) => e.amount),
-        borderColor: 'rgba(34,197,94,1)',
-        backgroundColor: 'rgba(34,197,94,0.2)',
-        tension: 0.4,
-      },
-    ],
+  const getColor = (i: number) => {
+    const colors = [
+      '#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#6366F1', '#EC4899', '#14B8A6', '#F97316'
+    ]
+    return colors[i % colors.length]
+  }
+
+  const chipLineChart = {
+    labels: [...new Set(earnings.map(e => e.month))],
+    datasets: Array.from(new Set(earnings.map(e => e.chip_id))).map((chipId, index) => {
+      const chipEarnings = earnings.filter(e => e.chip_id === chipId)
+      return {
+        label: `Chip ${chipId.slice(0, 6)}`,
+        data: chipEarnings.map(e => e.total),
+        borderColor: getColor(index),
+        backgroundColor: getColor(index) + '33',
+        tension: 0.4
+      }
+    })
+  }
+
+  const propertyLineChart = {
+    labels: [...new Set(earnings.map(e => e.month))],
+    datasets: Array.from(new Set(earnings.map(e => e.property_id))).map((propId, index) => {
+      const propEarnings = earnings.filter(e => e.property_id === propId)
+      return {
+        label: `Property ${propId.slice(0, 6)}`,
+        data: propEarnings.map(e => e.total),
+        borderColor: getColor(index),
+        backgroundColor: getColor(index) + '33',
+        tension: 0.4
+      }
+    })
   }
 
   return (
@@ -106,9 +128,16 @@ export default function DashboardPage() {
       </section>
 
       <section className="mb-10">
-        <h2 className="text-xl font-semibold mb-2">📈 Personal Performance</h2>
+        <h2 className="text-xl font-semibold mb-2">📈 Personal Earnings by Chip</h2>
         <div className="bg-[#1e2a3c] p-6 rounded-xl">
-          <Line data={earningsChart} />
+          <Line data={chipLineChart} />
+        </div>
+      </section>
+
+      <section className="mb-10">
+        <h2 className="text-xl font-semibold mb-2">🏘 Earnings by Property</h2>
+        <div className="bg-[#1e2a3c] p-6 rounded-xl">
+          <Line data={propertyLineChart} />
         </div>
       </section>
 
