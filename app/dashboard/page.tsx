@@ -156,15 +156,23 @@ export default function DashboardPage() {
   const chipChartData = buildChartData(filteredEarnings, 'chip_id')
   const propertyChartData = buildChartData(filteredEarnings, 'property_id')
 
-  const cumulativeData = {
-    labels: chipChartData.labels,
-    datasets: chipChartData.datasets.map((ds) => {
-      let cumulative = 0
-      return {
-        ...ds,
-        data: ds.data.map((v) => (cumulative += v))
+  const monthlyEarningsData = {
+    labels: months.slice(monthIndexes[0], monthIndexes[1] + 1),
+    datasets: [
+      {
+        label: 'Total Monthly Earnings',
+        data: months.slice(monthIndexes[0], monthIndexes[1] + 1).map(month =>
+          filteredEarnings
+            .filter(e => e.month === month)
+            .reduce((sum, e) => sum + Number(e.total || 0), 0)
+        ),
+        borderColor: '#10B981',
+        backgroundColor: '#10B981',
+        fill: false,
+        pointRadius: 2,
+        pointHoverRadius: 4
       }
-    })
+    ]
   }
 
   return (
@@ -173,9 +181,17 @@ export default function DashboardPage() {
         <h1 className="text-3xl font-bold mb-4 md:mb-0">Welcome, {firstName}!</h1>
         <div className="flex gap-2 items-center">
           <span className="text-lg font-semibold">🔗 Quick Access</span>
-          <Link href="/account"><button className="bg-emerald-600 px-3 py-1 rounded-xl">Account</button></Link>
-          <Link href="/account/add-funds"><button className="bg-emerald-600 px-3 py-1 rounded-xl">Add Funds</button></Link>
-          <Link href="/account/cash-out"><button className="bg-emerald-600 px-3 py-1 rounded-xl">Cash Out</button></Link>
+          {[
+            { label: 'Account', href: '/account' },
+            { label: 'Add Funds', href: '/account/add-funds' },
+            { label: 'Cash Out', href: '/account/cash-out' }
+          ].map(({ label, href }) => (
+            <Link key={label} href={href}>
+              <button className="bg-gray-700 hover:border-emerald-500 border border-transparent px-3 py-1 rounded-xl transition-colors duration-200">
+                {label}
+              </button>
+            </Link>
+          ))}
         </div>
       </div>
 
@@ -211,8 +227,8 @@ export default function DashboardPage() {
           <Line data={propertyChartData} options={chartOptionsWithDollarYAxis} />
         </div>
         <div className="border p-4 rounded-xl">
-          <h2 className="text-xl font-semibold mb-2">Cumulative Growth</h2>
-          <Line data={cumulativeData} options={{ ...chartOptionsWithDollarYAxis, plugins: { legend: { display: false } } }} />
+          <h2 className="text-xl font-semibold mb-2">Monthly Earnings</h2>
+          <Line data={monthlyEarningsData} options={{ ...chartOptionsWithDollarYAxis, plugins: { legend: { display: false } } }} />
         </div>
       </div>
 
