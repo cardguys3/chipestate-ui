@@ -5,17 +5,15 @@ import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
 
-type PageProps = {
-  params: {
-    id: string
-  }
-}
-
 export const metadata: Metadata = {
   title: 'Edit User | ChipEstate',
 }
 
-export default async function EditUserPage({ params }: PageProps) {
+export default async function EditUserPage({
+  params,
+}: {
+  params: { id: string }
+}) {
   const cookieStore = cookies()
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
