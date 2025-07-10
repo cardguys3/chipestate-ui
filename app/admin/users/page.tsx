@@ -45,31 +45,31 @@ export default async function AdminUsersPage() {
   }
 
   return (
-    <main className="min-h-screen bg-blue-950 text-white p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Manage Users</h1>
+    <main className="min-h-screen bg-blue-950 text-white p-4">
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Manage Users</h1>
         <Link
           href="/admin/users/add"
-          className="bg-emerald-700 hover:bg-emerald-600 text-white font-semibold py-2 px-4 rounded shadow"
+          className="bg-emerald-700 hover:bg-emerald-600 text-white font-semibold py-1.5 px-3 rounded shadow text-sm"
         >
           + Add User
         </Link>
       </div>
       <div className="overflow-x-auto">
-        <table className="min-w-full bg-blue-900 text-white border border-blue-700 rounded-lg shadow">
+        <table className="min-w-full bg-blue-900 text-white border border-blue-700 rounded-lg shadow text-sm">
           <thead className="bg-blue-800">
             <tr>
-              <th className="px-4 py-2 text-left">Name</th>
-              <th className="px-4 py-2 text-left">Email</th>
-              <th className="px-4 py-2 text-left">Approved</th>
-              <th className="px-4 py-2 text-left">Created</th>
-              <th className="px-4 py-2 text-left">Actions</th>
+              <th className="px-3 py-1.5 text-left">Name</th>
+              <th className="px-3 py-1.5 text-left">Email</th>
+              <th className="px-3 py-1.5 text-left">Approved</th>
+              <th className="px-3 py-1.5 text-left">Created</th>
+              <th className="px-3 py-1.5 text-left">Actions</th>
             </tr>
           </thead>
           <tbody>
             {users?.map((user) => (
               <tr key={user.id} className="border-t border-blue-700 hover:bg-blue-800">
-                <td className="px-4 py-2">
+                <td className="px-3 py-1.5">
                   <Link
                     href={`/admin/users/${user.id}/edit`}
                     className="text-emerald-300 hover:underline"
@@ -77,12 +77,12 @@ export default async function AdminUsersPage() {
                     {user.first_name} {user.last_name}
                   </Link>
                 </td>
-                <td className="px-4 py-2">{user.email}</td>
-                <td className="px-4 py-2">{user.is_approved ? '✅' : '❌'}</td>
-                <td className="px-4 py-2">{new Date(user.created_at).toLocaleDateString()}</td>
-                <td className="px-4 py-2 space-x-2">
-                  <button className="text-yellow-400 hover:underline">Deactivate</button>
-                  <button className="text-red-500 hover:underline">Delete</button>
+                <td className="px-3 py-1.5">{user.email}</td>
+                <td className="px-3 py-1.5">{user.is_approved ? '✅' : '❌'}</td>
+                <td className="px-3 py-1.5">{new Date(user.created_at).toLocaleDateString()}</td>
+                <td className="px-3 py-1.5 space-x-2">
+                  <button className="text-yellow-400 hover:underline text-sm">Deactivate</button>
+                  <button className="text-red-500 hover:underline text-sm">Delete</button>
                 </td>
               </tr>
             ))}
