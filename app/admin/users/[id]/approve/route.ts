@@ -1,17 +1,18 @@
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { Database } from '@/types/supabase'
 
 export async function POST(
-  req: Request,
+  req: NextRequest,
   context: { params: { id: string } }
 ) {
   const supabase = createRouteHandlerClient<Database>({ cookies })
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  // Only allow specific admin emails
   const isAdmin = ['mark@chipestate.com', 'cardguys3@gmail.com'].includes(user?.email || '')
   if (!isAdmin) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
