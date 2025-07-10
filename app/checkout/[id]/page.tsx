@@ -83,13 +83,14 @@ export default function CheckoutPage() {
               disabled={assigning}
               createOrder={(data, actions) => {
                 return actions.order.create({
-                  purchase_units: [{
-                    amount: {
-  currency_code: 'USD',
-  value: (qty * 50).toString()
-}
-                  }]
-                })
+  intent: 'CAPTURE',
+  purchase_units: [{
+    amount: {
+      currency_code: 'USD',
+      value: (qty * 50).toString()
+    }
+  }]
+})
               }}
               onApprove={async (data, actions) => {
                 const result = await actions.order?.capture()
