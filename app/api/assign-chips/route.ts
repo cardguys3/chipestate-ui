@@ -2,12 +2,14 @@
 
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 // import nodemailer from 'nodemailer' // Removed for Vercel compatibility
 
 export async function POST(req: Request) {
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: () => cookies() }
   )
 
   const { property_id, user_id, quantity } = await req.json()

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
+import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js'
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -68,14 +69,32 @@ export default function CheckoutPage() {
         <p className="mb-4">Total: <strong>${qty * 50}</strong></p>
 
         <div className="bg-white rounded-lg p-4 text-black">
-          {/* PayPal Smart Button Placeholder */}
-          <p className="text-center mb-2">PayPal Button Goes Here</p>
-          <button
-            className="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700"
-            onClick={handlePaymentSuccess}
-          >
-            Simulate Payment Success
-          </button>
+          <PayPalScriptProvider options={{ clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID!, currency: 'USD' }}>
+            <PayPalButtons
+              style={{ layout: 'vertical' }}
+              createOrder={(data, actions) => {
+                return actions.order.create({
+                  purchase_units: [{
+                    amount: {
+                      value: (qty * 50).toString()
+                    }
+                  }]
+                })
+              }}
+              onApprove={async (data, actions) => {
+                const result = await actions.order?.capture()
+                if (result?.status === 'COMPLETED') {
+                  await handlePaymentSuccess()
+                } else {
+                  alert('Payment not completed.')
+                }
+              }}
+              onError={(err) => {
+                console.error('PayPal Error:', err)
+                alert('An error occurred with PayPal.')
+              }}
+            />
+          </PayPalScriptProvider>
         </div>
       </div>
     </main>
