@@ -44,6 +44,22 @@ const customSelectStyles = {
     ...base,
     backgroundColor: state.isFocused ? '#2d3a50' : '#1e2a3c',
     color: 'white'
+  }),
+  multiValue: (styles: any) => ({
+    ...styles,
+    backgroundColor: '#374151'
+  }),
+  multiValueLabel: (styles: any) => ({
+    ...styles,
+    color: 'white'
+  }),
+  multiValueRemove: (styles: any) => ({
+    ...styles,
+    color: 'white',
+    ':hover': {
+      backgroundColor: 'red',
+      color: 'white'
+    }
   })
 }
 
@@ -75,6 +91,20 @@ export default function DashboardPage() {
 
       if (userData?.first_name) setFirstName(userData.first_name)
 
+      const { data: chipData } = await supabase.from('chips_view').select('*').eq('owner_id', user.id)
+      setChips(chipData || [])
+
+      const propIds = [...new Set((chipData || []).map(chip => chip.property_id))]
+      const { data: ownedProps } = await supabase.from('properties').select('*').in('id', propIds)
+      setProperties(ownedProps || [])
+
+      const { data: allProps } = await supabase.from('properties').select('*')
+      const ownedSet = new Set(propIds)
+      const recs = (allProps || [])
+        .filter((prop) => !ownedSet.has(prop.id) && prop.is_active && !prop.is_hidden)
+        .slice(0, 3)
+      setRecommendations(recs)
+
       const { data: earningsData } = await supabase
         .from('chip_earnings_monthly')
         .select('*')
@@ -82,28 +112,15 @@ export default function DashboardPage() {
         .order('month', { ascending: true })
 
       setEarnings(earningsData || [])
-
-      const chipIds = [...new Set((earningsData || []).map(e => e.chip_id))]
-      const propertyIds = [...new Set((earningsData || []).map(e => e.property_id))]
-
-      const { data: chipRecords } = await supabase
-        .from('chips_view')
-        .select('*')
-        .in('id', chipIds)
-      setChips(chipRecords || [])
-
-      const { data: propertyRecords } = await supabase
-        .from('properties')
-        .select('*')
-        .in('id', propertyIds)
-      setProperties(propertyRecords || [])
-
-      setSelectedChips(chipIds)
-      setSelectedProps(propertyIds)
-
       const uniqueMonths = [...new Set((earningsData || []).map((e) => e.month))]
       setMonths(uniqueMonths)
       if (uniqueMonths.length >= 2) setMonthIndexes([0, uniqueMonths.length - 1])
+
+      const chipOptions = [...new Set((chipData || []).map(c => c.id))]
+      setSelectedChips(chipOptions)
+
+      const propOptions = [...new Set((chipData || []).map(c => c.property_id))]
+      setSelectedProps(propOptions)
     }
     loadData()
   }, [])
@@ -184,7 +201,7 @@ export default function DashboardPage() {
           isMulti
           styles={customSelectStyles}
           options={chips.map(c => ({ value: c.id, label: `Chip ${c.serial || c.id.slice(0, 6)}` }))}
-          value={chips.filter(c => selectedChips.includes(c.id)).map(c => ({ value: c.id, label: `Chip ${c.serial || c.id.slice(0, 6)}` }))}
+          value={selectedChips.map(id => ({ value: id, label: `Chip ${chips.find(c => c.id === id)?.serial || id.slice(0, 6)}` }))}
           onChange={(vals) => setSelectedChips(vals.map(v => v.value))}
           placeholder="Chip"
         />
@@ -192,7 +209,7 @@ export default function DashboardPage() {
           isMulti
           styles={customSelectStyles}
           options={properties.map(p => ({ value: p.id, label: p.title }))}
-          value={properties.filter(p => selectedProps.includes(p.id)).map(p => ({ value: p.id, label: p.title }))}
+          value={selectedProps.map(id => ({ value: id, label: properties.find(p => p.id === id)?.title || id.slice(0, 6) }))}
           onChange={(vals) => setSelectedProps(vals.map(v => v.value))}
           placeholder="Property"
         />
@@ -221,7 +238,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <div className="border p-4 rounded-xl">
           <h2 className="text-xl font-semibold mb-2">Chip Earnings</h2>
           <Line data={chipChartData} />
@@ -230,11 +247,10 @@ export default function DashboardPage() {
           <h2 className="text-xl font-semibold mb-2">Property Earnings</h2>
           <Line data={propertyChartData} />
         </div>
-      </div>
-
-      <div className="border p-4 rounded-xl">
-        <h2 className="text-xl font-semibold mb-2">Cumulative Growth</h2>
-        <Line data={cumulativeData} />
+        <div className="border p-4 rounded-xl">
+          <h2 className="text-xl font-semibold mb-2">Cumulative Growth</h2>
+          <Line data={cumulativeData} />
+        </div>
       </div>
     </main>
   )
