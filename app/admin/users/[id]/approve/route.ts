@@ -3,10 +3,7 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { Database } from '@/types/supabase'
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(req: NextRequest, context: any) {
   const supabase = createRouteHandlerClient<Database>({ cookies })
 
   const {
@@ -18,14 +15,16 @@ export async function POST(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
   }
 
+  const userId = context.params?.id
+
   const { error } = await supabase
     .from('users_extended')
     .update({ is_approved: true })
-    .eq('id', params.id)
+    .eq('id', userId)
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.redirect(new URL(`/admin/users/${params.id}/edit`, req.url))
+  return NextResponse.redirect(new URL(`/admin/users/${userId}/edit`, req.url))
 }
