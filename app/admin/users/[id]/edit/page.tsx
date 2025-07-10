@@ -1,41 +1,15 @@
-import { cookies } from 'next/headers'
-import { createServerClient } from '@supabase/ssr'
 import { notFound } from 'next/navigation'
-import type { Metadata } from 'next'
-
-export const dynamic = 'force-dynamic'
-
-export const metadata: Metadata = {
-  title: 'Edit User | ChipEstate',
-}
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
+import { Database } from '@/types/supabase'
+import Link from 'next/link'
 
 export default async function EditUserPage({
   params,
 }: {
   params: { id: string }
 }) {
-  const cookieStore = cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get: (name) => cookieStore.get(name)?.value ?? '',
-        set: () => {},
-        remove: () => {},
-      },
-    }
-  )
-
-  const { data: { user } } = await supabase.auth.getUser()
-  const isAdmin = ['mark@chipestate.com', 'cardguys3@gmail.com'].includes(user?.email || '')
-  if (!isAdmin) {
-    return (
-      <main className="min-h-screen flex items-center justify-center text-white bg-blue-950">
-        <p className="text-xl">Unauthorized</p>
-      </main>
-    )
-  }
+  const supabase = createServerComponentClient<Database>({ cookies })
 
   const { data: userRecord, error } = await supabase
     .from('users_extended')
@@ -45,35 +19,59 @@ export default async function EditUserPage({
 
   if (!userRecord || error) return notFound()
 
+  const approveAction = async () => {
+    'use server'
+    const supabase = createServerComponentClient<Database>({ cookies })
+    await supabase
+      .from('users_extended')
+      .update({ is_approved: true })
+      .eq('id', params.id)
+  }
+
+  const denyAction = async () => {
+    'use server'
+    const supabase = createServerComponentClient<Database>({ cookies })
+    await supabase
+      .from('users_extended')
+      .update({ is_approved: false })
+      .eq('id', params.id)
+  }
+
   return (
     <main className="min-h-screen bg-blue-950 text-white p-6">
-      <h1 className="text-2xl font-bold mb-4">Edit User</h1>
-      <div className="bg-blue-900 p-4 rounded shadow max-w-xl">
-        <p><strong>Name:</strong> {userRecord.first_name} {userRecord.last_name}</p>
+      <h1 className="text-2xl font-bold mb-6">Edit User: {userRecord.email}</h1>
+      <div className="mb-4">
+        <p><strong>Name:</strong> {userRecord.first_name} {userRecord.middle_name} {userRecord.last_name}</p>
+        <p><strong>Phone:</strong> {userRecord.phone}</p>
+        <p><strong>DOB:</strong> {userRecord.dob}</p>
         <p><strong>Email:</strong> {userRecord.email}</p>
-        <p><strong>Phone:</strong> {userRecord.phone || '-'}</p>
         <p><strong>Approved:</strong> {userRecord.is_approved ? 'Yes' : 'No'}</p>
-
-        <form
-          action={`/admin/users/${params.id}/approve`}
-          method="POST"
-          className="mt-4 inline-block mr-3"
-        >
-          <button type="submit" className="bg-green-600 hover:bg-green-500 text-white font-semibold py-1 px-4 rounded">
-            Approve
-          </button>
-        </form>
-
-        <form
-          action={`/admin/users/${params.id}/deny`}
-          method="POST"
-          className="inline-block"
-        >
-          <button type="submit" className="bg-red-600 hover:bg-red-500 text-white font-semibold py-1 px-4 rounded">
-            Deny
-          </button>
-        </form>
       </div>
+
+      <form className="flex gap-4" action={approveAction}>
+        <button
+          type="submit"
+          className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded"
+        >
+          Approve
+        </button>
+      </form>
+
+      <form className="mt-2" action={denyAction}>
+        <button
+          type="submit"
+          className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded"
+        >
+          Deny
+        </button>
+      </form>
+
+      <Link
+        href="/admin/users"
+        className="inline-block mt-6 text-sm text-emerald-400 underline hover:text-emerald-200"
+      >
+        ← Back to User List
+      </Link>
     </main>
   )
 }
