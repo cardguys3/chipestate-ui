@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,7 +19,6 @@ export default async function EditUserPage({ params }: { params: { id: string } 
   )
 
   const { data: { user } } = await supabase.auth.getUser()
-
   const isAdmin = ['mark@chipestate.com', 'cardguys3@gmail.com'].includes(user?.email || '')
   if (!isAdmin) {
     return (
@@ -37,26 +36,6 @@ export default async function EditUserPage({ params }: { params: { id: string } 
 
   if (!userRecord || error) return notFound()
 
-  async function updateApproval(status: boolean) {
-    'use server'
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get: (name) => cookieStore.get(name)?.value ?? '',
-          set: () => {},
-          remove: () => {},
-        },
-      }
-    )
-
-    await supabase
-      .from('users_extended')
-      .update({ is_approved: status })
-      .eq('id', params.id)
-  }
-
   return (
     <main className="min-h-screen bg-blue-950 text-white p-6">
       <h1 className="text-2xl font-bold mb-4">Edit User</h1>
@@ -66,13 +45,21 @@ export default async function EditUserPage({ params }: { params: { id: string } 
         <p><strong>Phone:</strong> {userRecord.phone || '-'}</p>
         <p><strong>Approved:</strong> {userRecord.is_approved ? 'Yes' : 'No'}</p>
 
-        <form action={updateApproval.bind(null, true)} className="mt-4 inline-block mr-3">
+        <form
+          action={`/admin/users/${params.id}/approve`}
+          method="POST"
+          className="mt-4 inline-block mr-3"
+        >
           <button type="submit" className="bg-green-600 hover:bg-green-500 text-white font-semibold py-1 px-4 rounded">
             Approve
           </button>
         </form>
 
-        <form action={updateApproval.bind(null, false)} className="inline-block">
+        <form
+          action={`/admin/users/${params.id}/deny`}
+          method="POST"
+          className="inline-block"
+        >
           <button type="submit" className="bg-red-600 hover:bg-red-500 text-white font-semibold py-1 px-4 rounded">
             Deny
           </button>
