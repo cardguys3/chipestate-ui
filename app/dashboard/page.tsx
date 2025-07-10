@@ -210,12 +210,21 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="border p-4 rounded-xl">Net Worth: ${netWorth.toFixed(2)}</div>
-        <div className="border p-4 rounded-xl">Earnings: ${totalPayout.toFixed(2)}</div>
-        <div className="border p-4 rounded-xl">Total Earnings: ${totalEarnings.toFixed(2)}</div>
-        <div className="border p-4 rounded-xl">Properties Owned: {selectedProps.length}</div>
-      </div>
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+  <div className="border p-4 rounded-xl">Net Worth: ${netWorth.toFixed(2)}</div>
+  <div className="border p-4 rounded-xl">Earnings: ${totalPayout.toFixed(2)}</div>
+  <div className="border p-4 rounded-xl">Total Earnings: ${totalEarnings.toFixed(2)}</div>
+  <div className="border p-4 rounded-xl">
+    Properties Owned: {
+      new Set(filteredEarnings.map(e => e.property_id)).size
+    }
+  </div>
+  <div className="border p-4 rounded-xl">
+    Chips Owned: {
+      new Set(filteredEarnings.map(e => e.chip_id)).size
+    }
+  </div>
+</div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <div className="border p-4 rounded-xl">
