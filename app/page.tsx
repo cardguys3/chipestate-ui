@@ -63,7 +63,7 @@ export default function Home() {
           Welcome to ChipEstate
         </h1>
         <p className="text-gray-600 text-lg max-w-2xl mx-auto mb-10">
-          The bitcoin of real estate. 
+          The bitcoin of real estate 
         </p>
       </section>
 

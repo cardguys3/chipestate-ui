@@ -1,4 +1,4 @@
-// FULL UPDATED DASHBOARD PAGE WITH GRAPHS, DROPDOWNS, METRICS, PERSONALIZATION
+// FULL UPDATED DASHBOARD PAGE WITH GRAPHS, FILTERS, METRICS, SLIDER, PERSONALIZATION
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -6,6 +6,8 @@ import { createBrowserClient } from '@supabase/ssr'
 import { Line } from 'react-chartjs-2'
 import Select from 'react-select'
 import Link from 'next/link'
+import Slider from 'rc-slider'
+import 'rc-slider/assets/index.css'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -53,7 +55,8 @@ export default function DashboardPage() {
   const [earnings, setEarnings] = useState<any[]>([])
   const [selectedProps, setSelectedProps] = useState<any[]>([])
   const [selectedChips, setSelectedChips] = useState<any[]>([])
-  const [monthRange, setMonthRange] = useState<[string, string]>(['2023-01', '2025-12'])
+  const [months, setMonths] = useState<string[]>([])
+  const [monthIndexes, setMonthIndexes] = useState<[number, number]>([0, 0])
 
   useEffect(() => {
     const loadData = async () => {
@@ -83,9 +86,9 @@ export default function DashboardPage() {
         .order('month', { ascending: true })
 
       setEarnings(earningsData || [])
-
-      const months = [...new Set((earningsData || []).map((e) => e.month))]
-      if (months.length >= 2) setMonthRange([months[0], months[months.length - 1]])
+      const uniqueMonths = [...new Set((earningsData || []).map((e) => e.month))]
+      setMonths(uniqueMonths)
+      if (uniqueMonths.length >= 2) setMonthIndexes([0, uniqueMonths.length - 1])
     }
     loadData()
   }, [])
@@ -95,20 +98,18 @@ export default function DashboardPage() {
     return colors[i % colors.length]
   }
 
-  const isBetweenMonths = (m: string) => m >= monthRange[0] && m <= monthRange[1]
-
   const filteredEarnings = earnings.filter((e) => {
-    const inProperty = selectedProps.length === 0 || selectedProps.includes(e.property_id)
+    const inRange = months.indexOf(e.month) >= monthIndexes[0] && months.indexOf(e.month) <= monthIndexes[1]
+    const inProp = selectedProps.length === 0 || selectedProps.includes(e.property_id)
     const inChip = selectedChips.length === 0 || selectedChips.includes(e.chip_id)
-    return inProperty && inChip && isBetweenMonths(e.month)
+    return inRange && inProp && inChip
   })
 
   const netWorth = chips.reduce((sum, chip) => sum + (chip.current_value || 0), 0)
   const totalPayout = filteredEarnings.reduce((sum, e) => sum + Number(e.total || 0), 0)
   const totalEarnings = earnings.reduce((sum, e) => sum + Number(e.total || 0), 0)
-  const uniqueProperties = new Set(chips.map((chip) => chip.property_id)).size
-
-  const months = [...new Set(filteredEarnings.map((e) => e.month))]
+  const ownedChipIds = new Set(chips.map(c => c.id))
+  const ownedPropIds = new Set(chips.map(c => c.property_id))
 
   const buildChartData = (items: any[], key: 'chip_id' | 'property_id') => {
     const grouped = items.reduce((acc, item) => {
@@ -119,13 +120,12 @@ export default function DashboardPage() {
     }, {} as Record<string, any[]>)
 
     return {
-      labels: months,
+      labels: months.slice(monthIndexes[0], monthIndexes[1] + 1),
       datasets: Object.entries(grouped).map(([id, data], i) => {
-        const dataArr = data as any[]
         return {
-          label: `${key === 'chip_id' ? 'Chip' : 'Property'} ${id.slice(0, 6)}`,
-          data: months.map((m) => {
-            const match = dataArr.find((d) => d.month === m)
+          label: key === 'chip_id' ? `Chip ${id.slice(0, 6)}` : properties.find(p => p.id === id)?.title || `Property ${id.slice(0,6)}`,
+          data: months.slice(monthIndexes[0], monthIndexes[1] + 1).map((m) => {
+            const match = data.find((d) => d.month === m)
             return match ? Number(match.total || 0) : 0
           }),
           borderColor: getColor(i),
@@ -140,8 +140,8 @@ export default function DashboardPage() {
   const propertyChartData = buildChartData(filteredEarnings, 'property_id')
 
   const cumulativeData = {
-    labels: months,
-    datasets: chipChartData.datasets.map((ds, i) => {
+    labels: chipChartData.labels,
+    datasets: chipChartData.datasets.map((ds) => {
       let cumulative = 0
       return {
         ...ds,
@@ -154,9 +154,7 @@ export default function DashboardPage() {
   return (
     <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-        <h1 className="text-3xl font-bold mb-4 md:mb-0">
-          Welcome{user?.user_metadata?.first_name ? `, ${user.user_metadata.first_name}` : ''}!
-        </h1>
+        <h1 className="text-3xl font-bold mb-4 md:mb-0">Welcome, Mark!</h1>
         <div className="flex gap-2 items-center">
           <span className="text-lg font-semibold">🔗 Quick Access</span>
           <Link href="/account"><button className="bg-emerald-600 px-3 py-1 rounded-xl">Account</button></Link>
@@ -169,8 +167,8 @@ export default function DashboardPage() {
         <h2 className="text-xl font-semibold mb-2">📊 Account Overview</h2>
         <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
           <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Net Worth: ${netWorth.toLocaleString()}</div>
-          <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Chips Owned: {[...new Set(filteredEarnings.map(e => e.chip_id))].length}</div>
-          <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Properties Owned: {[...new Set(filteredEarnings.map(e => e.property_id))].length}</div>
+          <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Chips Owned: {ownedChipIds.size}</div>
+          <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Properties Owned: {ownedPropIds.size}</div>
           <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Earnings: ${totalPayout.toFixed(2)}</div>
           <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Total Earnings: ${totalEarnings.toFixed(2)}</div>
         </div>
@@ -182,6 +180,16 @@ export default function DashboardPage() {
           <Select isMulti className="w-full md:w-1/3" options={properties.map((p) => ({ label: p.title, value: p.id }))} value={selectedProps.map((id) => ({ value: id, label: properties.find((p) => p.id === id)?.title || id.slice(0, 6) }))} onChange={(opts) => setSelectedProps(opts.map((o) => o.value))} placeholder="Property" styles={customSelectStyles} />
           <Select isMulti className="w-full md:w-1/3" options={chips.map((chip) => ({ label: chip.serial, value: chip.id }))} value={selectedChips.map((id) => ({ value: id, label: chips.find((c) => c.id === id)?.serial || id.slice(0, 6) }))} onChange={(opts) => setSelectedChips(opts.map((o) => o.value))} placeholder="Chip" styles={customSelectStyles} />
         </div>
+        {months.length > 1 && (
+          <div className="mt-2 text-white">
+            <label className="block mb-1">Date Range</label>
+            <Slider range min={0} max={months.length - 1} value={monthIndexes} onChange={(val) => setMonthIndexes(val as [number, number])} />
+            <div className="flex justify-between text-sm mt-1">
+              <span>{months[monthIndexes[0]]}</span>
+              <span>{months[monthIndexes[1]]}</span>
+            </div>
+          </div>
+        )}
       </section>
 
       <section className="mb-10 grid grid-cols-1 md:grid-cols-2 gap-6">
