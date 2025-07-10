@@ -164,13 +164,13 @@ export default function DashboardPage() {
       </div>
 
       <section className="mb-10">
-        <h2 className="text-xl font-semibold mb-2">📊 Overview</h2>
+        <h2 className="text-xl font-semibold mb-2">📊 Account Overview</h2>
         <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
           <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Net Worth: ${netWorth.toLocaleString()}</div>
           <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Chips Owned: {filteredEarnings.reduce((acc, e) => acc.add(e.chip_id), new Set()).size}</div>
           <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Properties Owned: {filteredEarnings.reduce((acc, e) => acc.add(e.property_id), new Set()).size}</div>
           <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Earnings: ${totalPayout.toFixed(2)}</div>
-          <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Lifetime Earnings: ${totalEarnings.toFixed(2)}</div>
+          <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Total Earnings: ${totalEarnings.toFixed(2)}</div>
         </div>
       </section>
 
