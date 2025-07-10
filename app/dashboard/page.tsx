@@ -119,20 +119,22 @@ export default function DashboardPage() {
 
     return {
       labels: months.slice(monthIndexes[0], monthIndexes[1] + 1),
-      datasets: Object.entries(grouped).map(([id, data], i) => {
-        return {
-          label: key === 'chip_id'
-            ? `Chip ${id.slice(0, 6)}`
-            : properties.find(p => p.id === id)?.title || `Property ${id.slice(0, 6)}`,
-          data: months.slice(monthIndexes[0], monthIndexes[1] + 1).map((m) => {
-            const match = data.find((d) => d.month === m)
-            return match ? Number(match.total || 0) : 0
-          }),
-          borderColor: getColor(i),
-          backgroundColor: getColor(i),
-          fill: false
-        }
-      })
+     datasets: Object.entries(grouped).map(([id, data], i) => {
+  const series = data as any[];
+  return {
+    label: key === 'chip_id'
+      ? `Chip ${id.slice(0, 6)}`
+      : properties.find(p => p.id === id)?.title || `Property ${id.slice(0, 6)}`,
+    data: months.slice(monthIndexes[0], monthIndexes[1] + 1).map((m) => {
+      const match = series.find((d) => d.month === m)
+      return match ? Number(match.total || 0) : 0
+    }),
+    borderColor: getColor(i),
+    backgroundColor: getColor(i),
+    fill: false
+  }
+})
+
     }
   }
 
