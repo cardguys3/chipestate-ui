@@ -15,7 +15,6 @@ export default async function EditUserPage({
   params: { id: string }
 }) {
   const cookieStore = cookies()
-
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
