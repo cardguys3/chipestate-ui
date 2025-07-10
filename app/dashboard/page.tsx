@@ -49,6 +49,7 @@ const customSelectStyles = {
 
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null)
+  const [firstName, setFirstName] = useState<string>('User')
   const [chips, setChips] = useState<any[]>([])
   const [properties, setProperties] = useState<any[]>([])
   const [recommendations, setRecommendations] = useState<any[]>([])
@@ -65,6 +66,14 @@ export default function DashboardPage() {
       } = await supabase.auth.getUser()
       setUser(user)
       if (!user) return
+
+      const { data: userData } = await supabase
+        .from('users_extended')
+        .select('first_name')
+        .eq('id', user.id)
+        .single()
+
+      if (userData?.first_name) setFirstName(userData.first_name)
 
       const { data: chipData } = await supabase.from('chips_view').select('*').eq('owner_id', user.id)
       setChips(chipData || [])
@@ -154,7 +163,7 @@ export default function DashboardPage() {
   return (
     <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-        <h1 className="text-3xl font-bold mb-4 md:mb-0">Welcome, {user?.email === 'cardguys3@gmail.com' ? 'Mark' : user?.user_metadata?.first_name || 'User'}!</h1>
+        <h1 className="text-3xl font-bold mb-4 md:mb-0">Welcome, {firstName}!</h1>
         <div className="flex gap-2 items-center">
           <span className="text-lg font-semibold">🔗 Quick Access</span>
           <Link href="/account"><button className="bg-emerald-600 px-3 py-1 rounded-xl">Account</button></Link>
@@ -163,4 +172,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      ...
+      {/* ... rest of dashboard ... */}
+    </main>
+  )
+}
