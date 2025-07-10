@@ -44,22 +44,6 @@ const customSelectStyles = {
     ...base,
     backgroundColor: state.isFocused ? '#2d3a50' : '#1e2a3c',
     color: 'white'
-  }),
-  multiValue: (styles: any) => ({
-    ...styles,
-    backgroundColor: '#374151'
-  }),
-  multiValueLabel: (styles: any) => ({
-    ...styles,
-    color: 'white'
-  }),
-  multiValueRemove: (styles: any) => ({
-    ...styles,
-    color: 'white',
-    ':hover': {
-      backgroundColor: 'red',
-      color: 'white'
-    }
   })
 }
 
@@ -68,7 +52,6 @@ export default function DashboardPage() {
   const [firstName, setFirstName] = useState<string>('User')
   const [chips, setChips] = useState<any[]>([])
   const [properties, setProperties] = useState<any[]>([])
-  const [recommendations, setRecommendations] = useState<any[]>([])
   const [earnings, setEarnings] = useState<any[]>([])
   const [selectedProps, setSelectedProps] = useState<any[]>([])
   const [selectedChips, setSelectedChips] = useState<any[]>([])
@@ -97,13 +80,6 @@ export default function DashboardPage() {
       const propIds = [...new Set((chipData || []).map(chip => chip.property_id))]
       const { data: ownedProps } = await supabase.from('properties').select('*').in('id', propIds)
       setProperties(ownedProps || [])
-
-      const { data: allProps } = await supabase.from('properties').select('*')
-      const ownedSet = new Set(propIds)
-      const recs = (allProps || [])
-        .filter((prop) => !ownedSet.has(prop.id) && prop.is_active && !prop.is_hidden)
-        .slice(0, 3)
-      setRecommendations(recs)
 
       const { data: earningsData } = await supabase
         .from('chip_earnings_monthly')
@@ -154,7 +130,7 @@ export default function DashboardPage() {
       datasets: Object.entries(grouped).map(([id, data], i) => {
         return {
           label: key === 'chip_id'
-            ? `Chip ${id.slice(0, 6)}`
+            ? `Chip ${chips.find(c => c.id === id)?.serial || id.slice(0, 6)}`
             : properties.find(p => p.id === id)?.title || `Property ${id.slice(0, 6)}`,
           data: months.slice(monthIndexes[0], monthIndexes[1] + 1).map((m) => {
             const match = (data as any[]).find((d) => d.month === m)
@@ -204,6 +180,7 @@ export default function DashboardPage() {
           value={selectedChips.map(id => ({ value: id, label: `Chip ${chips.find(c => c.id === id)?.serial || id.slice(0, 6)}` }))}
           onChange={(vals) => setSelectedChips(vals.map(v => v.value))}
           placeholder="Chip"
+          menuIsOpen={false}
         />
         <Select
           isMulti
@@ -212,6 +189,7 @@ export default function DashboardPage() {
           value={selectedProps.map(id => ({ value: id, label: properties.find(p => p.id === id)?.title || id.slice(0, 6) }))}
           onChange={(vals) => setSelectedProps(vals.map(v => v.value))}
           placeholder="Property"
+          menuIsOpen={false}
         />
         <div className="text-white">
           <label className="block mb-1">Date Range</label>
