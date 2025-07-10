@@ -113,30 +113,34 @@ export default function DashboardPage() {
   const ownedChipIds = new Set(chips.map(c => c.id))
   const ownedPropIds = new Set(chips.map(c => c.property_id))
 
-  const buildChartData = (items: any[], key: 'chip_id' | 'property_id') => {
-    const grouped = items.reduce((acc, item) => {
-      const id = item[key]
-      if (!acc[id]) acc[id] = []
-      acc[id].push(item)
-      return acc
-    }, {} as Record<string, any[]>)
+const buildChartData = (items: any[], key: 'chip_id' | 'property_id') => {
+  const grouped = items.reduce((acc, item) => {
+    const id = item[key]
+    if (!acc[id]) acc[id] = []
+    acc[id].push(item)
+    return acc
+  }, {} as Record<string, any[]>)
 
-    return {
-      labels: months.slice(monthIndexes[0], monthIndexes[1] + 1),
-      datasets: Object.entries(grouped).map(([id, data], i) => {
-        return {
-          label: key === 'chip_id' ? `Chip ${id.slice(0, 6)}` : properties.find(p => p.id === id)?.title || `Property ${id.slice(0,6)}`,
-          data: months.slice(monthIndexes[0], monthIndexes[1] + 1).map((m) => {
-            const match = data.find((d) => d.month === m)
-            return match ? Number(match.total || 0) : 0
-          }),
-          borderColor: getColor(i),
-          backgroundColor: getColor(i),
-          fill: false
-        }
-      })
-    }
+  return {
+    labels: months.slice(monthIndexes[0], monthIndexes[1] + 1),
+    datasets: Object.entries(grouped).map(([id, rawData], i) => {
+      const data = rawData as any[]; // 👈 Add this line to fix the error
+      return {
+        label: key === 'chip_id'
+          ? `Chip ${id.slice(0, 6)}`
+          : properties.find(p => p.id === id)?.title || `Property ${id.slice(0, 6)}`,
+        data: months.slice(monthIndexes[0], monthIndexes[1] + 1).map((m) => {
+          const match = data.find((d) => d.month === m)
+          return match ? Number(match.total || 0) : 0
+        }),
+        borderColor: getColor(i),
+        backgroundColor: getColor(i),
+        fill: false
+      }
+    })
   }
+}
+
 
   const chipChartData = buildChartData(filteredEarnings, 'chip_id')
   const propertyChartData = buildChartData(filteredEarnings, 'property_id')
