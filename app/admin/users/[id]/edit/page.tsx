@@ -1,10 +1,16 @@
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
 
-export default async function EditUserPage({ params }: { params: { id: string } }) {
+interface PageProps {
+  params: {
+    id: string
+  }
+}
+
+export default async function EditUserPage({ params }: PageProps) {
   const cookieStore = cookies()
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
