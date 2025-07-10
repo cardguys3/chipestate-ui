@@ -1,10 +1,8 @@
-// FULL UPDATED DASHBOARD PAGE WITH GRAPHS, FILTERS, METRICS, SLIDER, PERSONALIZATION
 'use client'
 
 import { useEffect, useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { Line } from 'react-chartjs-2'
-import Select from 'react-select'
 import Link from 'next/link'
 import Slider from 'rc-slider'
 import 'rc-slider/assets/index.css'
@@ -14,7 +12,8 @@ import {
   LinearScale,
   PointElement,
   LineElement,
-  Tooltip
+  Tooltip,
+  ChartOptions
 } from 'chart.js'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip)
@@ -24,26 +23,35 @@ const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
-const customSelectStyles = {
-  control: (base: any) => ({
-    ...base,
-    backgroundColor: '#1e2a3c',
-    color: 'white',
-    borderColor: '#ccc'
-  }),
-  singleValue: (provided: any) => ({
-    ...provided,
-    color: 'white'
-  }),
-  menu: (base: any) => ({
-    ...base,
-    backgroundColor: '#1e2a3c'
-  }),
-  option: (base: any, state: any) => ({
-    ...base,
-    backgroundColor: state.isFocused ? '#2d3a50' : '#1e2a3c',
-    color: 'white'
-  })
+const chartOptionsWithDollarYAxis: ChartOptions<'line'> = {
+  scales: {
+    y: {
+      ticks: {
+        callback: function (value) {
+          return `$${value}`
+        },
+        color: 'white'
+      },
+      grid: {
+        color: '#334155'
+      }
+    },
+    x: {
+      ticks: {
+        color: 'white'
+      },
+      grid: {
+        color: '#334155'
+      }
+    }
+  },
+  plugins: {
+    legend: {
+      labels: {
+        color: 'white'
+      }
+    }
+  }
 }
 
 export default function DashboardPage() {
@@ -171,36 +179,18 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Select
-          isMulti
-          styles={customSelectStyles}
-          options={chips.map(c => ({ value: c.id, label: `Chip ${c.serial || c.id.slice(0, 6)}` }))}
-          value={chips.filter(c => selectedChips.includes(c.id)).map(c => ({ value: c.id, label: `Chip ${c.serial || c.id.slice(0, 6)}` }))}
-          onChange={(vals) => setSelectedChips(vals.map(v => v.value))}
-          placeholder="Chip"
+      <div className="text-white mb-6">
+        <label className="block mb-1">Date Range</label>
+        <Slider
+          range
+          min={0}
+          max={months.length - 1}
+          value={monthIndexes}
+          onChange={(range) => setMonthIndexes(range as [number, number])}
         />
-        <Select
-          isMulti
-          styles={customSelectStyles}
-          options={properties.map(p => ({ value: p.id, label: p.title }))}
-          value={properties.filter(p => selectedProps.includes(p.id)).map(p => ({ value: p.id, label: p.title }))}
-          onChange={(vals) => setSelectedProps(vals.map(v => v.value))}
-          placeholder="Property"
-        />
-        <div className="text-white">
-          <label className="block mb-1">Date Range</label>
-          <Slider
-            range
-            min={0}
-            max={months.length - 1}
-            value={monthIndexes}
-            onChange={(range) => setMonthIndexes(range as [number, number])}
-          />
-          <div className="flex justify-between text-xs">
-            <span>{months[monthIndexes[0]]}</span>
-            <span>{months[monthIndexes[1]]}</span>
-          </div>
+        <div className="flex justify-between text-xs">
+          <span>{months[monthIndexes[0]]}</span>
+          <span>{months[monthIndexes[1]]}</span>
         </div>
       </div>
 
@@ -214,16 +204,23 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <div className="border p-4 rounded-xl">
           <h2 className="text-xl font-semibold mb-2">Chip Earnings</h2>
-          <Line data={chipChartData} options={{ plugins: { legend: { display: false } } }} />
+          <Line data={chipChartData} options={{ ...chartOptionsWithDollarYAxis, plugins: { legend: { display: false } } }} />
         </div>
         <div className="border p-4 rounded-xl">
           <h2 className="text-xl font-semibold mb-2">Property Earnings</h2>
-          <Line data={propertyChartData} />
+          <Line data={propertyChartData} options={chartOptionsWithDollarYAxis} />
         </div>
         <div className="border p-4 rounded-xl">
           <h2 className="text-xl font-semibold mb-2">Cumulative Growth</h2>
-          <Line data={cumulativeData} options={{ plugins: { legend: { display: false } } }} />
+          <Line data={cumulativeData} options={{ ...chartOptionsWithDollarYAxis, plugins: { legend: { display: false } } }} />
         </div>
+      </div>
+
+      <div className="border p-4 rounded-xl mt-8">
+        <h2 className="text-xl font-semibold mb-4">🏠 Suggested Properties</h2>
+        <p className="text-sm text-gray-300">
+          You don’t have any recommendations yet. They’ll appear here once you browse or invest in properties.
+        </p>
       </div>
     </main>
   )
