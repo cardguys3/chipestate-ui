@@ -1,6 +1,4 @@
 // FULL UPDATED DASHBOARD PAGE WITH GRAPHS, FILTERS, METRICS, SLIDER, PERSONALIZATION
-// FULL UPDATED DASHBOARD PAGE WITH GRAPHS, FILTERS, METRICS, SLIDER, PERSONALIZATION
-
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -110,37 +108,33 @@ export default function DashboardPage() {
   const netWorth = chips.reduce((sum, chip) => sum + (chip.current_value || 0), 0)
   const totalPayout = filteredEarnings.reduce((sum, e) => sum + Number(e.total || 0), 0)
   const totalEarnings = earnings.reduce((sum, e) => sum + Number(e.total || 0), 0)
-  const ownedChipIds = new Set(chips.map(c => c.id))
-  const ownedPropIds = new Set(chips.map(c => c.property_id))
 
-const buildChartData = (items: any[], key: 'chip_id' | 'property_id') => {
-  const grouped = items.reduce((acc, item) => {
-    const id = item[key]
-    if (!acc[id]) acc[id] = []
-    acc[id].push(item)
-    return acc
-  }, {} as Record<string, any[]>)
+  const buildChartData = (items: any[], key: 'chip_id' | 'property_id') => {
+    const grouped = items.reduce((acc, item) => {
+      const id = item[key]
+      if (!acc[id]) acc[id] = []
+      acc[id].push(item)
+      return acc
+    }, {} as Record<string, any[]>)
 
-  return {
-    labels: months.slice(monthIndexes[0], monthIndexes[1] + 1),
-    datasets: Object.entries(grouped).map(([id, rawData], i) => {
-      const data = rawData as any[]; // 👈 Add this line to fix the error
-      return {
-        label: key === 'chip_id'
-          ? `Chip ${id.slice(0, 6)}`
-          : properties.find(p => p.id === id)?.title || `Property ${id.slice(0, 6)}`,
-        data: months.slice(monthIndexes[0], monthIndexes[1] + 1).map((m) => {
-          const match = data.find((d) => d.month === m)
-          return match ? Number(match.total || 0) : 0
-        }),
-        borderColor: getColor(i),
-        backgroundColor: getColor(i),
-        fill: false
-      }
-    })
+    return {
+      labels: months.slice(monthIndexes[0], monthIndexes[1] + 1),
+      datasets: Object.entries(grouped).map(([id, data], i) => {
+        return {
+          label: key === 'chip_id'
+            ? `Chip ${id.slice(0, 6)}`
+            : properties.find(p => p.id === id)?.title || `Property ${id.slice(0, 6)}`,
+          data: months.slice(monthIndexes[0], monthIndexes[1] + 1).map((m) => {
+            const match = data.find((d) => d.month === m)
+            return match ? Number(match.total || 0) : 0
+          }),
+          borderColor: getColor(i),
+          backgroundColor: getColor(i),
+          fill: false
+        }
+      })
+    }
   }
-}
-
 
   const chipChartData = buildChartData(filteredEarnings, 'chip_id')
   const propertyChartData = buildChartData(filteredEarnings, 'property_id')
@@ -170,13 +164,13 @@ const buildChartData = (items: any[], key: 'chip_id' | 'property_id') => {
       </div>
 
       <section className="mb-10">
-        <h2 className="text-xl font-semibold mb-2">📊 Account Overview</h2>
+        <h2 className="text-xl font-semibold mb-2">📊 Overview</h2>
         <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
           <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Net Worth: ${netWorth.toLocaleString()}</div>
           <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Chips Owned: {filteredEarnings.reduce((acc, e) => acc.add(e.chip_id), new Set()).size}</div>
           <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Properties Owned: {filteredEarnings.reduce((acc, e) => acc.add(e.property_id), new Set()).size}</div>
           <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Earnings: ${totalPayout.toFixed(2)}</div>
-          <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Total Earnings: ${totalEarnings.toFixed(2)}</div>
+          <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Lifetime Earnings: ${totalEarnings.toFixed(2)}</div>
         </div>
       </section>
 
