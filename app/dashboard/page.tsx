@@ -105,7 +105,7 @@ export default function DashboardPage() {
     return inRange && inProp && inChip
   })
 
-  const netWorth = chips.reduce((sum, chip) => sum + (chip.current_value || 0), 0)
+  const netWorth = filteredEarnings.reduce((sum, e) => sum + Number(e.total || 0), 0)
   const totalPayout = filteredEarnings.reduce((sum, e) => sum + Number(e.total || 0), 0)
   const totalEarnings = earnings.reduce((sum, e) => sum + Number(e.total || 0), 0)
 
@@ -119,22 +119,20 @@ export default function DashboardPage() {
 
     return {
       labels: months.slice(monthIndexes[0], monthIndexes[1] + 1),
-     datasets: Object.entries(grouped).map(([id, data], i) => {
-  const series = data as any[];
-  return {
-    label: key === 'chip_id'
-      ? `Chip ${id.slice(0, 6)}`
-      : properties.find(p => p.id === id)?.title || `Property ${id.slice(0, 6)}`,
-    data: months.slice(monthIndexes[0], monthIndexes[1] + 1).map((m) => {
-      const match = series.find((d) => d.month === m)
-      return match ? Number(match.total || 0) : 0
-    }),
-    borderColor: getColor(i),
-    backgroundColor: getColor(i),
-    fill: false
-  }
-})
-
+      datasets: Object.entries(grouped).map(([id, data], i) => {
+        return {
+          label: key === 'chip_id'
+            ? `Chip ${id.slice(0, 6)}`
+            : properties.find(p => p.id === id)?.title || `Property ${id.slice(0, 6)}`,
+          data: months.slice(monthIndexes[0], monthIndexes[1] + 1).map((m) => {
+            const match = data.find((d) => d.month === m)
+            return match ? Number(match.total || 0) : 0
+          }),
+          borderColor: getColor(i),
+          backgroundColor: getColor(i),
+          fill: false
+        }
+      })
     }
   }
 
@@ -156,7 +154,7 @@ export default function DashboardPage() {
   return (
     <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-        <h1 className="text-3xl font-bold mb-4 md:mb-0">Welcome, {user?.user_metadata?.first_name || 'User'}!</h1>
+        <h1 className="text-3xl font-bold mb-4 md:mb-0">Welcome, {user?.email === 'cardguys3@gmail.com' ? 'Mark' : user?.user_metadata?.first_name || 'User'}!</h1>
         <div className="flex gap-2 items-center">
           <span className="text-lg font-semibold">🔗 Quick Access</span>
           <Link href="/account"><button className="bg-emerald-600 px-3 py-1 rounded-xl">Account</button></Link>
@@ -165,64 +163,4 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <section className="mb-10">
-        <h2 className="text-xl font-semibold mb-2">📊 Account Overview</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
-          <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Net Worth: ${netWorth.toLocaleString()}</div>
-          <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Chips Owned: {filteredEarnings.reduce((acc, e) => acc.add(e.chip_id), new Set()).size}</div>
-          <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Properties Owned: {filteredEarnings.reduce((acc, e) => acc.add(e.property_id), new Set()).size}</div>
-          <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Earnings: ${totalPayout.toFixed(2)}</div>
-          <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Total Earnings: ${totalEarnings.toFixed(2)}</div>
-        </div>
-      </section>
-
-      <section className="mb-10">
-        <h2 className="text-lg font-semibold mb-2">Filters</h2>
-        <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
-          <Select isMulti className="w-full md:w-1/3" options={properties.map((p) => ({ label: p.title, value: p.id }))} value={selectedProps.map((id) => ({ value: id, label: properties.find((p) => p.id === id)?.title || id.slice(0, 6) }))} onChange={(opts) => setSelectedProps(opts.map((o) => o.value))} placeholder="Property" styles={customSelectStyles} />
-          <Select isMulti className="w-full md:w-1/3" options={chips.map((chip) => ({ label: chip.serial, value: chip.id }))} value={selectedChips.map((id) => ({ value: id, label: chips.find((c) => c.id === id)?.serial || id.slice(0, 6) }))} onChange={(opts) => setSelectedChips(opts.map((o) => o.value))} placeholder="Chip" styles={customSelectStyles} />
-        </div>
-        {months.length > 1 && (
-          <div className="mt-2 text-white">
-            <label className="block mb-1">Date Range</label>
-            <Slider range min={0} max={months.length - 1} value={monthIndexes} onChange={(val) => setMonthIndexes(val as [number, number])} />
-            <div className="flex justify-between text-sm mt-1">
-              <span>{months[monthIndexes[0]]}</span>
-              <span>{months[monthIndexes[1]]}</span>
-            </div>
-          </div>
-        )}
-      </section>
-
-      <section className="mb-10 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-[#1e2a3c] p-4 rounded-xl border border-gray-600">
-          <h3 className="text-lg font-semibold mb-2">Chip Earnings</h3>
-          <Line data={chipChartData} />
-        </div>
-        <div className="bg-[#1e2a3c] p-4 rounded-xl border border-gray-600">
-          <h3 className="text-lg font-semibold mb-2">Property Earnings</h3>
-          <Line data={propertyChartData} />
-        </div>
-      </section>
-
-      <section className="mb-10 bg-[#1e2a3c] p-4 rounded-xl border border-gray-600">
-        <h3 className="text-lg font-semibold mb-2">Cumulative Chip Earnings</h3>
-        <Line data={cumulativeData} />
-      </section>
-
-      <section className="mb-10">
-        <h2 className="text-lg font-semibold mb-2">🏡 Recommended Properties</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {recommendations.map((prop) => (
-            <div key={prop.id} className="bg-[#1e2a3c] border border-gray-600 rounded-xl p-4 shadow">
-              <img src={prop.image_url || '/placeholder.jpg'} className="rounded mb-2 w-full h-32 object-cover" alt="Property" />
-              <h3 className="text-lg font-bold mb-1">{prop.title}</h3>
-              <p className="text-sm mb-1">{prop.city}, {prop.state}</p>
-              <p className="text-sm">Value: ${Number(prop.current_value).toLocaleString()}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-    </main>
-  )
-}
+      ...
