@@ -63,7 +63,7 @@ export default function Home() {
           Welcome to ChipEstate
         </h1>
         <p className="text-gray-600 text-lg max-w-2xl mx-auto mb-10">
-          Buying a home can be too high of a financial burden for entry.  This is the next best thing.  Buy and sell shares real estate (Chips).  Those shares earn dividends when tenants pay rent!
+          The bitcoin of real estate. 
         </p>
       </section>
 

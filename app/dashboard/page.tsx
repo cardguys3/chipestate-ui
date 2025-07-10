@@ -22,6 +22,28 @@ const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
+const customSelectStyles = {
+  control: (base) => ({
+    ...base,
+    backgroundColor: 'white',
+    color: 'black',
+    borderColor: '#ccc'
+  }),
+  singleValue: (provided) => ({
+    ...provided,
+    color: 'black'
+  }),
+  menu: (base) => ({
+    ...base,
+    backgroundColor: 'white'
+  }),
+  option: (base, state) => ({
+    ...base,
+    backgroundColor: state.isFocused ? '#f0f0f0' : 'white',
+    color: 'black'
+  })
+}
+
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null)
   const [chips, setChips] = useState<any[]>([])
@@ -90,73 +112,9 @@ export default function DashboardPage() {
   const uniqueProperties = new Set(chips.map((chip) => chip.property_id)).size
   const months = [...new Set(filteredEarnings.map(e => e.month))]
 
-  const chipLineChart = {
-    labels: months,
-    datasets: Array.from(new Set(filteredEarnings.map(e => e.chip_id))).map((chipId, index) => {
-      const chipEarnings = filteredEarnings.filter(e => e.chip_id === chipId)
-      return {
-        label: `Chip ${chipId.slice(0, 6)}`,
-        data: chipEarnings.map(e => e.total),
-        borderColor: getColor(index),
-        backgroundColor: getColor(index) + '33',
-        tension: 0.4
-      }
-    })
-  }
-
-  const cumulativeChipChart = {
-    labels: months,
-    datasets: Array.from(new Set(filteredEarnings.map(e => e.chip_id))).map((chipId, index) => {
-      const chipEarnings = filteredEarnings.filter(e => e.chip_id === chipId)
-      let total = 0
-      const cumulative = chipEarnings.map(e => {
-        total += Number(e.total || 0)
-        return total
-      })
-      return {
-        label: `Chip ${chipId.slice(0, 6)} (Cumulative)`,
-        data: cumulative,
-        borderColor: getColor(index),
-        backgroundColor: getColor(index) + '33',
-        tension: 0.4
-      }
-    })
-  }
-
-  const propertyLineChart = {
-    labels: months,
-    datasets: Array.from(new Set(filteredEarnings.map(e => e.property_id))).map((propId, index) => {
-      const propEarnings = filteredEarnings.filter(e => e.property_id === propId)
-      const title = properties.find(p => p.id === propId)?.title || `Property ${propId.slice(0, 6)}`
-      return {
-        label: title,
-        data: propEarnings.map(e => e.total),
-        borderColor: getColor(index),
-        backgroundColor: getColor(index) + '33',
-        tension: 0.4
-      }
-    })
-  }
-
   return (
     <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-        <h1 className="text-3xl font-bold mb-4 md:mb-0">
-          Welcome{user?.user_metadata?.first_name ? `, ${user.user_metadata.first_name}` : ''}!
-        </h1>
-        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
-          <div className="text-lg font-semibold text-emerald-300">Quick Access</div>
-          <Link href="/account" className="bg-emerald-600 px-4 py-2 rounded-xl text-white hover:bg-emerald-700">
-            Account Details
-          </Link>
-          <Link href="/wallet/add-funds" className="bg-emerald-600 px-4 py-2 rounded-xl text-white hover:bg-emerald-700">
-            Add Funds
-          </Link>
-          <Link href="/wallet/cash-out" className="bg-emerald-600 px-4 py-2 rounded-xl text-white hover:bg-emerald-700">
-            Cash Out
-          </Link>
-        </div>
-      </div>
+      <h1 className="text-3xl font-bold mb-6">Welcome{user?.user_metadata?.first_name ? `, ${user.user_metadata.first_name}` : ''}!</h1>
 
       <section className="mb-10">
         <h2 className="text-xl font-semibold mb-2">📊 Account Overview</h2>
@@ -169,7 +127,29 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <!-- Remaining components unchanged -->
+      <section className="mb-10">
+        <h2 className="text-lg font-semibold mb-2">Filters</h2>
+        <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
+          <Select
+            isMulti
+            className="w-full md:w-1/3"
+            options={properties.map(p => ({ label: p.title, value: p.id }))}
+            value={selectedProps.map(id => ({ value: id, label: properties.find(p => p.id === id)?.title || id.slice(0, 6) }))}
+            onChange={(opts) => setSelectedProps(opts.map(o => o.value))}
+            placeholder="Filter by property"
+            styles={customSelectStyles}
+          />
+          <Select
+            isMulti
+            className="w-full md:w-1/3"
+            options={chips.map(chip => ({ label: chip.serial, value: chip.id }))}
+            value={selectedChips.map(id => ({ value: id, label: chips.find(c => c.id === id)?.serial || id.slice(0, 6) }))}
+            onChange={(opts) => setSelectedChips(opts.map(o => o.value))}
+            placeholder="Filter by chip"
+            styles={customSelectStyles}
+          />
+        </div>
+      </section>
     </main>
   )
 }
