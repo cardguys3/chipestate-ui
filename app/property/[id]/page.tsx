@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 
 const supabase = createBrowserClient(
@@ -11,9 +11,11 @@ const supabase = createBrowserClient(
 
 export default function PropertyDetailsPage() {
   const { id } = useParams()
+  const router = useRouter()
   const [property, setProperty] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [mainImage, setMainImage] = useState<string>('')
+  const [chipQty, setChipQty] = useState(1)
 
   useEffect(() => {
     const fetchProperty = async () => {
@@ -44,6 +46,10 @@ export default function PropertyDetailsPage() {
     if (!url) return ''
     if (url.startsWith('http')) return url
     return `https://ajburehyunbvpuhnyjbo.supabase.co/storage/v1/object/public/property-images/${url}`
+  }
+
+  const handleCheckout = () => {
+    router.push(`/checkout/${id}?qty=${chipQty}`)
   }
 
   if (loading) {
@@ -95,7 +101,7 @@ export default function PropertyDetailsPage() {
         )}
 
         {/* Property Details */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm mb-6">
           <div>
             <p className="text-gray-400">Current Price</p>
             <p className="text-white font-medium">${property.current_value?.toLocaleString()}</p>
@@ -114,8 +120,7 @@ export default function PropertyDetailsPage() {
               ${property.reserve_balance?.toLocaleString()} (
               {Math.round(
                 ((property.reserve_balance || 0) / (property.current_value || 1)) * 100
-              )}%
-              )
+              )}%)
             </p>
           </div>
           <div>
@@ -138,6 +143,34 @@ export default function PropertyDetailsPage() {
               {property.is_active ? 'Active' : 'Inactive'}
             </p>
           </div>
+        </div>
+
+        {/* Buy Chips Section */}
+        <div className="border-t border-gray-700 pt-6 mt-6">
+          <h2 className="text-2xl font-bold mb-4">Buy Chips</h2>
+          <div className="flex items-center gap-4 mb-4">
+            <label htmlFor="chipQty" className="text-white text-sm">
+              Chips to Buy:
+            </label>
+            <input
+              id="chipQty"
+              type="number"
+              min={1}
+              max={property.chips_available}
+              value={chipQty}
+              onChange={(e) => setChipQty(Math.min(property.chips_available, Math.max(1, Number(e.target.value))))}
+              className="w-24 p-2 rounded bg-gray-800 border border-gray-600 text-white"
+            />
+            <span className="text-sm text-gray-400">
+              (${chipQty} total)
+            </span>
+          </div>
+          <button
+            onClick={handleCheckout}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-xl transition"
+          >
+            Continue to Checkout
+          </button>
         </div>
       </div>
     </main>
