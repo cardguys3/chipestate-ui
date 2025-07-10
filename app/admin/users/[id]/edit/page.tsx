@@ -9,11 +9,13 @@ export const metadata: Metadata = {
   title: 'Edit User | ChipEstate',
 }
 
-export default async function EditUserPage({
-  params,
-}: {
-  params: { id: string }
-}) {
+type PageParams = {
+  params: {
+    id: string
+  }
+}
+
+export default async function EditUserPage({ params }: PageParams) {
   const cookieStore = cookies()
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
