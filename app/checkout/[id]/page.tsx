@@ -85,8 +85,9 @@ export default function CheckoutPage() {
                 return actions.order.create({
                   purchase_units: [{
                     amount: {
-                      value: (qty * 50).toString()
-                    }
+  currency_code: 'USD',
+  value: (qty * 50).toString()
+}
                   }]
                 })
               }}
