@@ -2,7 +2,7 @@
 
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
-import nodemailer from 'nodemailer'
+// import nodemailer from 'nodemailer' // Removed for Vercel compatibility
 
 export async function POST(req: Request) {
   const supabase = createServerClient(
@@ -75,21 +75,21 @@ export async function POST(req: Request) {
     console.error('Logging failed:', logError.message)
   }
 
-  // Step 5: Send email notification
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS
-    }
-  })
-
-  await transporter.sendMail({
-    from: 'system@chipestate.com',
-    to: 'cardguys3@gmail.com',
-    subject: 'Chip Purchase Confirmation',
-    text: `${quantity} chip(s) have been successfully purchased for property ID ${property_id}.`
-  })
+  // Step 5: Email notification (disabled for Edge Runtime compatibility)
+  // TODO: Offload to Supabase Edge Function or external email service like Resend/Postmark
+  // const transporter = nodemailer.createTransport({
+  //   service: 'gmail',
+  //   auth: {
+  //     user: process.env.SMTP_USER,
+  //     pass: process.env.SMTP_PASS
+  //   }
+  // })
+  // await transporter.sendMail({
+  //   from: 'system@chipestate.com',
+  //   to: 'cardguys3@gmail.com',
+  //   subject: 'Chip Purchase Confirmation',
+  //   text: `${quantity} chip(s) have been successfully purchased for property ID ${property_id}.`
+  // })
 
   return NextResponse.json({ message: 'Chips successfully assigned' }, { status: 200 })
 }
