@@ -162,8 +162,8 @@ export default function PropertyDetailsPage() {
               className="w-24 p-2 rounded bg-gray-800 border border-gray-600 text-white"
             />
             <span className="text-sm text-gray-400">
-              (${chipQty} total)
-            </span>
+  (${(chipQty * 50).toLocaleString()} total)
+</span>
           </div>
           <button
             onClick={handleCheckout}
