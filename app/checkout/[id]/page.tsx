@@ -26,7 +26,6 @@ export default function CheckoutPage() {
         .select('*')
         .eq('id', id)
         .single()
-
       if (error) {
         console.error('Error loading property:', error.message)
       } else {
