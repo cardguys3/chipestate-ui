@@ -1,3 +1,4 @@
+// FULL UPDATED DASHBOARD PAGE WITH GRAPHS, DROPDOWNS, METRICS, PERSONALIZATION
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -60,7 +61,6 @@ export default function DashboardPage() {
         data: { user }
       } = await supabase.auth.getUser()
       setUser(user)
-
       if (!user) return
 
       const { data: chipData } = await supabase.from('chips_view').select('*').eq('owner_id', user.id)
@@ -87,7 +87,6 @@ export default function DashboardPage() {
       const months = [...new Set((earningsData || []).map((e) => e.month))]
       if (months.length >= 2) setMonthRange([months[0], months[months.length - 1]])
     }
-
     loadData()
   }, [])
 
@@ -121,16 +120,19 @@ export default function DashboardPage() {
 
     return {
       labels: months,
-      datasets: Object.entries(grouped).map(([id, data], i) => ({
-        label: `${key === 'chip_id' ? 'Chip' : 'Property'} ${id.slice(0, 6)}`,
-        data: months.map((m) => {
-          const match = data.find((d) => d.month === m)
-          return match ? Number(match.total || 0) : 0
-        }),
-        borderColor: getColor(i),
-        backgroundColor: getColor(i),
-        fill: false
-      }))
+      datasets: Object.entries(grouped).map(([id, data], i) => {
+        const dataArr = data as any[]
+        return {
+          label: `${key === 'chip_id' ? 'Chip' : 'Property'} ${id.slice(0, 6)}`,
+          data: months.map((m) => {
+            const match = dataArr.find((d) => d.month === m)
+            return match ? Number(match.total || 0) : 0
+          }),
+          borderColor: getColor(i),
+          backgroundColor: getColor(i),
+          fill: false
+        }
+      })
     }
   }
 
@@ -157,15 +159,9 @@ export default function DashboardPage() {
         </h1>
         <div className="flex gap-2 items-center">
           <span className="text-lg font-semibold">🔗 Quick Access</span>
-          <Link href="/account">
-            <button className="bg-emerald-600 px-3 py-1 rounded-xl text-white">Account</button>
-          </Link>
-          <Link href="/account/add-funds">
-            <button className="bg-emerald-600 px-3 py-1 rounded-xl text-white">Add Funds</button>
-          </Link>
-          <Link href="/account/cash-out">
-            <button className="bg-emerald-600 px-3 py-1 rounded-xl text-white">Cash Out</button>
-          </Link>
+          <Link href="/account"><button className="bg-emerald-600 px-3 py-1 rounded-xl">Account</button></Link>
+          <Link href="/account/add-funds"><button className="bg-emerald-600 px-3 py-1 rounded-xl">Add Funds</button></Link>
+          <Link href="/account/cash-out"><button className="bg-emerald-600 px-3 py-1 rounded-xl">Cash Out</button></Link>
         </div>
       </div>
 
@@ -183,30 +179,8 @@ export default function DashboardPage() {
       <section className="mb-10">
         <h2 className="text-lg font-semibold mb-2">Filters</h2>
         <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
-          <Select
-            isMulti
-            className="w-full md:w-1/3"
-            options={properties.map((p) => ({ label: p.title, value: p.id }))}
-            value={selectedProps.map((id) => ({
-              value: id,
-              label: properties.find((p) => p.id === id)?.title || id.slice(0, 6)
-            }))}
-            onChange={(opts) => setSelectedProps(opts.map((o) => o.value))}
-            placeholder="Filter by property"
-            styles={customSelectStyles}
-          />
-          <Select
-            isMulti
-            className="w-full md:w-1/3"
-            options={chips.map((chip) => ({ label: chip.serial, value: chip.id }))}
-            value={selectedChips.map((id) => ({
-              value: id,
-              label: chips.find((c) => c.id === id)?.serial || id.slice(0, 6)
-            }))}
-            onChange={(opts) => setSelectedChips(opts.map((o) => o.value))}
-            placeholder="Filter by chip"
-            styles={customSelectStyles}
-          />
+          <Select isMulti className="w-full md:w-1/3" options={properties.map((p) => ({ label: p.title, value: p.id }))} value={selectedProps.map((id) => ({ value: id, label: properties.find((p) => p.id === id)?.title || id.slice(0, 6) }))} onChange={(opts) => setSelectedProps(opts.map((o) => o.value))} placeholder="Filter by property" styles={customSelectStyles} />
+          <Select isMulti className="w-full md:w-1/3" options={chips.map((chip) => ({ label: chip.serial, value: chip.id }))} value={selectedChips.map((id) => ({ value: id, label: chips.find((c) => c.id === id)?.serial || id.slice(0, 6) }))} onChange={(opts) => setSelectedChips(opts.map((o) => o.value))} placeholder="Filter by chip" styles={customSelectStyles} />
         </div>
       </section>
 
