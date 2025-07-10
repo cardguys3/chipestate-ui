@@ -9,7 +9,12 @@ export async function POST(req: Request) {
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: cookies() }
+    { cookies: Object.assign(cookies(), {
+  getAll: () => cookies().getAll(),
+  get: (name: string) => cookies().get(name),
+  set: () => { throw new Error('Not supported') },
+  delete: () => { throw new Error('Not supported') }
+}) }
   )
 
   const { property_id, user_id, quantity, paypal_transaction_id } = await req.json()
