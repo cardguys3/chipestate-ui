@@ -17,6 +17,7 @@ export default function CheckoutPage() {
   const qty = parseInt(searchParams.get('qty') || '1')
   const [property, setProperty] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [assigning, setAssigning] = useState(false)
 
   useEffect(() => {
     const fetchProperty = async () => {
@@ -38,15 +39,20 @@ export default function CheckoutPage() {
     fetchProperty()
   }, [id])
 
-  const handlePaymentSuccess = async () => {
+  const handlePaymentSuccess = async (paypal_transaction_id: string) => {
+    setAssigning(true)
     const user = await supabase.auth.getUser()
     const user_id = user.data.user?.id
-    if (!user_id) return alert('User not authenticated')
+    if (!user_id) {
+      alert('User not authenticated')
+      setAssigning(false)
+      return
+    }
 
     const response = await fetch('/api/assign-chips', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ property_id: id, user_id, quantity: qty })
+      body: JSON.stringify({ property_id: id, user_id, quantity: qty, paypal_transaction_id })
     })
 
     if (response.ok) {
@@ -55,6 +61,8 @@ export default function CheckoutPage() {
     } else {
       alert('Payment processed but chip assignment failed.')
     }
+
+    setAssigning(false)
   }
 
   if (loading) return <main className="min-h-screen bg-[#0B1D33] text-white p-8">Loading...</main>
@@ -72,6 +80,7 @@ export default function CheckoutPage() {
           <PayPalScriptProvider options={{ clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID!, currency: 'USD' }}>
             <PayPalButtons
               style={{ layout: 'vertical' }}
+              disabled={assigning}
               createOrder={(data, actions) => {
                 return actions.order.create({
                   purchase_units: [{
@@ -83,8 +92,9 @@ export default function CheckoutPage() {
               }}
               onApprove={async (data, actions) => {
                 const result = await actions.order?.capture()
-                if (result?.status === 'COMPLETED') {
-                  await handlePaymentSuccess()
+                const transactionId = result?.purchase_units?.[0]?.payments?.captures?.[0]?.id
+                if (result?.status === 'COMPLETED' && transactionId) {
+                  await handlePaymentSuccess(transactionId)
                 } else {
                   alert('Payment not completed.')
                 }
@@ -95,6 +105,9 @@ export default function CheckoutPage() {
               }}
             />
           </PayPalScriptProvider>
+          {assigning && (
+            <p className="text-center text-sm text-gray-500 mt-2">Assigning chips...</p>
+          )}
         </div>
       </div>
     </main>

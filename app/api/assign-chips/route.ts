@@ -12,8 +12,8 @@ export async function POST(req: Request) {
     { cookies: () => cookies() }
   )
 
-  const { property_id, user_id, quantity } = await req.json()
-  if (!property_id || !user_id || !quantity) {
+  const { property_id, user_id, quantity, paypal_transaction_id } = await req.json()
+  if (!property_id || !user_id || !quantity || !paypal_transaction_id) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
   }
 
@@ -68,7 +68,8 @@ export async function POST(req: Request) {
       changes: {
         user_id,
         chips_assigned: chips.map(chip => chip.id),
-        quantity
+        quantity,
+        paypal_transaction_id
       },
       created_at: now
     })
