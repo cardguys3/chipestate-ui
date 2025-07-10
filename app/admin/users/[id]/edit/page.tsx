@@ -1,7 +1,10 @@
+'use client'
+
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
-import { notFound } from 'next/navigation'
+import { notFound, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useState } from 'react'
 
 export const dynamic = 'force-dynamic'
 
@@ -46,6 +49,25 @@ export default async function EditUserPage({ params }: PageProps) {
 
   if (!userRecord || error) return notFound()
 
+  async function updateApproval(status: boolean) {
+    'use server'
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get: (name) => cookieStore.get(name)?.value ?? '',
+          set: () => {},
+          remove: () => {},
+        },
+      }
+    )
+    await supabase
+      .from('users_extended')
+      .update({ is_approved: status })
+      .eq('id', params.id)
+  }
+
   return (
     <main className="min-h-screen bg-blue-950 text-white p-6">
       <div className="flex justify-between items-center mb-6">
@@ -62,8 +84,13 @@ export default async function EditUserPage({ params }: PageProps) {
         <p className="mb-4"><span className="font-semibold">Mailing Address:</span> {userRecord.mail_address_line1} {userRecord.mail_address_line2}, {userRecord.mail_city}, {userRecord.mail_state} {userRecord.mail_zip}</p>
         <p className="mb-4"><span className="font-semibold">Approved:</span> {userRecord.is_approved ? '✅' : '❌'}</p>
 
-        <div className="mt-6">
-          <button className="bg-emerald-700 hover:bg-emerald-600 text-white font-semibold py-2 px-4 rounded">Edit (Coming Soon)</button>
+        <div className="mt-6 flex gap-4">
+          <form action={async () => updateApproval(true)}>
+            <button className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 px-4 rounded">✅ Approve</button>
+          </form>
+          <form action={async () => updateApproval(false)}>
+            <button className="bg-red-600 hover:bg-red-500 text-white font-semibold py-2 px-4 rounded">❌ Deny</button>
+          </form>
         </div>
       </div>
     </main>
