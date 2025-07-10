@@ -60,7 +60,7 @@ export default function RegisterPage() {
     if (profileError) {
       setError(profileError.message)
     } else {
-      router.push('/register/success')
+      router.push(`/register/license?user_id=${signUpData.user.id}`)
     }
   }
 
