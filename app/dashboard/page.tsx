@@ -154,7 +154,7 @@ export default function DashboardPage() {
   return (
     <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-        <h1 className="text-3xl font-bold mb-4 md:mb-0">Welcome, Mark!</h1>
+        <h1 className="text-3xl font-bold mb-4 md:mb-0">Welcome, {user?.user_metadata?.first_name || 'User'}!</h1>
         <div className="flex gap-2 items-center">
           <span className="text-lg font-semibold">🔗 Quick Access</span>
           <Link href="/account"><button className="bg-emerald-600 px-3 py-1 rounded-xl">Account</button></Link>
@@ -167,8 +167,8 @@ export default function DashboardPage() {
         <h2 className="text-xl font-semibold mb-2">📊 Account Overview</h2>
         <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
           <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Net Worth: ${netWorth.toLocaleString()}</div>
-          <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Chips Owned: {ownedChipIds.size}</div>
-          <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Properties Owned: {ownedPropIds.size}</div>
+          <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Chips Owned: {filteredEarnings.reduce((acc, e) => acc.add(e.chip_id), new Set()).size}</div>
+          <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Properties Owned: {filteredEarnings.reduce((acc, e) => acc.add(e.property_id), new Set()).size}</div>
           <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Earnings: ${totalPayout.toFixed(2)}</div>
           <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Total Earnings: ${totalEarnings.toFixed(2)}</div>
         </div>
