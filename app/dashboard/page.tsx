@@ -23,21 +23,21 @@ const supabase = createBrowserClient(
 )
 
 const customSelectStyles = {
-  control: (base) => ({
+  control: (base: any) => ({
     ...base,
     backgroundColor: 'white',
     color: 'black',
     borderColor: '#ccc'
   }),
-  singleValue: (provided) => ({
+  singleValue: (provided: any) => ({
     ...provided,
     color: 'black'
   }),
-  menu: (base) => ({
+  menu: (base: any) => ({
     ...base,
     backgroundColor: 'white'
   }),
-  option: (base, state) => ({
+  option: (base: any, state: any) => ({
     ...base,
     backgroundColor: state.isFocused ? '#f0f0f0' : 'white',
     color: 'black'
