@@ -98,6 +98,12 @@ export default function DashboardPage() {
       const uniqueMonths = [...new Set((earningsData || []).map((e) => e.month))]
       setMonths(uniqueMonths)
       if (uniqueMonths.length >= 2) setMonthIndexes([0, uniqueMonths.length - 1])
+
+      const chipOptions = [...new Set((chipData || []).map(c => c.id))]
+      setSelectedChips(chipOptions)
+
+      const propOptions = [...new Set((chipData || []).map(c => c.property_id))]
+      setSelectedProps(propOptions)
     }
     loadData()
   }, [])
@@ -134,7 +140,7 @@ export default function DashboardPage() {
             ? `Chip ${id.slice(0, 6)}`
             : properties.find(p => p.id === id)?.title || `Property ${id.slice(0, 6)}`,
           data: months.slice(monthIndexes[0], monthIndexes[1] + 1).map((m) => {
-            const match = data.find((d) => d.month === m)
+            const match = (data as any[]).find((d) => d.month === m)
             return match ? Number(match.total || 0) : 0
           }),
           borderColor: getColor(i),
@@ -172,7 +178,64 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ... rest of dashboard ... */}
+      {/* Filters */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <Select
+          isMulti
+          styles={customSelectStyles}
+          options={chips.map(c => ({ value: c.id, label: `Chip ${c.serial || c.id.slice(0, 6)}` }))}
+          value={chips.filter(c => selectedChips.includes(c.id)).map(c => ({ value: c.id, label: `Chip ${c.serial || c.id.slice(0, 6)}` }))}
+          onChange={(vals) => setSelectedChips(vals.map(v => v.value))}
+          placeholder="Chip"
+        />
+        <Select
+          isMulti
+          styles={customSelectStyles}
+          options={properties.map(p => ({ value: p.id, label: p.title }))}
+          value={properties.filter(p => selectedProps.includes(p.id)).map(p => ({ value: p.id, label: p.title }))}
+          onChange={(vals) => setSelectedProps(vals.map(v => v.value))}
+          placeholder="Property"
+        />
+        <div className="text-white">
+          <label className="block mb-1">Date Range</label>
+          <Slider
+            range
+            min={0}
+            max={months.length - 1}
+            value={monthIndexes}
+            onChange={(range) => setMonthIndexes(range as [number, number])}
+          />
+          <div className="flex justify-between text-xs">
+            <span>{months[monthIndexes[0]]}</span>
+            <span>{months[monthIndexes[1]]}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="border p-4 rounded-xl">Net Worth: ${netWorth.toFixed(2)}</div>
+        <div className="border p-4 rounded-xl">Earnings: ${totalPayout.toFixed(2)}</div>
+        <div className="border p-4 rounded-xl">Total Earnings: ${totalEarnings.toFixed(2)}</div>
+        <div className="border p-4 rounded-xl">Properties Owned: {selectedProps.length}</div>
+      </div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div className="border p-4 rounded-xl">
+          <h2 className="text-xl font-semibold mb-2">Chip Earnings</h2>
+          <Line data={chipChartData} />
+        </div>
+        <div className="border p-4 rounded-xl">
+          <h2 className="text-xl font-semibold mb-2">Property Earnings</h2>
+          <Line data={propertyChartData} />
+        </div>
+      </div>
+
+      <div className="border p-4 rounded-xl">
+        <h2 className="text-xl font-semibold mb-2">Cumulative Growth</h2>
+        <Line data={cumulativeData} />
+      </div>
     </main>
   )
 }
