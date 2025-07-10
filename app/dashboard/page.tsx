@@ -14,11 +14,10 @@ import {
   LinearScale,
   PointElement,
   LineElement,
-  Tooltip,
-  Legend
+  Tooltip
 } from 'chart.js'
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend)
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip)
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -138,7 +137,9 @@ export default function DashboardPage() {
           }),
           borderColor: getColor(i),
           backgroundColor: getColor(i),
-          fill: false
+          fill: false,
+          pointRadius: 0,
+          pointHoverRadius: 0
         }
       })
     }
@@ -153,7 +154,6 @@ export default function DashboardPage() {
       let cumulative = 0
       return {
         ...ds,
-        label: `${ds.label} (cumulative)`,
         data: ds.data.map((v) => (cumulative += v))
       }
     })
@@ -171,25 +171,22 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Filters */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Select
           isMulti
           styles={customSelectStyles}
           options={chips.map(c => ({ value: c.id, label: `Chip ${c.serial || c.id.slice(0, 6)}` }))}
-          value={selectedChips.map(id => ({ value: id, label: `Chip ${chips.find(c => c.id === id)?.serial || id.slice(0, 6)}` }))}
+          value={chips.filter(c => selectedChips.includes(c.id)).map(c => ({ value: c.id, label: `Chip ${c.serial || c.id.slice(0, 6)}` }))}
           onChange={(vals) => setSelectedChips(vals.map(v => v.value))}
           placeholder="Chip"
-          menuIsOpen={false}
         />
         <Select
           isMulti
           styles={customSelectStyles}
           options={properties.map(p => ({ value: p.id, label: p.title }))}
-          value={selectedProps.map(id => ({ value: id, label: properties.find(p => p.id === id)?.title || id.slice(0, 6) }))}
+          value={properties.filter(p => selectedProps.includes(p.id)).map(p => ({ value: p.id, label: p.title }))}
           onChange={(vals) => setSelectedProps(vals.map(v => v.value))}
           placeholder="Property"
-          menuIsOpen={false}
         />
         <div className="text-white">
           <label className="block mb-1">Date Range</label>
@@ -207,7 +204,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="border p-4 rounded-xl">Net Worth: ${netWorth.toFixed(2)}</div>
         <div className="border p-4 rounded-xl">Earnings: ${totalPayout.toFixed(2)}</div>
@@ -215,11 +211,10 @@ export default function DashboardPage() {
         <div className="border p-4 rounded-xl">Properties Owned: {selectedProps.length}</div>
       </div>
 
-      {/* Charts */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <div className="border p-4 rounded-xl">
           <h2 className="text-xl font-semibold mb-2">Chip Earnings</h2>
-          <Line data={chipChartData} />
+          <Line data={chipChartData} options={{ plugins: { legend: { display: false } } }} />
         </div>
         <div className="border p-4 rounded-xl">
           <h2 className="text-xl font-semibold mb-2">Property Earnings</h2>
@@ -227,7 +222,7 @@ export default function DashboardPage() {
         </div>
         <div className="border p-4 rounded-xl">
           <h2 className="text-xl font-semibold mb-2">Cumulative Growth</h2>
-          <Line data={cumulativeData} />
+          <Line data={cumulativeData} options={{ plugins: { legend: { display: false } } }} />
         </div>
       </div>
     </main>
