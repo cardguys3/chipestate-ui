@@ -1,167 +1,28 @@
-'use client'
-
-import { useState } from 'react'
-import { supabase } from '@/lib/supabaseClient'
-import { useRouter } from 'next/navigation'
-
-export default function RegisterPage() {
-  const router = useRouter()
-  const [form, setForm] = useState({
-    email: '',
-    password: '',
-    confirmPassword: '',
-    first_name: '',
-    middle_name: '',
-    last_name: '',
-    phone: '',
-    dob: '',
-    address_line1: '',
-    address_line2: '',
-    city: '',
-    state: '',
-    zip: ''
-  })
-
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
-  const [showPassword, setShowPassword] = useState(true)
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setForm({ ...form, [name]: value })
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setSuccess(null)
-
-    if (form.password !== form.confirmPassword) {
-      setError("❌ Passwords do not match.")
-      return
-    }
-
-    if (form.password.length < 8) {
-      setError("❌ Password must be at least 8 characters.")
-      return
-    }
-
-    const { data, error: signUpError } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password
-    })
-
-    if (signUpError) {
-      setError("❌ " + signUpError.message)
-      return
-    }
-
-    const { error: dbError } = await supabase.from('users_extended').insert({
-      id: data.user?.id,
-      email: form.email,
-      first_name: form.first_name,
-      middle_name: form.middle_name,
-      last_name: form.last_name,
-      phone: form.phone,
-      dob: form.dob,
-      address_line1: form.address_line1,
-      address_line2: form.address_line2,
-      city: form.city,
-      state: form.state,
-      zip: form.zip,
-    })
-
-    if (dbError) {
-      setError("Signup succeeded, but failed to save profile: " + dbError.message)
-      return
-    }
-
-    setSuccess("✅ Registration successful! Redirecting to dashboard...")
-    setTimeout(() => router.push('/dashboard'), 2000)
-  }
-
-  return (
-    <main className="min-h-screen bg-gray-100 p-6 max-w-xl mx-auto">
-      <h1 className="text-2xl font-bold text-blue-900 mb-4">Create Your ChipEstate Account</h1>
-
-      {error && <div className="text-red-600 mb-4 bg-red-100 p-3 rounded border border-red-300">{error}</div>}
-      {success && <div className="text-green-700 mb-4 bg-green-100 p-3 rounded border border-green-300">{success}</div>}
-
-      <form onSubmit={handleSubmit} className="space-y-5 bg-white p-6 rounded-lg shadow">
-
-        {[['First Name', 'first_name'], ['Middle Name', 'middle_name'], ['Last Name', 'last_name'],
-          ['Email Address', 'email', 'email'], ['Phone Number', 'phone'],
-          ['Date of Birth', 'dob', 'date'], ['Address Line 1', 'address_line1'],
-          ['Address Line 2', 'address_line2'], ['City', 'city'], ['State', 'state'], ['Zip Code', 'zip']]
-          .map(([label, name, type = 'text']) => (
-            <div key={name as string}>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-              <input
-                type={type}
-                name={name as string}
-                value={(form as any)[name as string]}
-                onChange={handleChange}
-                required={!['middle_name', 'address_line2'].includes(name as string)}
-                className="w-full border border-gray-300 px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring-emerald-400 focus:border-emerald-400"
-              />
-            </div>
-          ))}
-
-        {/* Password */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-          <input
-            type={showPassword ? 'text' : 'password'}
-            name="password"
-            value={form.password}
-            onChange={handleChange}
-            minLength={8}
-            required
-            className="w-full border border-gray-300 px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring-emerald-400 focus:border-emerald-400"
-          />
-        </div>
-
-        {/* Confirm Password */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
-          <input
-            type={showPassword ? 'text' : 'password'}
-            name="confirmPassword"
-            value={form.confirmPassword}
-            onChange={handleChange}
-            required
-            className="w-full border border-gray-300 px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring-emerald-400 focus:border-emerald-400"
-          />
-        </div>
-
-        {/* Show/hide toggle */}
-        <div className="text-sm text-right">
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="text-emerald-700 hover:underline"
-          >
-            {showPassword ? 'Hide Passwords' : 'Show Passwords'}
-          </button>
-        </div>
-
-        {/* Submit */}
-        <button
-          type="submit"
-          className="w-full bg-emerald-600 text-white font-semibold py-2 rounded hover:bg-emerald-700 transition"
-        >
-          Register
-        </button>
-
-        {/* Cancel */}
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="mt-2 w-full bg-gray-200 text-gray-700 font-semibold py-2 rounded hover:bg-gray-300 transition"
-        >
-          Cancel
-        </button>
-      </form>
-    </main>
-  )
-}
+  id uuid not null,
+  email text not null,
+  first_name text null,
+  middle_name text null,
+  last_name text null,
+  phone text null,
+  dob date null,
+  address_line1 text null,
+  address_line2 text null,
+  city text null,
+  state text null,
+  zip text null,
+  created_at timestamp with time zone null default now(),
+  is_approved boolean null default false,
+  license_front_url text null,
+  license_back_url text null,
+  res_address_line1 text null,
+  res_address_line2 text null,
+  res_city text null,
+  res_state text null,
+  res_zip text null,
+  mail_address_line1 text null,
+  mail_address_line2 text null,
+  mail_city text null,
+  mail_state text null,
+  mail_zip text null,
+  constraint users_extended_pkey primary key (id),
+  constraint users_extended_email_key unique (email)

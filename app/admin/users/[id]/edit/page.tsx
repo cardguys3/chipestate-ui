@@ -5,8 +5,14 @@ import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
-export default async function EditUserPage({ params }: { params: { id: string } }) {
-  const cookieStore = await cookies()
+interface PageProps {
+  params: {
+    id: string
+  }
+}
+
+export default async function EditUserPage({ params }: PageProps) {
+  const cookieStore = cookies()
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -52,10 +58,10 @@ export default async function EditUserPage({ params }: { params: { id: string } 
         <p className="mb-4"><span className="font-semibold">Name:</span> {userRecord.first_name} {userRecord.last_name}</p>
         <p className="mb-4"><span className="font-semibold">Phone:</span> {userRecord.phone || 'N/A'}</p>
         <p className="mb-4"><span className="font-semibold">DOB:</span> {userRecord.dob || 'N/A'}</p>
-        <p className="mb-4"><span className="font-semibold">Address:</span> {userRecord.address_line1} {userRecord.address_line2}, {userRecord.city}, {userRecord.state} {userRecord.zip}</p>
+        <p className="mb-4"><span className="font-semibold">Residential Address:</span> {userRecord.res_address_line1} {userRecord.res_address_line2}, {userRecord.res_city}, {userRecord.res_state} {userRecord.res_zip}</p>
+        <p className="mb-4"><span className="font-semibold">Mailing Address:</span> {userRecord.mail_address_line1} {userRecord.mail_address_line2}, {userRecord.mail_city}, {userRecord.mail_state} {userRecord.mail_zip}</p>
         <p className="mb-4"><span className="font-semibold">Approved:</span> {userRecord.is_approved ? '✅' : '❌'}</p>
 
-        {/* Future edit form can be inserted here */}
         <div className="mt-6">
           <button className="bg-emerald-700 hover:bg-emerald-600 text-white font-semibold py-2 px-4 rounded">Edit (Coming Soon)</button>
         </div>
