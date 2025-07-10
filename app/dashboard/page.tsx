@@ -75,20 +75,6 @@ export default function DashboardPage() {
 
       if (userData?.first_name) setFirstName(userData.first_name)
 
-      const { data: chipData } = await supabase.from('chips_view').select('*').eq('owner_id', user.id)
-      setChips(chipData || [])
-
-      const propIds = [...new Set((chipData || []).map(chip => chip.property_id))]
-      const { data: ownedProps } = await supabase.from('properties').select('*').in('id', propIds)
-      setProperties(ownedProps || [])
-
-      const { data: allProps } = await supabase.from('properties').select('*')
-      const ownedSet = new Set(propIds)
-      const recs = (allProps || [])
-        .filter((prop) => !ownedSet.has(prop.id) && prop.is_active && !prop.is_hidden)
-        .slice(0, 3)
-      setRecommendations(recs)
-
       const { data: earningsData } = await supabase
         .from('chip_earnings_monthly')
         .select('*')
@@ -96,15 +82,28 @@ export default function DashboardPage() {
         .order('month', { ascending: true })
 
       setEarnings(earningsData || [])
+
+      const chipIds = [...new Set((earningsData || []).map(e => e.chip_id))]
+      const propertyIds = [...new Set((earningsData || []).map(e => e.property_id))]
+
+      const { data: chipRecords } = await supabase
+        .from('chips_view')
+        .select('*')
+        .in('id', chipIds)
+      setChips(chipRecords || [])
+
+      const { data: propertyRecords } = await supabase
+        .from('properties')
+        .select('*')
+        .in('id', propertyIds)
+      setProperties(propertyRecords || [])
+
+      setSelectedChips(chipIds)
+      setSelectedProps(propertyIds)
+
       const uniqueMonths = [...new Set((earningsData || []).map((e) => e.month))]
       setMonths(uniqueMonths)
       if (uniqueMonths.length >= 2) setMonthIndexes([0, uniqueMonths.length - 1])
-
-      const chipOptions = [...new Set((chipData || []).map(c => c.id))]
-      setSelectedChips(chipOptions)
-
-      const propOptions = [...new Set((chipData || []).map(c => c.property_id))]
-      setSelectedProps(propOptions)
     }
     loadData()
   }, [])
