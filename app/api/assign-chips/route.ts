@@ -79,7 +79,24 @@ export async function POST(req: Request) {
     console.error('Logging failed:', logError.message)
   }
 
-  // Step 5: Email notification (disabled for Edge Runtime compatibility)
+  // Step 5: Insert into chip_purchase_transactions
+  const { error: txnError } = await supabase
+    .from('chip_purchase_transactions')
+    .insert({
+      user_id,
+      property_id,
+      paypal_transaction_id,
+      chip_ids: chips.map(chip => chip.id),
+      quantity,
+      total_amount: quantity * 50,
+      created_at: now
+    })
+
+  if (txnError) {
+    console.error('Transaction log failed:', txnError.message)
+  }
+
+  // Step 6: Email notification (disabled for Edge Runtime compatibility)
   // TODO: Offload to Supabase Edge Function or external email service like Resend/Postmark
   // const transporter = nodemailer.createTransport({
   //   service: 'gmail',
