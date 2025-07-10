@@ -4,13 +4,7 @@ import { notFound } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
 
-interface PageProps {
-  params: {
-    id: string
-  }
-}
-
-export default async function EditUserPage({ params }: PageProps) {
+export default async function EditUserPage({ params }: { params: { id: string } }) {
   const cookieStore = cookies()
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
