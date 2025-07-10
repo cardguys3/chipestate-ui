@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import Link from 'next/link'
 import { Line } from 'react-chartjs-2'
+import Select from 'react-select'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -27,8 +28,8 @@ export default function DashboardPage() {
   const [properties, setProperties] = useState<any[]>([])
   const [recommendations, setRecommendations] = useState<any[]>([])
   const [earnings, setEarnings] = useState<any[]>([])
-  const [selectedProps, setSelectedProps] = useState<string[]>([])
-  const [selectedChips, setSelectedChips] = useState<string[]>([])
+  const [selectedProps, setSelectedProps] = useState<any[]>([])
+  const [selectedChips, setSelectedChips] = useState<any[]>([])
   const [monthRange, setMonthRange] = useState<[string, string]>(['2023-01', '2025-12'])
 
   useEffect(() => {
@@ -168,48 +169,20 @@ export default function DashboardPage() {
 
       <section className="mb-10">
         <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
-          <select
-            multiple
-            className="bg-[#1e2a3c] text-white p-2 rounded-xl border border-gray-600"
-            value={selectedProps}
-            onChange={(e) => {
-              const options = Array.from(e.target.selectedOptions).map((o) => o.value)
-              setSelectedProps(options)
-            }}>
-            {properties.map((p) => (
-              <option key={p.id} value={p.id}>{p.title}</option>
-            ))}
-          </select>
-
-          <select
-            multiple
-            className="bg-[#1e2a3c] text-white p-2 rounded-xl border border-gray-600"
-            value={selectedChips}
-            onChange={(e) => {
-              const options = Array.from(e.target.selectedOptions).map((o) => o.value)
-              setSelectedChips(options)
-            }}>
-            {chips.map((chip) => (
-              <option key={chip.id} value={chip.id}>Chip {chip.serial}</option>
-            ))}
-          </select>
-
-          <div className="flex items-center gap-2">
-            <label>From:</label>
-            <input
-              type="month"
-              value={monthRange[0]}
-              onChange={(e) => setMonthRange([e.target.value, monthRange[1]])}
-              className="bg-[#1e2a3c] border border-gray-600 p-2 rounded-xl text-white"
-            />
-            <label>To:</label>
-            <input
-              type="month"
-              value={monthRange[1]}
-              onChange={(e) => setMonthRange([monthRange[0], e.target.value])}
-              className="bg-[#1e2a3c] border border-gray-600 p-2 rounded-xl text-white"
-            />
-          </div>
+          <Select
+            isMulti
+            className="text-black w-full md:w-1/4"
+            options={properties.map(p => ({ label: p.title, value: p.id }))}
+            onChange={(opts) => setSelectedProps(opts.map(o => o.value))}
+            placeholder="Filter by property"
+          />
+          <Select
+            isMulti
+            className="text-black w-full md:w-1/4"
+            options={chips.map(chip => ({ label: chip.serial, value: chip.id }))}
+            onChange={(opts) => setSelectedChips(opts.map(o => o.value))}
+            placeholder="Filter by chip"
+          />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -227,6 +200,42 @@ export default function DashboardPage() {
             <h2 className="text-xl font-semibold mb-2">📈 Cumulative Chip Earnings</h2>
             <Line data={cumulativeChipChart} />
           </div>
+        </div>
+      </section>
+
+      <section className="mb-10">
+        <h2 className="text-xl font-semibold mb-2">🏠 Properties You Own</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {chips.map((chip) => {
+            const property = properties.find((p) => p.id === chip.property_id)
+            return (
+              <div key={chip.id} className="bg-[#1e2a3c] rounded-xl p-4 shadow border border-gray-600">
+                <h3 className="text-lg font-bold mb-1">{property?.title || 'Unknown Property'}</h3>
+                <p className="text-sm">Chip: {chip.serial}</p>
+                <p className="text-sm">Value: ${chip.current_value?.toLocaleString()}</p>
+                <p className="text-sm">Purchased: {new Date(chip.created_at).toLocaleDateString()}</p>
+              </div>
+            )
+          })}
+        </div>
+      </section>
+
+      <section className="mb-10">
+        <h2 className="text-xl font-semibold mb-2">🌟 Recommended Properties</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {recommendations.map((p) => (
+            <div key={p.id} className="bg-[#1e2a3c] rounded-xl p-4 shadow border border-gray-600">
+              {p.image_url && (
+                <img src={p.image_url} alt={p.title} className="rounded-md h-32 w-full object-cover mb-2" />
+              )}
+              <h3 className="text-lg font-bold mb-1">{p.title}</h3>
+              <p className="text-sm mb-2">{p.city}, {p.state}</p>
+              <p className="text-sm mb-4">Value: ${p.current_value?.toLocaleString()}</p>
+              <Link className="text-emerald-400 underline" href={`/market/${p.id}`}>
+                View Property ↗
+              </Link>
+            </div>
+          ))}
         </div>
       </section>
     </main>
