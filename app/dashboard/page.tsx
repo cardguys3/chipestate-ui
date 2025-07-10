@@ -78,13 +78,14 @@ export default function DashboardPage() {
       const { data: chipData } = await supabase.from('chips_view').select('*').eq('owner_id', user.id)
       setChips(chipData || [])
 
-      const { data: allProps } = await supabase.from('properties').select('*')
-      const ownedPropertyIds = new Set((chipData || []).map((chip) => chip.property_id))
-      const ownedProps = (allProps || []).filter((p) => ownedPropertyIds.has(p.id))
-      setProperties(ownedProps)
+      const propIds = [...new Set((chipData || []).map(chip => chip.property_id))]
+      const { data: ownedProps } = await supabase.from('properties').select('*').in('id', propIds)
+      setProperties(ownedProps || [])
 
+      const { data: allProps } = await supabase.from('properties').select('*')
+      const ownedSet = new Set(propIds)
       const recs = (allProps || [])
-        .filter((prop) => !ownedPropertyIds.has(prop.id) && prop.is_active && !prop.is_hidden)
+        .filter((prop) => !ownedSet.has(prop.id) && prop.is_active && !prop.is_hidden)
         .slice(0, 3)
       setRecommendations(recs)
 
