@@ -2,19 +2,15 @@
 
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
+import { cookies as nextCookies } from 'next/headers'
 // import nodemailer from 'nodemailer' // Removed for Vercel compatibility
 
 export async function POST(req: Request) {
+  const cookieStore = nextCookies()
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: Object.assign(cookies(), {
-  getAll: () => cookies().getAll(),
-  get: (name: string) => cookies().get(name),
-  set: () => { throw new Error('Not supported') },
-  delete: () => { throw new Error('Not supported') }
-}) }
+    { cookies: cookieStore as any }
   )
 
   const { property_id, user_id, quantity, paypal_transaction_id } = await req.json()
