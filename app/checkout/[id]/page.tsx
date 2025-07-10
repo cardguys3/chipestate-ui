@@ -83,14 +83,14 @@ export default function CheckoutPage() {
               disabled={assigning}
               createOrder={(data, actions) => {
                 return actions.order.create({
-  intent: 'CAPTURE',
-  purchase_units: [{
-    amount: {
-      currency_code: 'USD',
-      value: (qty * 50).toString()
-    }
-  }]
-})
+                  intent: 'CAPTURE',
+                  purchase_units: [{
+                    amount: {
+                      currency_code: 'USD',
+                      value: (qty * 50).toFixed(2) // Ensure proper decimal formatting
+                    }
+                  }]
+                })
               }}
               onApprove={async (data, actions) => {
                 const result = await actions.order?.capture()
@@ -107,6 +107,7 @@ export default function CheckoutPage() {
               }}
             />
           </PayPalScriptProvider>
+
           {assigning && (
             <p className="text-center text-sm text-gray-500 mt-2">Assigning chips...</p>
           )}
