@@ -5,9 +5,8 @@ import { Database } from '@/types/supabase'
 
 export async function POST(
   req: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
-  const { params } = context
   const supabase = createRouteHandlerClient<Database>({ cookies })
 
   const {
