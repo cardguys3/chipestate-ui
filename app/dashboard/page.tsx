@@ -26,22 +26,22 @@ const supabase = createBrowserClient(
 const customSelectStyles = {
   control: (base: any) => ({
     ...base,
-    backgroundColor: 'white',
-    color: 'black',
+    backgroundColor: '#1e2a3c',
+    color: 'white',
     borderColor: '#ccc'
   }),
   singleValue: (provided: any) => ({
     ...provided,
-    color: 'black'
+    color: 'white'
   }),
   menu: (base: any) => ({
     ...base,
-    backgroundColor: 'white'
+    backgroundColor: '#1e2a3c'
   }),
   option: (base: any, state: any) => ({
     ...base,
-    backgroundColor: state.isFocused ? '#f0f0f0' : 'white',
-    color: 'black'
+    backgroundColor: state.isFocused ? '#2d3a50' : '#1e2a3c',
+    color: 'white'
   })
 }
 
@@ -169,9 +169,9 @@ export default function DashboardPage() {
         <h2 className="text-xl font-semibold mb-2">📊 Account Overview</h2>
         <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
           <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Net Worth: ${netWorth.toLocaleString()}</div>
-          <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Chips Owned: {chips.length}</div>
-          <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Properties Owned: {uniqueProperties}</div>
-          <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Total Payouts: ${totalPayout.toFixed(2)}</div>
+          <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Chips Owned: {[...new Set(filteredEarnings.map(e => e.chip_id))].length}</div>
+          <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Properties Owned: {[...new Set(filteredEarnings.map(e => e.property_id))].length}</div>
+          <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Earnings: ${totalPayout.toFixed(2)}</div>
           <div className="bg-[#1e2a3c] rounded-xl p-4 border border-gray-600 shadow">Total Earnings: ${totalEarnings.toFixed(2)}</div>
         </div>
       </section>
@@ -179,8 +179,8 @@ export default function DashboardPage() {
       <section className="mb-10">
         <h2 className="text-lg font-semibold mb-2">Filters</h2>
         <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
-          <Select isMulti className="w-full md:w-1/3" options={properties.map((p) => ({ label: p.title, value: p.id }))} value={selectedProps.map((id) => ({ value: id, label: properties.find((p) => p.id === id)?.title || id.slice(0, 6) }))} onChange={(opts) => setSelectedProps(opts.map((o) => o.value))} placeholder="Filter by property" styles={customSelectStyles} />
-          <Select isMulti className="w-full md:w-1/3" options={chips.map((chip) => ({ label: chip.serial, value: chip.id }))} value={selectedChips.map((id) => ({ value: id, label: chips.find((c) => c.id === id)?.serial || id.slice(0, 6) }))} onChange={(opts) => setSelectedChips(opts.map((o) => o.value))} placeholder="Filter by chip" styles={customSelectStyles} />
+          <Select isMulti className="w-full md:w-1/3" options={properties.map((p) => ({ label: p.title, value: p.id }))} value={selectedProps.map((id) => ({ value: id, label: properties.find((p) => p.id === id)?.title || id.slice(0, 6) }))} onChange={(opts) => setSelectedProps(opts.map((o) => o.value))} placeholder="Property" styles={customSelectStyles} />
+          <Select isMulti className="w-full md:w-1/3" options={chips.map((chip) => ({ label: chip.serial, value: chip.id }))} value={selectedChips.map((id) => ({ value: id, label: chips.find((c) => c.id === id)?.serial || id.slice(0, 6) }))} onChange={(opts) => setSelectedChips(opts.map((o) => o.value))} placeholder="Chip" styles={customSelectStyles} />
         </div>
       </section>
 
