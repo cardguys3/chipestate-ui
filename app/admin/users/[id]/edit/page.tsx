@@ -1,20 +1,10 @@
-'use client'
-
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
-import { notFound, useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { useState } from 'react'
+import { notFound } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
 
-interface PageProps {
-  params: {
-    id: string
-  }
-}
-
-export default async function EditUserPage({ params }: PageProps) {
+export default async function EditUserPage({ params }: { params: { id: string } }) {
   const cookieStore = cookies()
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -28,9 +18,7 @@ export default async function EditUserPage({ params }: PageProps) {
     }
   )
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
 
   const isAdmin = ['mark@chipestate.com', 'cardguys3@gmail.com'].includes(user?.email || '')
   if (!isAdmin) {
@@ -62,6 +50,7 @@ export default async function EditUserPage({ params }: PageProps) {
         },
       }
     )
+
     await supabase
       .from('users_extended')
       .update({ is_approved: status })
@@ -70,28 +59,24 @@ export default async function EditUserPage({ params }: PageProps) {
 
   return (
     <main className="min-h-screen bg-blue-950 text-white p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Edit User</h1>
-        <Link href="/admin/users" className="text-emerald-400 hover:underline">Back to Users</Link>
-      </div>
+      <h1 className="text-2xl font-bold mb-4">Edit User</h1>
+      <div className="bg-blue-900 p-4 rounded shadow max-w-xl">
+        <p><strong>Name:</strong> {userRecord.first_name} {userRecord.last_name}</p>
+        <p><strong>Email:</strong> {userRecord.email}</p>
+        <p><strong>Phone:</strong> {userRecord.phone || '-'}</p>
+        <p><strong>Approved:</strong> {userRecord.is_approved ? 'Yes' : 'No'}</p>
 
-      <div className="bg-blue-900 p-6 rounded-lg shadow-lg">
-        <p className="mb-4"><span className="font-semibold">Email:</span> {userRecord.email}</p>
-        <p className="mb-4"><span className="font-semibold">Name:</span> {userRecord.first_name} {userRecord.last_name}</p>
-        <p className="mb-4"><span className="font-semibold">Phone:</span> {userRecord.phone || 'N/A'}</p>
-        <p className="mb-4"><span className="font-semibold">DOB:</span> {userRecord.dob || 'N/A'}</p>
-        <p className="mb-4"><span className="font-semibold">Residential Address:</span> {userRecord.res_address_line1} {userRecord.res_address_line2}, {userRecord.res_city}, {userRecord.res_state} {userRecord.res_zip}</p>
-        <p className="mb-4"><span className="font-semibold">Mailing Address:</span> {userRecord.mail_address_line1} {userRecord.mail_address_line2}, {userRecord.mail_city}, {userRecord.mail_state} {userRecord.mail_zip}</p>
-        <p className="mb-4"><span className="font-semibold">Approved:</span> {userRecord.is_approved ? '✅' : '❌'}</p>
+        <form action={updateApproval.bind(null, true)} className="mt-4 inline-block mr-3">
+          <button type="submit" className="bg-green-600 hover:bg-green-500 text-white font-semibold py-1 px-4 rounded">
+            Approve
+          </button>
+        </form>
 
-        <div className="mt-6 flex gap-4">
-          <form action={async () => updateApproval(true)}>
-            <button className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 px-4 rounded">✅ Approve</button>
-          </form>
-          <form action={async () => updateApproval(false)}>
-            <button className="bg-red-600 hover:bg-red-500 text-white font-semibold py-2 px-4 rounded">❌ Deny</button>
-          </form>
-        </div>
+        <form action={updateApproval.bind(null, false)} className="inline-block">
+          <button type="submit" className="bg-red-600 hover:bg-red-500 text-white font-semibold py-1 px-4 rounded">
+            Deny
+          </button>
+        </form>
       </div>
     </main>
   )
