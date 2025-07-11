@@ -4,7 +4,11 @@ import { cookies } from 'next/headers'
 import { Database } from '@/types/supabase'
 import Link from 'next/link'
 
-const EditUserPage = async ({ params }: { params: { id: string } }) => {
+const EditUserPage = async ({
+  params,
+}: {
+  params: { id: string }
+}) => {
   const supabase = createServerComponentClient<Database>({ cookies })
 
   const { data: userRecord, error } = await supabase
