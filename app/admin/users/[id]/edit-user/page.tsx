@@ -3,7 +3,9 @@ import { cookies } from 'next/headers'
 import { Database } from '@/types/supabase'
 import Link from 'next/link'
 
-// No extra types imported — we define exactly what Next expects
+// ✅ DO NOT IMPORT OR REFERENCE `PageProps` ANYWHERE
+// ✅ This file must NOT be marked 'use client'
+
 export default async function EditUserPage({
   params,
 }: {
