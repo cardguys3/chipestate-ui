@@ -4,11 +4,11 @@ import { cookies } from 'next/headers'
 import { Database } from '@/types/supabase'
 import Link from 'next/link'
 
-const EditUserPage = async ({
+export default async function EditUserPage({
   params,
 }: {
   params: { id: string }
-}) => {
+}) {
   const supabase = createServerComponentClient<Database>({ cookies })
 
   const { data: userRecord, error } = await supabase
@@ -58,5 +58,3 @@ const EditUserPage = async ({
     </main>
   )
 }
-
-export default EditUserPage
