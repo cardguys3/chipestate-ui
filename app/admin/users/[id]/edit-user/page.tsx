@@ -1,5 +1,3 @@
-'use client'
-
 import { createServerComponentClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { Database } from '@/types/supabase'
@@ -9,8 +7,9 @@ interface PageProps {
   params: { id: string }
 }
 
-const EditUserPage = async ({ params }: PageProps) => {
+export default async function EditUserPage({ params }: PageProps) {
   const supabase = createServerComponentClient<Database>({ cookies })
+
   const { data: user, error } = await supabase
     .from('users_extended')
     .select('*')
@@ -44,5 +43,3 @@ const EditUserPage = async ({ params }: PageProps) => {
     </main>
   )
 }
-
-export default EditUserPage
