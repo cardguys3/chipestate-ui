@@ -9,7 +9,9 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 export async function POST(req: NextRequest, context: any) {
   const { id } = context.params
 
-  const supabase = createServerClient<Database>(supabaseUrl, supabaseKey, { cookies })
+  const supabase = createServerClient<Database>(supabaseUrl, supabaseKey, {
+    cookies: cookies()
+  })
 
   const { error } = await supabase
     .from('users_extended')
