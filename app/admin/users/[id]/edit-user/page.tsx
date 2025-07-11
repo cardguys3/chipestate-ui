@@ -4,7 +4,7 @@ import { Database } from '@/types/supabase'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
-export default async function Page({ params }: { params: { id: string } }) {
+export default async function Page({ params }: { params: Record<string, string> }) {
   const supabase = createServerComponentClient<Database>({ cookies })
 
   const { data: user, error } = await supabase
