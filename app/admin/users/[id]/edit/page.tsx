@@ -4,11 +4,11 @@ import { cookies } from 'next/headers'
 import { Database } from '@/types/supabase'
 import Link from 'next/link'
 
-export default async function EditUserPage({
-  params,
-}: {
+interface PageProps {
   params: { id: string }
-}) {
+}
+
+export default async function EditUserPage({ params }: PageProps) {
   const supabase = createServerComponentClient<Database>({ cookies })
 
   const { data: userRecord, error } = await supabase
@@ -18,24 +18,6 @@ export default async function EditUserPage({
     .single()
 
   if (!userRecord || error) return notFound()
-
-  const approveAction = async () => {
-    'use server'
-    const supabase = createServerComponentClient<Database>({ cookies })
-    await supabase
-      .from('users_extended')
-      .update({ is_approved: true })
-      .eq('id', params.id)
-  }
-
-  const denyAction = async () => {
-    'use server'
-    const supabase = createServerComponentClient<Database>({ cookies })
-    await supabase
-      .from('users_extended')
-      .update({ is_approved: false })
-      .eq('id', params.id)
-  }
 
   return (
     <main className="min-h-screen bg-blue-950 text-white p-6">
@@ -48,18 +30,19 @@ export default async function EditUserPage({
         <p><strong>Approved:</strong> {userRecord.is_approved ? 'Yes' : 'No'}</p>
       </div>
 
-      <form className="flex gap-4" action={approveAction}>
+      <form className="flex gap-4" action={`/admin/users/${params.id}/approve`} method="post">
         <button
           type="submit"
+          name="action"
+          value="approve"
           className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded"
         >
           Approve
         </button>
-      </form>
-
-      <form className="mt-2" action={denyAction}>
         <button
           type="submit"
+          name="action"
+          value="deny"
           className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded"
         >
           Deny
