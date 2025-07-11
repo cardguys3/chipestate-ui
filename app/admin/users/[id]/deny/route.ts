@@ -7,8 +7,10 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export async function POST(req: NextRequest, context: any) {
+  const cookieStore = await cookies(); // ✅ FIXED: Await cookies()
+
   const supabase = createServerClient<Database>(supabaseUrl, supabaseKey, {
-    cookies: cookies(), // ✅ This is the correct usage
+    cookies: cookieStore, // ✅ Now this is a valid CookieMethodsServer
   });
 
   const { id } = context.params;
