@@ -10,17 +10,20 @@ export async function POST(req: NextRequest, context: any) {
   const cookieStore = await nextCookies();
 
   const supabase = createServerClient<Database>(supabaseUrl, supabaseKey, {
-    cookies: {
-      get: (name: string) => cookieStore.get(name)?.value ?? null,
-      getAll: () =>
-        Array.from(cookieStore.entries()).map(([name, cookie]) => ({
-          name,
-          value: cookie.value,
-        })),
-      set: () => {},
-      remove: () => {},
+  cookies: {
+    get: (name: string) => cookieStore.get(name)?.value ?? null,
+    getAll: (): { name: string; value: string }[] => {
+      const entries = Array.from(cookieStore.entries());
+      return entries.map(([name, cookie]) => ({
+        name,
+        value: cookie.value,
+      }));
     },
-  });
+    set: () => {},
+    remove: () => {},
+  },
+});
+
 
   const { id } = context.params;
 
