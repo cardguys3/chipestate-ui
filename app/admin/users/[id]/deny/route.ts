@@ -1,24 +1,31 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+import { NextRequest } from 'next/server';
+import type { Database } from '@/types/supabase.types';
 
-import type { RouteHandlerContext } from 'next/dist/server/web/types'
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-export async function POST(
-  req: NextRequest,
-  context: RouteHandlerContext
-) {
-  const { id } = context.params
-  const supabase = createServerClient({ cookies })
+export async function POST(req: NextRequest, context: any) {
+  const supabase = createServerClient<Database>(supabaseUrl, supabaseKey, {
+    cookies,
+  });
+
+  const { id } = context.params;
 
   const { error } = await supabase
     .from('users_extended')
-    .update({ is_approved: false })
-    .eq('user_id', id)
+    .update({ registration_status: 'denied' })
+    .eq('id', id);
 
   if (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+    console.error('Error denying user:', error.message);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+    });
   }
 
-  return NextResponse.json({ success: true }, { status: 200 })
+  return new Response(JSON.stringify({ message: 'User denied' }), {
+    status: 200,
+  });
 }
