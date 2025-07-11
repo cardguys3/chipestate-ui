@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import type { RouteHandlerContext } from 'next/dist/server/web/types' // ✅ import the right type
 
 export async function POST(
   req: NextRequest,
-  context: RouteHandlerContext
+  context: { params: { id: string } }
 ) {
   const { id } = context.params
   const supabase = createServerClient({ cookies })
