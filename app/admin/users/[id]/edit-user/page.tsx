@@ -11,7 +11,6 @@ interface PageProps {
 
 const EditUserPage = async ({ params }: PageProps) => {
   const supabase = createServerComponentClient<Database>({ cookies })
-
   const { data: user, error } = await supabase
     .from('users_extended')
     .select('*')
