@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies as nextCookies } from 'next/headers'
 import type { Database } from '@/types/supabase.types'
+import type { CookieOptionsWithName } from '@supabase/ssr'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -11,12 +12,15 @@ export async function POST(req: NextRequest, context: any) {
 
   const supabase = createServerClient<Database>(supabaseUrl, supabaseKey, {
     cookies: {
-      get: (name) => cookieStore.get(name)?.value ?? null,
+      get: (name: string) => cookieStore.get(name)?.value ?? null,
       getAll: () =>
         cookieStore.getAll().map(({ name, value }) => ({ name, value })),
-      set: () => {}, // noop – server route doesn't set cookies
-      remove: () => {}, // noop – same
+      set: () => {},
+      remove: () => {},
     },
+    cookieOptions: {
+      name: 'sb', // required by Supabase typing, safe default
+    } satisfies CookieOptionsWithName,
   })
 
   const { id } = context.params
