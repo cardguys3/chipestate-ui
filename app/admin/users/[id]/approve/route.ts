@@ -1,23 +1,19 @@
-import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
+import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 
-export async function POST(request: Request, context: { params: { id: string } }) {
-  const { params } = context;
-
-  const supabase = createServerClient({ cookies });
+export async function POST(request: NextRequest, context: { params: { id: string } }) {
+  const { id } = context.params
+  const supabase = createServerClient({ cookies })
 
   const { error } = await supabase
     .from('users_extended')
     .update({ is_approved: true })
-    .eq('user_id', params.id);
+    .eq('user_id', id)
 
   if (error) {
-    return new Response(JSON.stringify({ success: false, error: error.message }), {
-      status: 500,
-    });
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 })
   }
 
-  return new Response(JSON.stringify({ success: true }), {
-    status: 200,
-  });
+  return NextResponse.json({ success: true }, { status: 200 })
 }
