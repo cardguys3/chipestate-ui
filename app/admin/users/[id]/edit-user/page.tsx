@@ -1,47 +1,40 @@
-import { createServerComponentClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-import { Database } from '@/types/supabase'
-import Link from 'next/link'
+import { createServerComponentClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+import { Database } from '@/types/supabase';
+import Link from 'next/link';
 
-type Props = {
+type PageProps = {
   params: {
-    id: string
-  }
-}
+    id: string;
+  };
+};
 
-export default async function EditUserPage({ params }: Props) {
-  const supabase = createServerComponentClient<Database>({ cookies })
-
-  const { data: user, error } = await supabase
+export default async function EditUserPage({ params }: PageProps) {
+  const supabase = createServerComponentClient<Database>({ cookies });
+  const { data: user } = await supabase
     .from('users_extended')
     .select('*')
     .eq('id', params.id)
-    .single()
+    .single();
 
-  if (error || !user) {
-    return (
-      <main className="p-6">
-        <h1 className="text-xl font-semibold text-red-600">Error loading user</h1>
-        <p>{error?.message || 'User not found.'}</p>
-      </main>
-    )
+  if (!user) {
+    return <div className="p-4 text-red-600">User not found</div>;
   }
 
   return (
-    <main className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Edit User</h1>
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-4">Edit User: {user.first_name} {user.last_name}</h1>
       <div className="space-y-2">
-        <p><strong>Name:</strong> {user.first_name} {user.last_name}</p>
-        <p><strong>Email:</strong> {user.email}</p>
-        <p><strong>Phone:</strong> {user.phone || '—'}</p>
-        <p><strong>DOB:</strong> {user.dob || '—'}</p>
-        <p><strong>Address:</strong> {user.res_address_line1} {user.res_address_line2}, {user.res_city}, {user.res_state} {user.res_zip}</p>
-        <p><strong>Registration Status:</strong> {user.registration_status || '—'}</p>
-        <p><strong>Approved:</strong> {user.is_approved ? 'Yes' : 'No'}</p>
+        <div><strong>Email:</strong> {user.email}</div>
+        <div><strong>Phone:</strong> {user.phone}</div>
+        <div><strong>DOB:</strong> {user.dob}</div>
+        <div><strong>Residential Address:</strong> {user.res_address_line1} {user.res_address_line2}, {user.res_city}, {user.res_state} {user.res_zip}</div>
+        <div><strong>Mailing Address:</strong> {user.mail_address_line1} {user.mail_address_line2}, {user.mail_city}, {user.mail_state} {user.mail_zip}</div>
+        <div><strong>Approved:</strong> {user.is_approved ? 'Yes' : 'No'}</div>
       </div>
-      <div className="mt-6">
-        <Link href="/admin/users" className="text-blue-600 hover:underline">← Back to Users</Link>
-      </div>
-    </main>
-  )
+      <Link href="/admin/users" className="mt-4 inline-block text-blue-500 hover:underline">
+        ← Back to Users
+      </Link>
+    </div>
+  );
 }
