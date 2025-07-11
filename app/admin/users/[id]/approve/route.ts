@@ -1,22 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
-import { cookies as nextCookies } from 'next/headers'
+import { cookies } from 'next/headers'
 import type { Database } from '@/types/supabase.types'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 export async function POST(req: NextRequest, context: any) {
-  const { id } = context.params
-
   const supabase = createServerClient<Database>(supabaseUrl, supabaseKey, {
-    cookies: {
-      get: (name) => nextCookies().get(name)?.value ?? null,
-      getAll: () => nextCookies().getAll().map(({ name, value }) => ({ name, value })),
-      set: () => {}, // no-op, server routes don’t write cookies
-      remove: () => {}, // no-op
-    },
+    cookies
   })
+
+  const { id } = context.params
 
   const { error } = await supabase
     .from('users_extended')
