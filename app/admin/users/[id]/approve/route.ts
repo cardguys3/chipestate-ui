@@ -1,22 +1,23 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createServerActionClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
-import { Database } from '@/types/supabase'
+import { NextResponse } from "next/server";
+import { createClient } from "@/utils/supabase/server";
+import { Database } from "@/types/supabase";
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  const supabase = createServerActionClient<Database>({ cookies })
-  const formData = await req.formData()
-  const action = formData.get('action')
+// Fix: correctly use context parameter
+export async function POST(request: Request, context: { params: { id: string } }) {
+  const { params } = context;
+  const userId = params.id;
 
-  const is_approved = action === 'approve'
+  const supabase = createClient();
+
+  // Update the 'is_approved' field in the 'users_extended' table
   const { error } = await supabase
-    .from('users_extended')
-    .update({ is_approved })
-    .eq('id', params.id)
+    .from("users_extended")
+    .update({ is_approved: true })
+    .eq("user_id", userId);
 
   if (error) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 })
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 
-  return NextResponse.redirect(new URL('/admin/users', req.url))
+  return NextResponse.json({ success: true }, { status: 200 });
 }
