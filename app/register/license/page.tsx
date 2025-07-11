@@ -4,8 +4,9 @@ import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Database } from '@/types/supabase'
+import { Suspense } from 'react'
 
-export default function LicenseUploadPage() {
+function LicenseForm() {
   const supabase = createClientComponentClient<Database>()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -32,11 +33,11 @@ export default function LicenseUploadPage() {
     const fileNameBack = `${userId}_back.${fileExtBack}`
     const filePathBack = `${fileNameBack}`
 
-    const { data: frontUpload, error: frontError } = await supabase.storage
+    const { error: frontError } = await supabase.storage
       .from('licenses')
       .upload(filePathFront, front, { upsert: true })
 
-    const { data: backUpload, error: backError } = await supabase.storage
+    const { error: backError } = await supabase.storage
       .from('licenses')
       .upload(filePathBack, back, { upsert: true })
 
@@ -46,8 +47,9 @@ export default function LicenseUploadPage() {
       return
     }
 
-    const frontUrl = `https://ajburehyunbvpuhnyjbo.supabase.co/storage/v1/object/public/licenses/${filePathFront}`
-    const backUrl = `https://ajburehyunbvpuhnyjbo.supabase.co/storage/v1/object/public/licenses/${filePathBack}`
+    const baseUrl = `https://szzglzcddjrnrtguwjsc.supabase.co/storage/v1/object/public/licenses`
+    const frontUrl = `${baseUrl}/${filePathFront}`
+    const backUrl = `${baseUrl}/${filePathBack}`
 
     const { error: updateError } = await supabase
       .from('users_extended')
@@ -100,5 +102,13 @@ export default function LicenseUploadPage() {
         </button>
       </div>
     </main>
+  )
+}
+
+export default function LicenseUploadPage() {
+  return (
+    <Suspense fallback={<p className="text-white p-4">Loading license form...</p>}>
+      <LicenseForm />
+    </Suspense>
   )
 }
