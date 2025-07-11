@@ -1,18 +1,10 @@
-// /app/admin/users/[id]/edit-user/page.tsx
 import { createServerComponentClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { Database } from '@/types/supabase'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { UserExtended } from '@/types/tables'
 
-interface EditUserPageProps {
-  params: {
-    id: string
-  }
-}
-
-export default async function EditUserPage({ params }: EditUserPageProps) {
+export default async function Page({ params }: { params: { id: string } }) {
   const supabase = createServerComponentClient<Database>({ cookies })
 
   const { data: user, error } = await supabase
