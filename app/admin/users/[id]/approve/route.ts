@@ -2,9 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
+// You can also pull these from process.env
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+
 export async function POST(req: NextRequest, context: any) {
   const { id } = context.params
-  const supabase = createServerClient({ cookies })
+
+  const supabase = createServerClient<Database>(supabaseUrl, supabaseKey, { cookies })
 
   const { error } = await supabase
     .from('users_extended')
