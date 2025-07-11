@@ -10,7 +10,7 @@ export async function POST(req: NextRequest, context: any) {
   const { id } = context.params
 
   const supabase = createServerClient<Database>(supabaseUrl, supabaseKey, {
-    cookies: cookies
+    cookies // ✅ not cookies()
   })
 
   const { error } = await supabase
