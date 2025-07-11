@@ -8,7 +8,7 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export async function POST(req: NextRequest, context: any) {
   const supabase = createServerClient<Database>(supabaseUrl, supabaseKey, {
-    cookies,
+    cookies: cookies(), // ✅ FIXED HERE
   });
 
   const { id } = context.params;
