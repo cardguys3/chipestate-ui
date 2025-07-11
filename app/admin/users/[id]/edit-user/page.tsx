@@ -3,11 +3,7 @@ import { cookies } from 'next/headers'
 import { Database } from '@/types/supabase'
 import Link from 'next/link'
 
-interface Props {
-  params: { id: string }
-}
-
-export default function Page({ params }: Props) {
+export default function Page({ params }: { params: { id: string } }) {
   return <EditUser userId={params.id} />
 }
 
