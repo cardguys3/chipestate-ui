@@ -1,25 +1,23 @@
-import { cookies } from 'next/headers'
+import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
-import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
+import type { RouteHandlerContext } from 'next/dist/server/web/types'
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
-  const cookieStore = cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get: (name) => cookieStore.get(name)?.value ?? '',
-        set: () => {},
-        remove: () => {},
-      },
-    }
-  )
+export async function POST(
+  req: NextRequest,
+  context: RouteHandlerContext
+) {
+  const { id } = context.params
+  const supabase = createServerClient({ cookies })
 
-  await supabase
+  const { error } = await supabase
     .from('users_extended')
     .update({ is_approved: false })
-    .eq('id', params.id)
+    .eq('user_id', id)
 
-  redirect(`/admin/users/${params.id}/edit`)
+  if (error) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+  }
+
+  return NextResponse.json({ success: true }, { status: 200 })
 }
