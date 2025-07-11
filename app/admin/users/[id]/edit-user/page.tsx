@@ -3,22 +3,17 @@ import { cookies } from 'next/headers'
 import { Database } from '@/types/supabase'
 import Link from 'next/link'
 
-type PageProps = {
-  params: {
-    id: string
-  }
+interface Props {
+  params: { id: string }
 }
 
-export default function EditUserPage({ params }: PageProps) {
-  const supabase = createServerComponentClient<Database>({ cookies })
-
-  return (
-    <UserContent userId={params.id} />
-  )
+export default function Page({ params }: Props) {
+  return <EditUser userId={params.id} />
 }
 
-async function UserContent({ userId }: { userId: string }) {
+async function EditUser({ userId }: { userId: string }) {
   const supabase = createServerComponentClient<Database>({ cookies })
+
   const { data: user, error } = await supabase
     .from('users_extended')
     .select('*')
@@ -28,7 +23,7 @@ async function UserContent({ userId }: { userId: string }) {
   if (error || !user) {
     return (
       <main className="p-6">
-        <h1 className="text-xl text-red-600">Error loading user</h1>
+        <h1 className="text-xl font-semibold text-red-600">Error loading user</h1>
         <p>{error?.message || 'User not found.'}</p>
       </main>
     )
@@ -43,7 +38,7 @@ async function UserContent({ userId }: { userId: string }) {
         <p><strong>Phone:</strong> {user.phone || '—'}</p>
         <p><strong>DOB:</strong> {user.dob || '—'}</p>
         <p><strong>Address:</strong> {user.res_address_line1} {user.res_address_line2}, {user.res_city}, {user.res_state} {user.res_zip}</p>
-        <p><strong>Status:</strong> {user.registration_status || '—'}</p>
+        <p><strong>Registration Status:</strong> {user.registration_status || '—'}</p>
         <p><strong>Approved:</strong> {user.is_approved ? 'Yes' : 'No'}</p>
       </div>
       <div className="mt-6">
