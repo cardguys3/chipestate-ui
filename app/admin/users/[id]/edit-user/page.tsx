@@ -3,20 +3,33 @@ import { cookies } from 'next/headers'
 import { Database } from '@/types/supabase'
 import Link from 'next/link'
 
-export default async function EditUserPage({ params }: { params: { id: string } }) {
+type PageProps = {
+  params: {
+    id: string
+  }
+}
+
+export default function EditUserPage({ params }: PageProps) {
   const supabase = createServerComponentClient<Database>({ cookies })
 
+  return (
+    <UserContent userId={params.id} />
+  )
+}
+
+async function UserContent({ userId }: { userId: string }) {
+  const supabase = createServerComponentClient<Database>({ cookies })
   const { data: user, error } = await supabase
     .from('users_extended')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', userId)
     .single()
 
   if (error || !user) {
     return (
       <main className="p-6">
         <h1 className="text-xl text-red-600">Error loading user</h1>
-        <p>{error?.message}</p>
+        <p>{error?.message || 'User not found.'}</p>
       </main>
     )
   }
