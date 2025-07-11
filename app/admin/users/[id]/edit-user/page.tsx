@@ -2,6 +2,7 @@ import { createServerComponentClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { Database } from '@/types/supabase'
 import Link from 'next/link'
+
 import { notFound } from 'next/navigation'
 
 export default async function Page({ params }: { params: { id: string } }) {
