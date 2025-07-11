@@ -1,30 +1,35 @@
 import { createServerComponentClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-
 import { Database } from '@/types/supabase';
 import Link from 'next/link';
 
-type PageProps = {
-  params: {
-    id: string;
-  };
-};
+interface PageProps {
+  params: { id: string };
+}
 
-export default async function EditUserPage({ params }: PageProps) {
+export default async function Page({ params }: PageProps) {
   const supabase = createServerComponentClient<Database>({ cookies });
-  const { data: user } = await supabase
+
+  const { data: user, error } = await supabase
     .from('users_extended')
     .select('*')
     .eq('id', params.id)
     .single();
 
+  if (error) {
+    console.error('Error fetching user:', error.message);
+    return <div className="p-4 text-red-600">Error loading user data.</div>;
+  }
+
   if (!user) {
-    return <div className="p-4 text-red-600">User not found</div>;
+    return <div className="p-4 text-red-600">User not found.</div>;
   }
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Edit User: {user.first_name} {user.last_name}</h1>
+      <h1 className="text-2xl font-bold mb-4">
+        Edit User: {user.first_name} {user.last_name}
+      </h1>
       <div className="space-y-2">
         <div><strong>Email:</strong> {user.email}</div>
         <div><strong>Phone:</strong> {user.phone}</div>

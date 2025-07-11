@@ -41,3 +41,5 @@ coverage/
 
 # PEM keys (private keys)
 *.pem
+
+.vercel
