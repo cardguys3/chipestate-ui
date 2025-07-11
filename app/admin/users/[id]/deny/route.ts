@@ -10,20 +10,18 @@ export async function POST(req: NextRequest, context: any) {
   const cookieStore = await nextCookies();
 
   const supabase = createServerClient<Database>(supabaseUrl, supabaseKey, {
-  cookies: {
-    get: (name: string) => cookieStore.get(name)?.value ?? null,
-    getAll: (): { name: string; value: string }[] => {
-      const entries = Array.from(cookieStore.entries());
-      return entries.map(([name, cookie]) => ({
-        name,
-        value: cookie.value,
-      }));
+    cookies: {
+      get: (name: string) => cookieStore.get(name)?.value ?? null,
+      getAll: () => {
+        return Array.from(cookieStore.entries()).map(([name, cookie]) => ({
+          name,
+          value: cookie.value,
+        }));
+      },
+      set: () => {},
+      remove: () => {},
     },
-    set: () => {},
-    remove: () => {},
-  },
-});
-
+  });
 
   const { id } = context.params;
 
@@ -33,13 +31,12 @@ export async function POST(req: NextRequest, context: any) {
     .eq('id', id);
 
   if (error) {
-    console.error('Error denying user:', error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
     });
   }
 
-  return new Response(JSON.stringify({ message: 'User denied' }), {
+  return new Response(JSON.stringify({ success: true }), {
     status: 200,
   });
 }
