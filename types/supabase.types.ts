@@ -488,6 +488,7 @@ export type Database = {
           mail_zip: string | null
           middle_name: string | null
           phone: string | null
+          registration_status: string | null
           res_address_line1: string | null
           res_address_line2: string | null
           res_city: string | null
@@ -511,6 +512,7 @@ export type Database = {
           mail_zip?: string | null
           middle_name?: string | null
           phone?: string | null
+          registration_status?: string | null
           res_address_line1?: string | null
           res_address_line2?: string | null
           res_city?: string | null
@@ -534,6 +536,7 @@ export type Database = {
           mail_zip?: string | null
           middle_name?: string | null
           phone?: string | null
+          registration_status?: string | null
           res_address_line1?: string | null
           res_address_line2?: string | null
           res_city?: string | null
