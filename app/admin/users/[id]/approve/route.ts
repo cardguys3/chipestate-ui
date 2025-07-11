@@ -1,23 +1,23 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/server";
-import { Database } from "@/types/supabase";
+import { cookies } from 'next/headers';
+import { createServerClient } from '@supabase/ssr';
 
-// Fix: correctly use context parameter
 export async function POST(request: Request, context: { params: { id: string } }) {
   const { params } = context;
-  const userId = params.id;
 
-  const supabase = createClient();
+  const supabase = createServerClient({ cookies });
 
-  // Update the 'is_approved' field in the 'users_extended' table
   const { error } = await supabase
-    .from("users_extended")
+    .from('users_extended')
     .update({ is_approved: true })
-    .eq("user_id", userId);
+    .eq('user_id', params.id);
 
   if (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return new Response(JSON.stringify({ success: false, error: error.message }), {
+      status: 500,
+    });
   }
 
-  return NextResponse.json({ success: true }, { status: 200 });
+  return new Response(JSON.stringify({ success: true }), {
+    status: 200,
+  });
 }
