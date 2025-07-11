@@ -1,21 +1,22 @@
+'use client'
+
 import { createServerComponentClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { Database } from '@/types/supabase'
 import Link from 'next/link'
 
-export default function Page({ params }: { params: { id: string } }) {
-  return <EditUser userId={params.id} />
+interface PageProps {
+  params: { id: string }
 }
 
-async function EditUser({ userId }: { userId: string }) {
+const EditUserPage = async ({ params }: PageProps) => {
   const supabase = createServerComponentClient<Database>({ cookies })
 
   const { data: user, error } = await supabase
     .from('users_extended')
     .select('*')
-    .eq('id', userId)
+    .eq('id', params.id)
     .single()
-
 
   if (error || !user) {
     return (
@@ -44,3 +45,5 @@ async function EditUser({ userId }: { userId: string }) {
     </main>
   )
 }
+
+export default EditUserPage
