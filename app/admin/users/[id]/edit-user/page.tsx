@@ -1,58 +1,47 @@
-import { notFound } from 'next/navigation'
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createServerComponentClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { Database } from '@/types/supabase'
 import Link from 'next/link'
 
-export default async function EditUserPage(props: any) {
-  const { params } = props as { params: { id: string } }
+type Props = {
+  params: {
+    id: string
+  }
+}
 
+export default async function EditUserPage({ params }: Props) {
   const supabase = createServerComponentClient<Database>({ cookies })
 
-  const { data: userRecord, error } = await supabase
+  const { data: user, error } = await supabase
     .from('users_extended')
     .select('*')
     .eq('id', params.id)
     .single()
 
-  if (!userRecord || error) return notFound()
+  if (error || !user) {
+    return (
+      <main className="p-6">
+        <h1 className="text-xl text-red-600">Error loading user</h1>
+        <p>{error?.message}</p>
+      </main>
+    )
+  }
 
   return (
-    <main className="min-h-screen bg-blue-950 text-white p-6">
-      <h1 className="text-2xl font-bold mb-6">Edit User: {userRecord.email}</h1>
-      <div className="mb-4">
-        <p><strong>Name:</strong> {userRecord.first_name} {userRecord.middle_name} {userRecord.last_name}</p>
-        <p><strong>Phone:</strong> {userRecord.phone}</p>
-        <p><strong>DOB:</strong> {userRecord.dob}</p>
-        <p><strong>Email:</strong> {userRecord.email}</p>
-        <p><strong>Approved:</strong> {userRecord.is_approved ? 'Yes' : 'No'}</p>
+    <main className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Edit User</h1>
+      <div className="space-y-2">
+        <p><strong>Name:</strong> {user.first_name} {user.last_name}</p>
+        <p><strong>Email:</strong> {user.email}</p>
+        <p><strong>Phone:</strong> {user.phone || '—'}</p>
+        <p><strong>DOB:</strong> {user.dob || '—'}</p>
+        <p><strong>Address:</strong> {user.res_address_line1} {user.res_address_line2}, {user.res_city}, {user.res_state} {user.res_zip}</p>
+        <p><strong>Status:</strong> {user.registration_status || '—'}</p>
+        <p><strong>Approved:</strong> {user.is_approved ? 'Yes' : 'No'}</p>
       </div>
-
-      <form className="flex gap-4" action={`/admin/users/${params.id}/approve`} method="post">
-        <button
-          type="submit"
-          name="action"
-          value="approve"
-          className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded"
-        >
-          Approve
-        </button>
-        <button
-          type="submit"
-          name="action"
-          value="deny"
-          className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded"
-        >
-          Deny
-        </button>
-      </form>
-
-      <Link
-        href="/admin/users"
-        className="inline-block mt-6 text-sm text-emerald-400 underline hover:text-emerald-200"
-      >
-        ← Back to User List
-      </Link>
+      <div className="mt-6">
+        <Link href="/admin/users" className="text-blue-600 hover:underline">← Back to Users</Link>
+      </div>
     </main>
   )
 }

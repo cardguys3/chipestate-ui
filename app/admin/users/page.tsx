@@ -1,94 +1,67 @@
-import { cookies } from 'next/headers'
-import { createServerClient } from '@supabase/ssr'
+'use client'
+
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 
-export const dynamic = 'force-dynamic'
+type User = {
+  id: string
+  email: string
+  first_name: string
+  last_name: string
+  res_state: string | null
+  created_at: string
+}
 
-export default async function AdminUsersPage() {
-  const cookieStore = await cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get: (name) => cookieStore.get(name)?.value ?? '',
-        set: () => {},
-        remove: () => {},
-      },
+export default function AdminUsersPage() {
+  const [users, setUsers] = useState<User[]>([])
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchUsers() {
+      try {
+        const res = await fetch('/api/admin/users')
+        if (!res.ok) throw new Error('Failed to fetch users')
+        const data = await res.json()
+        setUsers(data)
+      } catch (err: any) {
+        setError(err.message || 'Error loading users')
+      }
     }
-  )
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  const isAdmin = ['mark@chipestate.com', 'cardguys3@gmail.com'].includes(user?.email || '')
-  if (!isAdmin) {
-    return (
-      <main className="min-h-screen flex items-center justify-center text-white bg-blue-950">
-        <p className="text-xl">Unauthorized</p>
-      </main>
-    )
-  }
-
-  const { data: users, error } = await supabase
-    .from('users_extended')
-    .select('id, email, first_name, last_name, state, created_at')
-    .order('created_at', { ascending: false })
+    fetchUsers()
+  }, [])
 
   if (error) {
-    return (
-      <main className="min-h-screen flex items-center justify-center text-white bg-blue-950">
-        <p className="text-xl">Error loading users</p>
-      </main>
-    )
+    return <main><p className="text-red-600 text-xl">{error}</p></main>
   }
 
   return (
-    <main className="min-h-screen bg-blue-950 text-white p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Manage Users</h1>
-        <Link
-          href="/admin/users/add"
-          className="bg-emerald-700 hover:bg-emerald-600 text-white font-semibold py-1.5 px-3 rounded shadow text-sm"
-        >
-          + Add User
-        </Link>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-blue-900 text-white border border-blue-700 rounded-lg shadow text-sm">
-          <thead className="bg-blue-800">
-            <tr>
-              <th className="px-3 py-1.5 text-left">Name</th>
-              <th className="px-3 py-1.5 text-left">Email</th>
-              <th className="px-3 py-1.5 text-left">State</th>
-              <th className="px-3 py-1.5 text-left">Created</th>
-              <th className="px-3 py-1.5 text-left">Actions</th>
+    <main className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Users</h1>
+      <table className="w-full border">
+        <thead>
+          <tr className="bg-gray-100 dark:bg-gray-800 text-left">
+            <th className="p-2">Name</th>
+            <th className="p-2">Email</th>
+            <th className="p-2">State</th>
+            <th className="p-2">Created At</th>
+            <th className="p-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map((user) => (
+            <tr key={user.id} className="border-t">
+              <td className="p-2">{user.first_name} {user.last_name}</td>
+              <td className="p-2">{user.email}</td>
+              <td className="p-2">{user.res_state || '—'}</td>
+              <td className="p-2">{new Date(user.created_at).toLocaleDateString()}</td>
+              <td className="p-2">
+                <Link href={`/admin/users/${user.id}/edit-user`} className="text-blue-600 hover:underline">Edit</Link>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {users?.map((user) => (
-              <tr key={user.id} className="border-t border-blue-700 hover:bg-blue-800">
-                <td className="px-3 py-1.5">
-                  <Link
-                    href={`/admin/users/${user.id}/edit`}
-                    className="text-emerald-300 hover:underline"
-                  >
-                    {user.first_name} {user.last_name}
-                  </Link>
-                </td>
-                <td className="px-3 py-1.5">{user.email}</td>
-                <td className="px-3 py-1.5">{user.state || '-'}</td>
-                <td className="px-3 py-1.5">{new Date(user.created_at).toLocaleDateString()}</td>
-                <td className="px-3 py-1.5 space-x-2">
-                  <button className="text-yellow-400 hover:underline text-sm">Deactivate</button>
-                  <button className="text-red-500 hover:underline text-sm">Delete</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </table>
     </main>
   )
 }
