@@ -1,5 +1,5 @@
 import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { cookies as nextCookies } from 'next/headers';
 import { NextRequest } from 'next/server';
 import type { Database } from '@/types/supabase.types';
 
@@ -7,8 +7,19 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export async function POST(req: NextRequest, context: any) {
+  const cookieStore = await nextCookies();
+
   const supabase = createServerClient<Database>(supabaseUrl, supabaseKey, {
-    cookies: cookies(), // ✅ FIXED HERE
+    cookies: {
+      get: (name: string) => cookieStore.get(name)?.value ?? null,
+      getAll: () =>
+        Array.from(cookieStore.entries()).map(([name, cookie]) => ({
+          name,
+          value: cookie.value,
+        })),
+      set: () => {},
+      remove: () => {},
+    },
   });
 
   const { id } = context.params;
