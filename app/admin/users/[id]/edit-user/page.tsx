@@ -16,6 +16,7 @@ async function EditUser({ userId }: { userId: string }) {
     .eq('id', userId)
     .single()
 
+
   if (error || !user) {
     return (
       <main className="p-6">
