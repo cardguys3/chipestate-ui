@@ -24,7 +24,16 @@ export default async function AdminUsersPage() {
 
   return (
     <main className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Users</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Users</h1>
+        <Link
+          href="/admin/users/add-user"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded shadow"
+        >
+          + Add User
+        </Link>
+      </div>
+
       <table className="w-full border">
         <thead>
           <tr className="bg-gray-100 dark:bg-gray-800 text-left">
@@ -38,14 +47,38 @@ export default async function AdminUsersPage() {
         <tbody>
           {users.map((user) => (
             <tr key={user.id} className="border-t">
-              <td className="p-2">{user.first_name} {user.last_name}</td>
+              <td className="p-2">
+                <Link
+                  href={`/admin/users/${user.id}/edit-user`}
+                  className="text-blue-600 hover:underline"
+                >
+                  {user.first_name} {user.last_name}
+                </Link>
+              </td>
               <td className="p-2">{user.email}</td>
               <td className="p-2">{user.res_state || '—'}</td>
               <td className="p-2">
                 {user.created_at ? new Date(user.created_at).toLocaleDateString() : '—'}
               </td>
-              <td className="p-2">
-                <Link href={`/admin/users/${user.id}/edit-user`} className="text-blue-600 hover:underline">Edit</Link>
+              <td className="p-2 space-x-2">
+                <Link
+                  href={`/admin/users/${user.id}/edit-user`}
+                  className="text-blue-600 hover:underline"
+                >
+                  Edit
+                </Link>
+                <button
+                  className="text-green-600 hover:underline"
+                  onClick={() => console.log(`Approve ${user.id}`)}
+                >
+                  Approve
+                </button>
+                <button
+                  className="text-red-600 hover:underline"
+                  onClick={() => console.log(`Deny ${user.id}`)}
+                >
+                  Deny
+                </button>
               </td>
             </tr>
           ))}
