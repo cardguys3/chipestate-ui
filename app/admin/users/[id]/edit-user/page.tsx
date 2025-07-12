@@ -1,11 +1,18 @@
+'use client'
+
 import { createServerComponentClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { Database } from '@/types/supabase'
 import Link from 'next/link'
-
 import { notFound } from 'next/navigation'
 
-export default async function Page({ params }: { params: { id: string } }) {
+interface PageProps {
+  params: {
+    id: string
+  }
+}
+
+export default async function Page({ params }: PageProps) {
   const supabase = createServerComponentClient<Database>({ cookies })
 
   const { data: user, error } = await supabase
