@@ -1,38 +1,25 @@
-'use client'
-
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+import { Database } from '@/types/supabase'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
 
-type User = {
-  id: string
-  email: string
-  first_name: string
-  last_name: string
-  res_state: string | null
-  created_at: string
-}
+export default async function AdminUsersPage() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  const cookieStore = await cookies()
 
-export default function AdminUsersPage() {
-  const [users, setUsers] = useState<User[]>([])
-  const [error, setError] = useState<string | null>(null)
+  const supabase = createServerClient<Database>(
+    supabaseUrl,
+    supabaseAnonKey,
+    { cookies: cookieStore }
+  )
 
-  useEffect(() => {
-    async function fetchUsers() {
-      try {
-        const res = await fetch('/api/admin/users')
-        if (!res.ok) throw new Error('Failed to fetch users')
-        const data = await res.json()
-        setUsers(data)
-      } catch (err: any) {
-        setError(err.message || 'Error loading users')
-      }
-    }
+  const { data: users, error } = await supabase
+    .from('users_extended')
+    .select('*')
 
-    fetchUsers()
-  }, [])
-
-  if (error) {
-    return <main><p className="text-red-600 text-xl">{error}</p></main>
+  if (error || !users) {
+    return <main><p className="text-red-600 text-xl">Failed to fetch users: {error.message}</p></main>
   }
 
   return (
