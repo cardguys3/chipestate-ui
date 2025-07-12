@@ -51,41 +51,56 @@ export default async function AdminUsersPage() {
           </tr>
         </thead>
         <tbody>
-          {users.map((user) => (
-            <tr key={user.id} className="border-t">
-              <td className="p-2">
-                <Link
-                  href={`/admin/users/${user.id}/edit-user`}
-                  className="text-blue-600 hover:underline"
-                >
-                  {user.first_name} {user.last_name}
-                </Link>
-              </td>
-              <td className="p-2">{user.email}</td>
-              <td className="p-2">{user.res_state || '—'}</td>
-              <td className="p-2">{formatDate(user.created_at)}</td>
-              <td className="p-2 space-x-2">
-                <Link
-                  href={`/admin/users/${user.id}/edit-user`}
-                  className="text-blue-600 hover:underline"
-                >
-                  Edit
-                </Link>
-                <button
-                  className="text-green-600 hover:underline"
-                  onClick={() => console.log(`Approve ${user.id}`)}
-                >
-                  Approve
-                </button>
-                <button
-                  className="text-red-600 hover:underline"
-                  onClick={() => console.log(`Deny ${user.id}`)}
-                >
-                  Deny
-                </button>
-              </td>
-            </tr>
-          ))}
+          {users.map((user) => {
+            try {
+              const id = user.id ?? 'unknown'
+              const email = user.email ?? '—'
+              const firstName = user.first_name ?? ''
+              const lastName = user.last_name ?? ''
+              const name = `${firstName} ${lastName}`.trim() || '—'
+              const resState = user.res_state || '—'
+              const createdAt = formatDate(user.created_at ?? null)
+
+              return (
+                <tr key={id} className="border-t">
+                  <td className="p-2">
+                    <Link
+                      href={`/admin/users/${id}/edit-user`}
+                      className="text-blue-600 hover:underline"
+                    >
+                      {name}
+                    </Link>
+                  </td>
+                  <td className="p-2">{email}</td>
+                  <td className="p-2">{resState}</td>
+                  <td className="p-2">{createdAt}</td>
+                  <td className="p-2 space-x-2">
+                    <Link
+                      href={`/admin/users/${id}/edit-user`}
+                      className="text-blue-600 hover:underline"
+                    >
+                      Edit
+                    </Link>
+                    <button
+                      className="text-green-600 hover:underline"
+                      onClick={() => console.log(`Approve ${id}`)}
+                    >
+                      Approve
+                    </button>
+                    <button
+                      className="text-red-600 hover:underline"
+                      onClick={() => console.log(`Deny ${id}`)}
+                    >
+                      Deny
+                    </button>
+                  </td>
+                </tr>
+              )
+            } catch (err) {
+              console.error('User row error:', user, err)
+              return null
+            }
+          })}
         </tbody>
       </table>
     </main>
