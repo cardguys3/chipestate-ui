@@ -41,7 +41,9 @@ export default async function AdminUsersPage() {
               <td className="p-2">{user.first_name} {user.last_name}</td>
               <td className="p-2">{user.email}</td>
               <td className="p-2">{user.res_state || '—'}</td>
-              <td className="p-2">{new Date(user.created_at).toLocaleDateString()}</td>
+              <td className="p-2">
+                {user.created_at ? new Date(user.created_at).toLocaleDateString() : '—'}
+              </td>
               <td className="p-2">
                 <Link href={`/admin/users/${user.id}/edit-user`} className="text-blue-600 hover:underline">Edit</Link>
               </td>
