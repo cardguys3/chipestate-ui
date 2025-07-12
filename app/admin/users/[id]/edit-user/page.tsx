@@ -7,7 +7,12 @@ import { notFound } from 'next/navigation'
 export default async function Page(props: any) {
   const { params } = props as { params: { id: string } }
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
   const supabase = createServerClient<Database>(
+    supabaseUrl,
+    supabaseAnonKey,
     { cookies }
   )
 
