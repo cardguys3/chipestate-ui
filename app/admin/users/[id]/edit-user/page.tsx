@@ -13,7 +13,7 @@ export default async function Page(props: any) {
   const supabase = createServerClient<Database>(
     supabaseUrl,
     supabaseAnonKey,
-    { cookies }
+    { cookies: cookies() }
   )
 
   const { data: user, error } = await supabase
