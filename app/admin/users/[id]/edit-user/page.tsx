@@ -1,4 +1,4 @@
-import { createServerComponentClient } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { Database } from '@/types/supabase'
 import Link from 'next/link'
@@ -7,7 +7,9 @@ import { notFound } from 'next/navigation'
 export default async function Page(props: any) {
   const { params } = props as { params: { id: string } }
 
-  const supabase = createServerComponentClient<Database>({ cookies })
+  const supabase = createServerClient<Database>(
+    { cookies }
+  )
 
   const { data: user, error } = await supabase
     .from('users_extended')
