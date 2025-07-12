@@ -4,13 +4,11 @@ import { Database } from '@/types/supabase'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
-interface PageProps {
-  params: {
-    id: string
-  }
+type Props = {
+  params: { id: string }
 }
 
-export default async function Page({ params }: PageProps) {
+export default async function Page({ params }: Props) {
   const supabase = createServerComponentClient<Database>({ cookies })
 
   const { data: user, error } = await supabase
