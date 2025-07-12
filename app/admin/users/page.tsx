@@ -3,6 +3,12 @@ import { cookies } from 'next/headers'
 import { Database } from '@/types/supabase'
 import Link from 'next/link'
 
+function formatDate(date: string | null): string {
+  if (!date) return '—'
+  const parsed = new Date(date)
+  return isNaN(parsed.getTime()) ? '—' : parsed.toLocaleDateString()
+}
+
 export default async function AdminUsersPage() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -57,9 +63,7 @@ export default async function AdminUsersPage() {
               </td>
               <td className="p-2">{user.email}</td>
               <td className="p-2">{user.res_state || '—'}</td>
-              <td className="p-2">
-                {user.created_at ? new Date(user.created_at).toLocaleDateString() : '—'}
-              </td>
+              <td className="p-2">{formatDate(user.created_at)}</td>
               <td className="p-2 space-x-2">
                 <Link
                   href={`/admin/users/${user.id}/edit-user`}
