@@ -10,8 +10,8 @@ interface Property {
   title: string;
   location: string;
   current_value: number;
-  chip_count: number;
-  chips_sold: number;
+  total_chips: number;
+  chips_available: number;
   created_at: string;
 }
 
@@ -28,7 +28,7 @@ export default function MarketPage() {
 
       const { data, error } = await supabase
         .from('properties')
-        .select('id, title, current_value, chip_count, chips_sold, created_at, city, state')
+        .select('id, title, current_value, total_chips, chips_available, created_at, city, state')
         .order(sortField, { ascending: sortDirection === 'asc' });
 
       if (!error && data) {
@@ -36,8 +36,8 @@ export default function MarketPage() {
           id: p.id,
           title: p.title,
           current_value: p.current_value || 0,
-          chip_count: p.chip_count || 0,
-          chips_sold: p.chips_sold || 0,
+          total_chips: p.total_chips,
+          chips_available: p.chips_available,
           created_at: p.created_at || '',
           location: `${p.city || ''}, ${p.state || ''}`.replace(/^, |, $/g, '').trim(),
         }));
@@ -70,8 +70,8 @@ export default function MarketPage() {
               <th className="p-3 font-semibold cursor-pointer" onClick={() => toggleSort('title')}>Title</th>
               <th className="p-3 font-semibold cursor-pointer" onClick={() => toggleSort('location')}>Location</th>
               <th className="p-3 font-semibold cursor-pointer" onClick={() => toggleSort('current_value')}>Value</th>
-              <th className="p-3 font-semibold cursor-pointer" onClick={() => toggleSort('chip_count')}>Chips</th>
-              <th className="p-3 font-semibold cursor-pointer" onClick={() => toggleSort('chips_sold')}>Sold</th>
+              <th className="p-3 font-semibold cursor-pointer" onClick={() => toggleSort('total_chips')}>Total Chips</th>
+              <th className="p-3 font-semibold cursor-pointer" onClick={() => toggleSort('chips_available')}>Available</th>
               <th className="p-3 font-semibold cursor-pointer" onClick={() => toggleSort('created_at')}>Created</th>
             </tr>
           </thead>
@@ -85,8 +85,8 @@ export default function MarketPage() {
                 </td>
                 <td className="p-3">{p.location}</td>
                 <td className="p-3">{formatCurrency(p.current_value)}</td>
-                <td className="p-3">{p.chip_count}</td>
-                <td className="p-3">{p.chips_sold}</td>
+                <td className="p-3">{p.total_chips}</td>
+                <td className="p-3">{p.chips_available}</td>
                 <td className="p-3 whitespace-nowrap">{new Date(p.created_at).toLocaleDateString()}</td>
               </tr>
             ))}
