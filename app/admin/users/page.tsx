@@ -1,7 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
-
 import { Database } from '@/types/supabase';
 
 export const dynamic = 'force-dynamic';
