@@ -17,33 +17,39 @@ export default async function AdminUsersPage() {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY.');
+    console.error('Supabase env vars missing');
+    return (
+      <main className="p-6">
+        <h1 className="text-2xl font-bold text-red-600">Configuration error</h1>
+        <p className="text-white">Supabase environment variables are not set.</p>
+      </main>
+    );
   }
 
-  const cookieStore = await Promise.resolve(cookies()); // Fixes TS issue with cookies()
-
-  const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      get: (name: string) => cookieStore.get(name)?.value,
-      set: () => {},
-      remove: () => {},
-    },
-  });
-
-  let users: any[] = []; // ✅ Explicit type added here
+  let users: any[] = [];
   let errorMessage = '';
 
   try {
+    const cookieStore = await Promise.resolve(cookies());
+
+    const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        get: (name: string) => cookieStore.get(name)?.value,
+        set: () => {},
+        remove: () => {},
+      },
+    });
+
     const { data, error } = await supabase
       .from('users_extended')
       .select('id, email, first_name, last_name, res_state, created_at')
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('[AdminUsersPage] Supabase fetch error:', error);
+      console.error('[AdminUsersPage] Supabase error:', error.message);
       errorMessage = error.message;
     } else {
-      users = data || [];
+      users = data ?? [];
     }
   } catch (err: any) {
     console.error('[AdminUsersPage] Unexpected error:', err);
@@ -81,7 +87,7 @@ export default async function AdminUsersPage() {
               </tr>
             </thead>
             <tbody>
-              {users.map((u: any) => {
+              {(users || []).map((u: any) => {
                 const name = `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim() || '—';
                 return (
                   <tr key={u.id} className="border-t border-gray-700">
