@@ -1,37 +1,67 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { type CookieOptions, createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+import Link from 'next/link';
 
-import { Database } from '@/types/supabase'
-import Link from 'next/link'
+import { Database } from '@/types/supabase';
 
 function formatDate(date: string | null): string {
-  if (!date) return '—'
-  const parsed = new Date(date)
-  return isNaN(parsed.getTime()) ? '—' : parsed.toLocaleDateString()
+  if (!date) return '—';
+  const parsed = new Date(date);
+  return isNaN(parsed.getTime()) ? '—' : parsed.toLocaleDateString();
 }
 
-export default async function AdminUsersPage() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  const cookieStore = await cookies()
+export const dynamic = 'force-dynamic'; // ensure fresh data & avoid cache
 
-  const supabase = createServerClient<Database>(
-    supabaseUrl,
-    supabaseAnonKey,
-    { cookies: cookieStore }
-  )
+export default async function AdminUsersPage() {
+  // ENV sanity‑check – throws early instead of crashing Vercel at runtime
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY env variables.');
+  }
+
+  /**
+   * @see https://supabase.com/docs/guides/auth/server-side/nextjs – SSR client requires
+   * a cookie wrapper with get / set / remove so that auth refresh logic can run
+   */
+  const cookieStore = cookies();
+  const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      get: (name: string) => cookieStore.get(name)?.value,
+      set: (name: string, value: string, options: CookieOptions) => {
+        cookieStore.set({ name, value, ...options });
+      },
+      remove: (name: string, options: CookieOptions) => {
+        // Supabase expects remove to set an empty string with same options
+        cookieStore.set({ name, value: '', ...options });
+      },
+    },
+  });
 
   const { data: users, error } = await supabase
     .from('users_extended')
-    .select('*')
+    .select('id, email, first_name, last_name, res_state, created_at');
 
-  if (error || !users) {
-    return <main><p className="text-red-600 text-xl">Failed to fetch users: {error.message}</p></main>
+  if (error) {
+    console.error('[AdminUsersPage] Supabase fetch error:', error);
+    return (
+      <main className="p-6">
+        <p className="text-red-600 text-xl">Failed to fetch users: {error.message}</p>
+      </main>
+    );
+  }
+
+  if (!users || users.length === 0) {
+    return (
+      <main className="p-6">
+        <p className="text-lg">No users found.</p>
+      </main>
+    );
   }
 
   return (
-    <main className="p-6">
-      <div className="flex justify-between items-center mb-4">
+    <main className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Users</h1>
         <Link
           href="/admin/users/add-user"
@@ -41,69 +71,60 @@ export default async function AdminUsersPage() {
         </Link>
       </div>
 
-      <table className="w-full border">
+      <table className="w-full border border-gray-700 rounded-lg overflow-hidden text-sm">
         <thead>
           <tr className="bg-gray-100 dark:bg-gray-800 text-left">
-            <th className="p-2">Name</th>
-            <th className="p-2">Email</th>
-            <th className="p-2">State</th>
-            <th className="p-2">Created At</th>
-            <th className="p-2">Actions</th>
+            <th className="p-2 font-semibold">Name</th>
+            <th className="p-2 font-semibold">Email</th>
+            <th className="p-2 font-semibold">State</th>
+            <th className="p-2 font-semibold">Created&nbsp;At</th>
+            <th className="p-2 font-semibold">Actions</th>
           </tr>
         </thead>
         <tbody>
-          {users.map((user) => {
-            try {
-              const id = user.id ?? 'unknown'
-              const email = user.email ?? '—'
-              const firstName = user.first_name ?? ''
-              const lastName = user.last_name ?? ''
-              const name = `${firstName} ${lastName}`.trim() || '—'
-              const resState = user.res_state || '—'
-              const createdAt = formatDate(user.created_at ?? null)
+          {users.map(({ id, email = '—', first_name = '', last_name = '', res_state = '—', created_at }) => {
+            const name = `${first_name} ${last_name}`.trim() || '—';
 
-              return (
-                <tr key={id} className="border-t">
-                  <td className="p-2">
-                    <Link
-                      href={`/admin/users/${id}/edit-user`}
-                      className="text-blue-600 hover:underline"
-                    >
-                      {name}
-                    </Link>
-                  </td>
-                  <td className="p-2">{email}</td>
-                  <td className="p-2">{resState}</td>
-                  <td className="p-2">{createdAt}</td>
-                  <td className="p-2 space-x-2">
-                    <Link
-                      href={`/admin/users/${id}/edit-user`}
-                      className="text-blue-600 hover:underline"
-                    >
-                      Edit
-                    </Link>
-                    <button
-                      className="text-green-600 hover:underline"
-                      onClick={() => console.log(`Approve ${id}`)}
-                    >
-                      Approve
-                    </button>
-                    <button
-                      className="text-red-600 hover:underline"
-                      onClick={() => console.log(`Deny ${id}`)}
-                    >
-                      Deny
-                    </button>
-                  </td>
-                </tr>
-              )
-            } catch (err) {
-              console.error('User row error:', user, err)
-              return null
-            }
+            return (
+              <tr key={id} className="border-t border-gray-700">
+                <td className="p-2">
+                  <Link
+                    href={`/admin/users/${id}/edit-user`}
+                    className="text-blue-500 hover:underline"
+                  >
+                    {name}
+                  </Link>
+                </td>
+                <td className="p-2">{email}</td>
+                <td className="p-2">{res_state}</td>
+                <td className="p-2 whitespace-nowrap">{formatDate(created_at)}</td>
+                <td className="p-2 space-x-3">
+                  <Link
+                    href={`/admin/users/${id}/edit-user`}
+                    className="text-blue-500 hover:underline"
+                  >
+                    Edit
+                  </Link>
+                  <button
+                    type="button"
+                    className="text-green-500 hover:underline"
+                    onClick={() => console.log(`Approve ${id}`)}
+                  >
+                    Approve
+                  </button>
+                  <button
+                    type="button"
+                    className="text-red-500 hover:underline"
+                    onClick={() => console.log(`Deny ${id}`)}
+                  >
+                    Deny
+                  </button>
+                </td>
+              </tr>
+            );
           })}
         </tbody>
       </table>
     </main>
-  )
+  );
 }
