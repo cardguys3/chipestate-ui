@@ -20,7 +20,7 @@ export default async function AdminUsersPage() {
     throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY.');
   }
 
-  const cookieStore = cookies() as ReturnType<typeof cookies>; // ✅ cast to fix type error
+  const cookieStore = await Promise.resolve(cookies()); // ✅ fixes TS type issue on Vercel
 
   const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {
