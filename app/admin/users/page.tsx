@@ -1,4 +1,4 @@
-import { type CookieOptions, createServerClient } from '@supabase/ssr';
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 
@@ -26,18 +26,14 @@ export default async function AdminUsersPage() {
     );
   }
 
-  let users: any[] = [];
+  let users: { id: string; email: string; first_name: string | null; last_name: string | null; res_state: string | null; created_at: string | null }[] = [];
   let errorMessage = '';
 
   try {
-    const cookieStore = await Promise.resolve(cookies());
+    const cookieStore = cookies();
 
     const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
-      cookies: {
-        get: (name: string) => cookieStore.get(name)?.value,
-        set: () => {},
-        remove: () => {},
-      },
+      cookies: () => cookieStore,
     });
 
     const { data, error } = await supabase
@@ -87,7 +83,7 @@ export default async function AdminUsersPage() {
               </tr>
             </thead>
             <tbody>
-              {(users || []).map((u: any) => {
+              {users.map((u) => {
                 const name = `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim() || '—';
                 return (
                   <tr key={u.id} className="border-t border-gray-700">
