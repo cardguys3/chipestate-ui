@@ -1,7 +1,7 @@
-
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
+
 import { Database } from '@/types/supabase';
 
 export const dynamic = 'force-dynamic';
@@ -34,17 +34,12 @@ export default async function AdminUsersPage() {
     res_state: string | null;
     created_at: string | null;
   }[] = [];
+
   let errorMessage = '';
 
   try {
-    const cookieStore = cookies();
-
     const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
-      cookies: {
-        get: (name: string) => cookieStore.get(name)?.value,
-        set: () => {},
-        remove: () => {},
-      },
+      cookies, // ✅ This is the correct usage per @supabase/ssr
     });
 
     const { data, error } = await supabase
