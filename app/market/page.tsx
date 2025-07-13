@@ -12,12 +12,15 @@ interface Property {
   current_value: number;
   total_chips: number;
   chips_available: number;
-  created_at: string;
+  occupied: boolean;
+  annual_rent: number;
+  reserve_balance: number;
+  manager_name: string;
 }
 
 export default function MarketPage() {
   const [properties, setProperties] = useState<Property[]>([]);
-  const [sortField, setSortField] = useState<string>('created_at');
+  const [sortField, setSortField] = useState<string>('current_value');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   useEffect(() => {
@@ -28,7 +31,10 @@ export default function MarketPage() {
 
       const { data, error } = await supabase
         .from('properties')
-        .select('id, title, current_value, total_chips, chips_available, created_at, city, state')
+        .select(`
+          id, title, current_value, total_chips, chips_available, city, state, 
+          occupied, annual_rent, reserve_balance, manager_name
+        `)
         .order(sortField, { ascending: sortDirection === 'asc' });
 
       if (!error && data) {
@@ -38,7 +44,10 @@ export default function MarketPage() {
           current_value: p.current_value || 0,
           total_chips: p.total_chips,
           chips_available: p.chips_available,
-          created_at: p.created_at || '',
+          occupied: p.occupied || false,
+          annual_rent: p.annual_rent || 0,
+          reserve_balance: p.reserve_balance || 0,
+          manager_name: p.manager_name || '',
           location: `${p.city || ''}, ${p.state || ''}`.replace(/^, |, $/g, '').trim(),
         }));
         setProperties(transformed);
@@ -58,29 +67,11 @@ export default function MarketPage() {
   };
 
   const formatCurrency = (value: number) => `$${value.toLocaleString()}`;
-
-  const totalValue = properties.reduce((sum, p) => sum + (p.current_value || 0), 0);
-  const totalChips = properties.reduce((sum, p) => sum + (p.total_chips || 0), 0);
-  const totalAvailable = properties.reduce((sum, p) => sum + (p.chips_available || 0), 0);
+  const formatPercent = (value: number) => `${(value * 100).toFixed(1)}%`;
 
   return (
     <main className="p-6 space-y-6">
       <h1 className="text-2xl font-bold text-white">Market</h1>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-gray-800 p-4 rounded-lg shadow text-white">
-          <h2 className="text-sm uppercase text-gray-400">Total Property Value</h2>
-          <p className="text-xl font-bold">{formatCurrency(totalValue)}</p>
-        </div>
-        <div className="bg-gray-800 p-4 rounded-lg shadow text-white">
-          <h2 className="text-sm uppercase text-gray-400">Total Chips</h2>
-          <p className="text-xl font-bold">{totalChips.toLocaleString()}</p>
-        </div>
-        <div className="bg-gray-800 p-4 rounded-lg shadow text-white">
-          <h2 className="text-sm uppercase text-gray-400">Chips Available</h2>
-          <p className="text-xl font-bold">{totalAvailable.toLocaleString()}</p>
-        </div>
-      </div>
 
       <div className="overflow-x-auto rounded-lg border border-gray-700">
         <table className="min-w-full text-sm">
@@ -91,7 +82,10 @@ export default function MarketPage() {
               <th className="p-3 font-semibold cursor-pointer" onClick={() => toggleSort('current_value')}>Value</th>
               <th className="p-3 font-semibold cursor-pointer" onClick={() => toggleSort('total_chips')}>Chips</th>
               <th className="p-3 font-semibold cursor-pointer" onClick={() => toggleSort('chips_available')}>Available</th>
-              <th className="p-3 font-semibold cursor-pointer" onClick={() => toggleSort('created_at')}>Created</th>
+              <th className="p-3 font-semibold cursor-pointer" onClick={() => toggleSort('occupied')}>Occupied</th>
+              <th className="p-3 font-semibold cursor-pointer" onClick={() => toggleSort('annual_rent')}>Annual Rent</th>
+              <th className="p-3 font-semibold cursor-pointer" onClick={() => toggleSort('reserve_balance')}>Reserve</th>
+              <th className="p-3 font-semibold cursor-pointer" onClick={() => toggleSort('manager_name')}>Manager</th>
             </tr>
           </thead>
           <tbody>
@@ -106,7 +100,10 @@ export default function MarketPage() {
                 <td className="p-3">{formatCurrency(p.current_value)}</td>
                 <td className="p-3">{p.total_chips}</td>
                 <td className="p-3">{p.chips_available}</td>
-                <td className="p-3 whitespace-nowrap">{new Date(p.created_at).toLocaleDateString()}</td>
+                <td className="p-3">{p.occupied ? 'Yes' : 'No'}</td>
+                <td className="p-3">{formatCurrency(p.annual_rent)}</td>
+                <td className="p-3">{formatCurrency(p.reserve_balance)}</td>
+                <td className="p-3">{p.manager_name}</td>
               </tr>
             ))}
           </tbody>
