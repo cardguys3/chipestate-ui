@@ -59,9 +59,28 @@ export default function MarketPage() {
 
   const formatCurrency = (value: number) => `$${value.toLocaleString()}`;
 
+  const totalValue = properties.reduce((sum, p) => sum + (p.current_value || 0), 0);
+  const totalChips = properties.reduce((sum, p) => sum + (p.total_chips || 0), 0);
+  const totalAvailable = properties.reduce((sum, p) => sum + (p.chips_available || 0), 0);
+
   return (
     <main className="p-6 space-y-6">
       <h1 className="text-2xl font-bold text-white">Market</h1>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-gray-800 p-4 rounded-lg shadow text-white">
+          <h2 className="text-sm uppercase text-gray-400">Total Property Value</h2>
+          <p className="text-xl font-bold">{formatCurrency(totalValue)}</p>
+        </div>
+        <div className="bg-gray-800 p-4 rounded-lg shadow text-white">
+          <h2 className="text-sm uppercase text-gray-400">Total Chips</h2>
+          <p className="text-xl font-bold">{totalChips.toLocaleString()}</p>
+        </div>
+        <div className="bg-gray-800 p-4 rounded-lg shadow text-white">
+          <h2 className="text-sm uppercase text-gray-400">Chips Available</h2>
+          <p className="text-xl font-bold">{totalAvailable.toLocaleString()}</p>
+        </div>
+      </div>
 
       <div className="overflow-x-auto rounded-lg border border-gray-700">
         <table className="min-w-full text-sm">
@@ -70,7 +89,7 @@ export default function MarketPage() {
               <th className="p-3 font-semibold cursor-pointer" onClick={() => toggleSort('title')}>Title</th>
               <th className="p-3 font-semibold cursor-pointer" onClick={() => toggleSort('location')}>Location</th>
               <th className="p-3 font-semibold cursor-pointer" onClick={() => toggleSort('current_value')}>Value</th>
-              <th className="p-3 font-semibold cursor-pointer" onClick={() => toggleSort('total_chips')}>Total Chips</th>
+              <th className="p-3 font-semibold cursor-pointer" onClick={() => toggleSort('total_chips')}>Chips</th>
               <th className="p-3 font-semibold cursor-pointer" onClick={() => toggleSort('chips_available')}>Available</th>
               <th className="p-3 font-semibold cursor-pointer" onClick={() => toggleSort('created_at')}>Created</th>
             </tr>
