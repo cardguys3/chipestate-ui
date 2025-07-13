@@ -1,13 +1,7 @@
-'use client';
-
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { createBrowserClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+import { createServerClient } from '@supabase/ssr';
 import { Database } from '@/types/supabase';
-
-interface MarketPageProps {
-  searchParams?: { [key: string]: string | string[] | undefined };
-}
 
 interface Property {
   id: string;
@@ -19,37 +13,31 @@ interface Property {
   created_at: string;
 }
 
-export default function MarketPage({ searchParams = {} }: MarketPageProps) {
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [sortField, setSortField] = useState<string>('created_at');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+export const dynamic = 'force-dynamic';
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-      const supabase = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey);
+interface MarketPageProps {
+  searchParams?: { [key: string]: string | string[] | undefined };
+}
 
-      const { data, error } = await supabase
-        .from('properties')
-        .select('*')
-        .order(sortField, { ascending: sortDirection === 'asc' });
+export default async function MarketPage({ searchParams }: MarketPageProps) {
+  const cookieStore = cookies();
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
+    cookies: () => cookieStore,
+  });
 
-      if (!error && data) {
-        setProperties(data);
-      }
-    };
+  const sortField = (typeof searchParams?.sort === 'string' && searchParams.sort) || 'created_at';
+  const sortDirection = (typeof searchParams?.dir === 'string' && searchParams.dir === 'asc') ? 'asc' : 'desc';
 
-    fetchData();
-  }, [sortField, sortDirection]);
+  const { data: properties } = await supabase
+    .from('properties')
+    .select('*')
+    .order(sortField, { ascending: sortDirection === 'asc' });
 
-  const toggleSort = (field: string) => {
-    if (sortField === field) {
-      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
-    }
+  const toggleUrl = (field: string) => {
+    const newDir = sortField === field && sortDirection === 'asc' ? 'desc' : 'asc';
+    return `?sort=${field}&dir=${newDir}`;
   };
 
   const formatCurrency = (value: number) => `$${value.toLocaleString()}`;
@@ -62,16 +50,28 @@ export default function MarketPage({ searchParams = {} }: MarketPageProps) {
         <table className="min-w-full text-sm">
           <thead className="bg-gray-100 dark:bg-gray-800 text-left">
             <tr>
-              <th className="p-3 font-semibold cursor-pointer" onClick={() => toggleSort('title')}>Title</th>
-              <th className="p-3 font-semibold cursor-pointer" onClick={() => toggleSort('location')}>Location</th>
-              <th className="p-3 font-semibold cursor-pointer" onClick={() => toggleSort('current_value')}>Value</th>
-              <th className="p-3 font-semibold cursor-pointer" onClick={() => toggleSort('chip_count')}>Chips</th>
-              <th className="p-3 font-semibold cursor-pointer" onClick={() => toggleSort('chips_sold')}>Sold</th>
-              <th className="p-3 font-semibold cursor-pointer" onClick={() => toggleSort('created_at')}>Created</th>
+              <th className="p-3 font-semibold">
+                <Link href={toggleUrl('title')} className="hover:underline">Title</Link>
+              </th>
+              <th className="p-3 font-semibold">
+                <Link href={toggleUrl('location')} className="hover:underline">Location</Link>
+              </th>
+              <th className="p-3 font-semibold">
+                <Link href={toggleUrl('current_value')} className="hover:underline">Value</Link>
+              </th>
+              <th className="p-3 font-semibold">
+                <Link href={toggleUrl('chip_count')} className="hover:underline">Chips</Link>
+              </th>
+              <th className="p-3 font-semibold">
+                <Link href={toggleUrl('chips_sold')} className="hover:underline">Sold</Link>
+              </th>
+              <th className="p-3 font-semibold">
+                <Link href={toggleUrl('created_at')} className="hover:underline">Created</Link>
+              </th>
             </tr>
           </thead>
           <tbody>
-            {properties.map((p) => (
+            {properties?.map((p) => (
               <tr key={p.id} className="border-t border-gray-700">
                 <td className="p-3">
                   <Link href={`/market/${p.id}`} className="text-blue-500 hover:underline">
