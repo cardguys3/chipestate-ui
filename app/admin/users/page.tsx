@@ -24,19 +24,21 @@ export default async function AdminUsersPage() {
    * @see https://supabase.com/docs/guides/auth/server-side/nextjs – SSR client requires
    * a cookie wrapper with get / set / remove so that auth refresh logic can run
    */
-  const cookieStore = cookies();
-  const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      get: (name: string) => cookieStore.get(name)?.value,
-      set: (name: string, value: string, options: CookieOptions) => {
-        cookieStore.set({ name, value, ...options });
-      },
-      remove: (name: string, options: CookieOptions) => {
-        // Supabase expects remove to set an empty string with same options
-        cookieStore.set({ name, value: '', ...options });
-      },
+const cookieStore = cookies();
+const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
+  cookies: {
+    get: (name: string) => {
+      const cookie = cookieStore.get(name);
+      return cookie?.value;
     },
-  });
+    set: () => {
+      // no-op: not needed on server read
+    },
+    remove: () => {
+      // no-op: not needed on server read
+    },
+  },
+});
 
   const { data: users, error } = await supabase
     .from('users_extended')
