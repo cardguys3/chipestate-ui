@@ -33,7 +33,7 @@ export default async function AdminUsersPage() {
     const cookieStore = cookies();
 
     const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
-      cookies: () => cookieStore,
+      cookies: cookieStore,
     });
 
     const { data, error } = await supabase
