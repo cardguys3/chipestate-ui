@@ -1,6 +1,7 @@
-import { createServerClient } from '@supabase/ssr';
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
+
 import { Database } from '@/types/supabase';
 
 export const dynamic = 'force-dynamic';
@@ -12,32 +13,18 @@ function formatDate(dateStr: string | null) {
 }
 
 export default async function AdminUsersPage() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.error('Supabase env vars missing');
-    return (
-      <main className="p-6">
-        <h1 className="text-2xl font-bold text-red-600">Configuration error</h1>
-        <p className="text-white">Supabase environment variables are not set.</p>
-      </main>
-    );
-  }
-
-  let users: { id: string; email: string; first_name: string | null; last_name: string | null; res_state: string | null; created_at: string | null }[] = [];
+  let users: {
+    id: string;
+    email: string;
+    first_name: string | null;
+    last_name: string | null;
+    res_state: string | null;
+    created_at: string | null;
+  }[] = [];
   let errorMessage = '';
 
   try {
-    const cookieStore = cookies();
-
-    const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
-      cookies: {
-        get: (name: string) => cookieStore.get(name)?.value,
-        set: () => {},
-        remove: () => {},
-      },
-    });
+    const supabase = createServerComponentClient<Database>({ cookies });
 
     const { data, error } = await supabase
       .from('users_extended')
