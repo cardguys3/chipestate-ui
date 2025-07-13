@@ -33,7 +33,11 @@ export default async function AdminUsersPage() {
     const cookieStore = cookies();
 
     const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
-      cookies: cookieStore,
+      cookies: {
+        get: (name: string) => cookieStore.get(name)?.value,
+        set: () => {},
+        remove: () => {},
+      },
     });
 
     const { data, error } = await supabase
