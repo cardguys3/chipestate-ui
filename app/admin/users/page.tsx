@@ -1,10 +1,10 @@
-import { type CookieOptions, createServerClient } from '@supabase/ssr';
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 
 import { Database } from '@/types/supabase';
 
-export const dynamic = 'force-dynamic'; // always run on the server (no static cache)
+export const dynamic = 'force-dynamic';
 
 function formatDate(dateStr: string | null) {
   if (!dateStr) return '—';
@@ -15,11 +15,12 @@ function formatDate(dateStr: string | null) {
 export default async function AdminUsersPage() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY.');
   }
 
-  const cookieStore = cookies(); // ✅ NO await here
+  const cookieStore = cookies(); // ✅ No await here
 
   const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {
@@ -29,19 +30,24 @@ export default async function AdminUsersPage() {
     },
   });
 
-  const { data: users, error } = await supabase
-    .from('users_extended')
-    .select('id, email, first_name, last_name, res_state, created_at')
-    .order('created_at', { ascending: false });
+  let users = [];
+  let errorMessage = '';
 
-  if (error) {
-    console.error('[AdminUsersPage] Supabase fetch error:', error);
-    return (
-      <main className="p-6">
-        <h1 className="text-xl font-bold text-red-600">Failed to load users</h1>
-        <p className="text-white">{error.message}</p>
-      </main>
-    );
+  try {
+    const { data, error } = await supabase
+      .from('users_extended')
+      .select('id, email, first_name, last_name, res_state, created_at')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('[AdminUsersPage] Supabase fetch error:', error);
+      errorMessage = error.message;
+    } else {
+      users = data || [];
+    }
+  } catch (err: any) {
+    console.error('[AdminUsersPage] Unexpected error:', err);
+    errorMessage = err?.message || 'Unexpected error occurred.';
   }
 
   return (
@@ -56,7 +62,11 @@ export default async function AdminUsersPage() {
         </Link>
       </div>
 
-      {(!users || users.length === 0) ? (
+      {errorMessage ? (
+        <div className="text-red-500 bg-red-100 dark:bg-red-900 p-4 rounded">
+          <strong>Error:</strong> {errorMessage}
+        </div>
+      ) : users.length === 0 ? (
         <p className="text-lg text-white">No users found.</p>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-gray-700">
@@ -71,7 +81,7 @@ export default async function AdminUsersPage() {
               </tr>
             </thead>
             <tbody>
-              {users.map((u) => {
+              {users.map((u: any) => {
                 const name = `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim() || '—';
                 return (
                   <tr key={u.id} className="border-t border-gray-700">
