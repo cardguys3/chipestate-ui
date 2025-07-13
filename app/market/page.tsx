@@ -28,11 +28,20 @@ export default function MarketPage() {
 
       const { data, error } = await supabase
         .from('properties')
-        .select('*')
+        .select('id, title, current_value, chip_count, chips_sold, created_at, city, state')
         .order(sortField, { ascending: sortDirection === 'asc' });
 
       if (!error && data) {
-        setProperties(data);
+        const transformed = data.map((p) => ({
+          id: p.id,
+          title: p.title,
+          current_value: p.current_value || 0,
+          chip_count: p.chip_count || 0,
+          chips_sold: p.chips_sold || 0,
+          created_at: p.created_at || '',
+          location: `${p.city || ''}, ${p.state || ''}`.replace(/^, |, $/g, '').trim(),
+        }));
+        setProperties(transformed);
       }
     };
 
