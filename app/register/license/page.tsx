@@ -99,7 +99,8 @@ function LicenseForm() {
 
       {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
 
-      <div className="max-w-lg mx-auto space-y-4">
+      <div className="max-w-lg mx-auto space-y-6">
+        {/* Front Upload */}
         <div>
           <label className="block mb-1">Front of Driver’s License or State issued ID Card</label>
           <label className="block w-64 cursor-pointer border border-emerald-600 px-4 py-2 text-center rounded bg-blue-900 hover:bg-blue-800">
@@ -107,12 +108,26 @@ function LicenseForm() {
             <input
               type="file"
               accept="image/*"
+              multiple={false}
               onChange={(e) => setFront(e.target.files?.[0] || null)}
               className="hidden"
             />
           </label>
+          {front && (
+            <div className="flex items-center justify-between mt-2 text-sm bg-blue-900 px-3 py-2 rounded border border-blue-700 w-64">
+              <span className="truncate">{front.name}</span>
+              <button
+                type="button"
+                onClick={() => setFront(null)}
+                className="ml-2 text-red-400 hover:text-red-600 font-bold"
+              >
+                ×
+              </button>
+            </div>
+          )}
         </div>
 
+        {/* Back Upload */}
         <div>
           <label className="block mb-1">Back of Driver’s License or State issued ID Card</label>
           <label className="block w-64 cursor-pointer border border-emerald-600 px-4 py-2 text-center rounded bg-blue-900 hover:bg-blue-800">
@@ -120,12 +135,26 @@ function LicenseForm() {
             <input
               type="file"
               accept="image/*"
+              multiple={false}
               onChange={(e) => setBack(e.target.files?.[0] || null)}
               className="hidden"
             />
           </label>
+          {back && (
+            <div className="flex items-center justify-between mt-2 text-sm bg-blue-900 px-3 py-2 rounded border border-blue-700 w-64">
+              <span className="truncate">{back.name}</span>
+              <button
+                type="button"
+                onClick={() => setBack(null)}
+                className="ml-2 text-red-400 hover:text-red-600 font-bold"
+              >
+                ×
+              </button>
+            </div>
+          )}
         </div>
 
+        {/* Action Buttons */}
         <div className="flex flex-wrap justify-center gap-3 pt-4">
           <button
             onClick={() => router.back()}
