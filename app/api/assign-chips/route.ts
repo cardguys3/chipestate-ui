@@ -1,13 +1,13 @@
 //assign-chips route.ts
 
-
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { Database } from '@/types/supabase';
 import { cookies } from 'next/headers';
 
 export async function POST(req: NextRequest) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
+
   const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing data' }, { status: 400 });
   }
 
-  // Assign each chip to the user
+  // Assign chips to user
   const { error: updateError } = await supabase
     .from('chips')
     .update({ owner_id: user_id, assigned_at: new Date().toISOString() })
@@ -39,6 +39,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: updateError.message }, { status: 500 });
   }
 
+  // Badge Logic
   const badgeResults: string[] = [];
 
   const { data: ownedChips } = await supabase
@@ -61,20 +62,22 @@ export async function POST(req: NextRequest) {
     .select('badge_key')
     .eq('user_id', user_id);
 
-  const earnedBadges = new Set(userBadges?.map(b => b.badge_key));
+  const earned = new Set(userBadges?.map(b => b.badge_key));
 
   for (const b of badgeChecks) {
-    if (b.check && !earnedBadges.has(b.key)) {
+    if (b.check && !earned.has(b.key)) {
       await supabase.from('user_badges').insert({
         user_id,
         badge_key: b.key,
         earned_at: new Date().toISOString(),
       });
+
       await supabase.from('badge_activity_log').insert({
         user_id,
         badge_key: b.key,
         triggered_by: 'chip_purchase',
       });
+
       badgeResults.push(b.key);
     }
   }
