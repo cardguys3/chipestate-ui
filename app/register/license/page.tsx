@@ -179,7 +179,7 @@ function LicenseForm() {
             disabled={loading}
             className="bg-emerald-700 hover:bg-emerald-600 px-4 py-2 rounded shadow text-white border border-emerald-500"
           >
-            {loading ? 'Uploading...' : 'Submit License'}
+            {loading ? 'Uploading...' : 'Next'}
           </button>
         </div>
       </div>
