@@ -91,18 +91,18 @@ function LicenseForm() {
         </div>
       </div>
 
-      <h1 className="text-2xl font-bold mb-4 text-center">Upload Your Driver's License</h1>
+      <h1 className="text-2xl font-bold mb-4 text-center">Identity Verification</h1>
 
       <p className="mb-4 text-sm text-emerald-300 max-w-2xl mx-auto border border-emerald-700 p-4 rounded text-center">
-        To comply with U.S. regulations and ensure identity verification, fractional real estate owners are required to supply proof of US citizenship. You may skip this step for now, but you will not be able to purchase chips until verification is complete.
+        To comply with U.S. regulations which require identity verification, fractional real estate owners are required to supply proof of US citizenship. You may skip this step for now, but you will not be able to purchase chips until verification is complete.
       </p>
 
       {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
 
       <div className="max-w-lg mx-auto space-y-4">
         <div>
-          <label className="block mb-1">Front of License</label>
-          <label className="block w-full cursor-pointer border border-emerald-600 px-4 py-2 text-center rounded bg-blue-900 hover:bg-blue-800">
+          <label className="block mb-1">Front of Driver’s License or State issued ID Card</label>
+          <label className="block w-64 cursor-pointer border border-emerald-600 px-4 py-2 text-center rounded bg-blue-900 hover:bg-blue-800">
             Choose Image
             <input
               type="file"
@@ -114,8 +114,8 @@ function LicenseForm() {
         </div>
 
         <div>
-          <label className="block mb-1">Back of License</label>
-          <label className="block w-full cursor-pointer border border-emerald-600 px-4 py-2 text-center rounded bg-blue-900 hover:bg-blue-800">
+          <label className="block mb-1">Back of Driver’s License or State issued ID Card</label>
+          <label className="block w-64 cursor-pointer border border-emerald-600 px-4 py-2 text-center rounded bg-blue-900 hover:bg-blue-800">
             Choose Image
             <input
               type="file"
