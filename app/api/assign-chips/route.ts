@@ -1,113 +1,83 @@
 //assign-chips route.ts
 
-import { NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
-import { Database } from '@/types/supabase';
 
-export async function POST(req: Request) {
+import { NextRequest, NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { Database } from '@/types/supabase';
+import { cookies } from 'next/headers';
+
+export async function POST(req: NextRequest) {
   const cookieStore = cookies();
   const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: () => cookieStore }
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set() {},
+        remove() {},
+      },
+    }
   );
 
   const body = await req.json();
-  const { user_id, property_id, chip_ids, paypal_transaction_id, quantity, total_amount } = body;
+  const { user_id, chip_ids, property_id } = body;
 
-  if (!user_id || !chip_ids || chip_ids.length === 0) {
-    return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+  if (!user_id || !chip_ids?.length || !property_id) {
+    return NextResponse.json({ error: 'Missing data' }, { status: 400 });
   }
 
-  // Step 1: Assign chips
+  // Assign each chip to the user
   const { error: updateError } = await supabase
     .from('chips')
-    .update({
-      owner_id: user_id,
-      assigned_at: new Date().toISOString()
-    })
+    .update({ owner_id: user_id, assigned_at: new Date().toISOString() })
     .in('id', chip_ids);
 
   if (updateError) {
     return NextResponse.json({ error: updateError.message }, { status: 500 });
   }
 
-  // Step 2: Log purchase transaction
-  await supabase.from('chip_purchase_transactions').insert({
-    user_id,
-    property_id,
-    chip_ids,
-    paypal_transaction_id,
-    quantity,
-    total_amount
-  });
+  const badgeResults: string[] = [];
 
-  // Step 3: Award badges
-  await evaluateAndAwardBadges(supabase, user_id);
-
-  return NextResponse.json({ success: true });
-}
-
-async function evaluateAndAwardBadges(supabase: ReturnType<typeof createServerClient>, user_id: string) {
-  const { data: chips, error: chipError } = await supabase
+  const { data: ownedChips } = await supabase
     .from('chips')
-    .select('id, property_id, assigned_at')
+    .select('id, property_id')
     .eq('owner_id', user_id)
     .eq('is_hidden', false);
 
-  if (!chips || chipError) return;
+  const distinctProperties = new Set(ownedChips?.map(c => c.property_id));
+  const totalChips = ownedChips?.length || 0;
 
-  const distinctProps = new Set(chips.map(c => c.property_id));
-  const totalChips = chips.length;
+  const badgeChecks = [
+    { key: 'first_chip', check: totalChips === chip_ids.length },
+    { key: 'diversifier', check: distinctProperties.size >= 3 },
+    { key: 'whale_watcher', check: totalChips >= 100 },
+  ];
 
-  await insertBadgeIfEligible(supabase, user_id, 'first_chip', totalChips === 1);
-  await insertBadgeIfEligible(supabase, user_id, 'diversifier', distinctProps.size >= 3);
-  await insertBadgeIfEligible(supabase, user_id, 'whale_watcher', totalChips >= 100);
-
-  const monthlyPurchaseMap = new Set(chips.map(c => {
-    const date = new Date(c.assigned_at!);
-    return `${date.getUTCFullYear()}-${date.getUTCMonth()}`;
-  }));
-  await insertBadgeIfEligible(supabase, user_id, 'consistent_investor', monthlyPurchaseMap.size >= 3);
-
-  const { data: properties } = await supabase.from('properties').select('id, created_at');
-  const propMap = Object.fromEntries((properties || []).map(p => [p.id, new Date(p.created_at)]));
-
-  const isEarly = chips.some(c => {
-    const assigned = new Date(c.assigned_at!);
-    const created = propMap[c.property_id];
-    return created && assigned.getTime() - created.getTime() < 3 * 24 * 60 * 60 * 1000;
-  });
-  await insertBadgeIfEligible(supabase, user_id, 'early_backer', isEarly);
-}
-
-async function insertBadgeIfEligible(
-  supabase: ReturnType<typeof createServerClient>,
-  user_id: string,
-  badge_key: string,
-  condition: boolean
-) {
-  if (!condition) return;
-
-  const { data: existing } = await supabase
+  const { data: userBadges } = await supabase
     .from('user_badges')
-    .select('id')
-    .eq('user_id', user_id)
-    .eq('badge_key', badge_key)
-    .maybeSingle();
+    .select('badge_key')
+    .eq('user_id', user_id);
 
-  if (!existing) {
-    await supabase.from('user_badges').insert({
-      user_id,
-      badge_key,
-      earned_at: new Date().toISOString()
-    });
+  const earnedBadges = new Set(userBadges?.map(b => b.badge_key));
 
-    await supabase.from('badge_activity_log').insert({
-      user_id,
-      badge_key,
-      triggered_by: 'chip_purchase'
-    });
+  for (const b of badgeChecks) {
+    if (b.check && !earnedBadges.has(b.key)) {
+      await supabase.from('user_badges').insert({
+        user_id,
+        badge_key: b.key,
+        earned_at: new Date().toISOString(),
+      });
+      await supabase.from('badge_activity_log').insert({
+        user_id,
+        badge_key: b.key,
+        triggered_by: 'chip_purchase',
+      });
+      badgeResults.push(b.key);
+    }
   }
+
+  return NextResponse.json({ success: true, newBadges: badgeResults });
 }
