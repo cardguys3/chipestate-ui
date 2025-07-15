@@ -6,7 +6,7 @@ import { Database } from '@/types/supabase';
 import { cookies } from 'next/headers';
 
 export async function POST(req: NextRequest) {
-  const cookieStore = await cookies();
+  const cookieStore = cookies();
 
   const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -23,64 +23,74 @@ export async function POST(req: NextRequest) {
   );
 
   const body = await req.json();
-  const { user_id, chip_ids, property_id } = body;
+  const { user_id, chip_ids, property_id, quantity, paypal_transaction_id, total_amount } = body;
 
-  if (!user_id || !chip_ids?.length || !property_id) {
-    return NextResponse.json({ error: 'Missing data' }, { status: 400 });
-  }
+  const { error: txError } = await supabase.from('chip_purchase_transactions').insert([
+    {
+      user_id,
+      chip_ids,
+      property_id,
+      quantity,
+      paypal_transaction_id,
+      total_amount,
+    },
+  ]);
 
-  // Assign chips to user
-  const { error: updateError } = await supabase
+  if (txError) return NextResponse.json({ error: txError.message }, { status: 500 });
+
+  const now = new Date().toISOString();
+
+  const ownerships = chip_ids.map((chip_id: string) => ({
+    chip_id,
+    user_id,
+    acquired_at: now,
+    acquired_by: 'paypal',
+    is_current: true,
+  }));
+
+  const { error: ownershipError } = await supabase.from('chip_ownerships').insert(ownerships);
+  if (ownershipError) return NextResponse.json({ error: ownershipError.message }, { status: 500 });
+
+  const { error: chipUpdateError } = await supabase
     .from('chips')
-    .update({ owner_id: user_id, assigned_at: new Date().toISOString() })
+    .update({ owner_id: user_id, assigned_at: now })
     .in('id', chip_ids);
 
-  if (updateError) {
-    return NextResponse.json({ error: updateError.message }, { status: 500 });
-  }
+  if (chipUpdateError) return NextResponse.json({ error: chipUpdateError.message }, { status: 500 });
 
-  // Badge Logic
-  const badgeResults: string[] = [];
-
-  const { data: ownedChips } = await supabase
-    .from('chips')
-    .select('id, property_id')
-    .eq('owner_id', user_id)
-    .eq('is_hidden', false);
-
-  const distinctProperties = new Set(ownedChips?.map(c => c.property_id));
-  const totalChips = ownedChips?.length || 0;
-
-  const badgeChecks = [
-    { key: 'first_chip', check: totalChips === chip_ids.length },
-    { key: 'diversifier', check: distinctProperties.size >= 3 },
-    { key: 'whale_watcher', check: totalChips >= 100 },
-  ];
-
+  // 🏅 Badge Logic – First Chip, Whale Watcher
   const { data: userBadges } = await supabase
     .from('user_badges')
     .select('badge_key')
     .eq('user_id', user_id);
 
-  const earned = new Set(userBadges?.map(b => b.badge_key));
+  const hasBadge = (key: string) => userBadges?.some((b) => b.badge_key === key);
 
-  for (const b of badgeChecks) {
-    if (b.check && !earned.has(b.key)) {
-      await supabase.from('user_badges').insert({
-        user_id,
-        badge_key: b.key,
-        earned_at: new Date().toISOString(),
-      });
+  const { data: allOwnerships } = await supabase
+    .from('chip_ownerships')
+    .select('id')
+    .eq('user_id', user_id)
+    .eq('is_current', true);
 
-      await supabase.from('badge_activity_log').insert({
-        user_id,
-        badge_key: b.key,
-        triggered_by: 'chip_purchase',
-      });
+  const earnedBadges: string[] = [];
 
-      badgeResults.push(b.key);
-    }
+  if (!hasBadge('first_chip')) {
+    earnedBadges.push('first_chip');
   }
 
-  return NextResponse.json({ success: true, newBadges: badgeResults });
+  if (!hasBadge('whale_watcher') && (allOwnerships?.length || 0) >= 100) {
+    earnedBadges.push('whale_watcher');
+  }
+
+  if (earnedBadges.length > 0) {
+    const insertPayload = earnedBadges.map((badge_key) => ({
+      user_id,
+      badge_key,
+      earned_at: new Date().toISOString(),
+    }));
+
+    await supabase.from('user_badges').insert(insertPayload);
+  }
+
+  return NextResponse.json({ success: true, earnedBadges });
 }
