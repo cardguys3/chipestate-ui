@@ -29,10 +29,27 @@ export default function RegisterPage() {
   })
 
   const [error, setError] = useState<string | null>(null)
+  const [sameAsResidential, setSameAsResidential] = useState(false)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleSameAsResidential = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = e.target.checked
+    setSameAsResidential(checked)
+
+    if (checked) {
+      setFormData((prev) => ({
+        ...prev,
+        mail_address_line1: prev.res_address_line1,
+        mail_address_line2: prev.res_address_line2,
+        mail_city: prev.res_city,
+        mail_state: prev.res_state,
+        mail_zip: prev.res_zip,
+      }))
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,7 +84,7 @@ export default function RegisterPage() {
   return (
     <main className="min-h-screen bg-blue-950 text-white p-6">
       {/* Step Graphic */}
-      <div className="mb-6 text-sm font-medium text-center text-gray-300">
+      <div className="mb-6 text-sm font-medium text-center text-gray-300 border border-emerald-700 p-4 rounded max-w-xl mx-auto">
         <div className="flex justify-center items-center gap-4">
           <div className="flex flex-col items-center">
             <div className="w-6 h-6 rounded-full bg-emerald-500 text-white text-xs flex items-center justify-center">1</div>
@@ -81,22 +98,22 @@ export default function RegisterPage() {
           <div className="h-px w-8 bg-gray-400" />
           <div className="flex flex-col items-center">
             <div className="w-6 h-6 rounded-full bg-gray-500 text-white text-xs flex items-center justify-center">3</div>
-            <span className="mt-1">Funding</span>
+            <span className="mt-1">Chips</span>
           </div>
         </div>
       </div>
 
-      <h1 className="text-xl font-bold mb-4">Step 1: Personal Info</h1>
+      <h1 className="text-xl font-bold mb-4 text-center">Step 1: Personal Info</h1>
 
-      <form onSubmit={handleSubmit} className="space-y-4 max-w-2xl text-sm">
+      <form onSubmit={handleSubmit} className="space-y-4 max-w-2xl text-sm border border-emerald-700 p-6 rounded mx-auto">
         <div className="grid grid-cols-2 gap-3">
-          <input name="first_name" placeholder="First Name" onChange={handleChange} required className="p-2 border border-blue-700 rounded bg-blue-900" />
-          <input name="middle_name" placeholder="Middle Name" onChange={handleChange} className="p-2 border border-blue-700 rounded bg-blue-900" />
-          <input name="last_name" placeholder="Last Name" onChange={handleChange} required className="p-2 border border-blue-700 rounded bg-blue-900" />
-          <input name="phone" placeholder="Mobile Phone" onChange={handleChange} required className="p-2 border border-blue-700 rounded bg-blue-900" />
-          <input name="dob" type="date" placeholder="Date of Birth" onChange={handleChange} required className="p-2 border border-blue-700 rounded bg-blue-900" />
-          <input name="email" placeholder="Email" type="email" onChange={handleChange} required className="p-2 border border-blue-700 rounded bg-blue-900" />
-          <input name="password" placeholder="Password" type="password" onChange={handleChange} required className="p-2 border border-blue-700 rounded bg-blue-900" />
+          <input name="first_name" placeholder="First Name" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
+          <input name="middle_name" placeholder="Middle Name" onChange={handleChange} className="p-2 border border-emerald-600 rounded bg-blue-900" />
+          <input name="last_name" placeholder="Last Name" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
+          <input name="phone" placeholder="Mobile Phone" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
+          <input name="dob" type="date" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
+          <input name="email" placeholder="Email" type="email" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
+          <input name="password" placeholder="Password" type="password" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
         </div>
         <p className="text-xs text-gray-400">
           Password must be 10–100 characters and include at least one uppercase letter, one lowercase letter, one number, and one special character.
@@ -105,22 +122,26 @@ export default function RegisterPage() {
         <fieldset className="border border-blue-700 p-4 rounded">
           <legend className="text-base font-semibold">Residential Address (optional)</legend>
           <div className="grid grid-cols-2 gap-3 mt-2">
-            <input name="res_address_line1" placeholder="Address Line 1" onChange={handleChange} className="p-2 border border-blue-700 rounded bg-blue-900" />
-            <input name="res_address_line2" placeholder="Address Line 2" onChange={handleChange} className="p-2 border border-blue-700 rounded bg-blue-900" />
-            <input name="res_city" placeholder="City" onChange={handleChange} className="p-2 border border-blue-700 rounded bg-blue-900" />
-            <input name="res_state" placeholder="State" onChange={handleChange} className="p-2 border border-blue-700 rounded bg-blue-900" />
-            <input name="res_zip" placeholder="Zip Code" onChange={handleChange} className="p-2 border border-blue-700 rounded bg-blue-900" />
+            <input name="res_address_line1" placeholder="Address Line 1" onChange={handleChange} className="p-2 border border-emerald-600 rounded bg-blue-900" />
+            <input name="res_address_line2" placeholder="Address Line 2" onChange={handleChange} className="p-2 border border-emerald-600 rounded bg-blue-900" />
+            <input name="res_city" placeholder="City" onChange={handleChange} className="p-2 border border-emerald-600 rounded bg-blue-900" />
+            <input name="res_state" placeholder="State" onChange={handleChange} className="p-2 border border-emerald-600 rounded bg-blue-900" />
+            <input name="res_zip" placeholder="Zip Code" onChange={handleChange} className="p-2 border border-emerald-600 rounded bg-blue-900" />
           </div>
         </fieldset>
 
         <fieldset className="border border-blue-700 p-4 rounded">
           <legend className="text-base font-semibold">Mailing Address <span className="text-red-400">*</span></legend>
+          <label className="flex items-center mb-3 text-sm">
+            <input type="checkbox" checked={sameAsResidential} onChange={handleSameAsResidential} className="mr-2" />
+            Mailing address is the same as residential
+          </label>
           <div className="grid grid-cols-2 gap-3 mt-2">
-            <input name="mail_address_line1" placeholder="Address Line 1" onChange={handleChange} required className="p-2 border border-blue-700 rounded bg-blue-900" />
-            <input name="mail_address_line2" placeholder="Address Line 2" onChange={handleChange} className="p-2 border border-blue-700 rounded bg-blue-900" />
-            <input name="mail_city" placeholder="City" onChange={handleChange} required className="p-2 border border-blue-700 rounded bg-blue-900" />
-            <input name="mail_state" placeholder="State" onChange={handleChange} required className="p-2 border border-blue-700 rounded bg-blue-900" />
-            <input name="mail_zip" placeholder="Zip Code" onChange={handleChange} required className="p-2 border border-blue-700 rounded bg-blue-900" />
+            <input name="mail_address_line1" placeholder="Address Line 1" value={formData.mail_address_line1} onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
+            <input name="mail_address_line2" placeholder="Address Line 2" value={formData.mail_address_line2} onChange={handleChange} className="p-2 border border-emerald-600 rounded bg-blue-900" />
+            <input name="mail_city" placeholder="City" value={formData.mail_city} onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
+            <input name="mail_state" placeholder="State" value={formData.mail_state} onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
+            <input name="mail_zip" placeholder="Zip Code" value={formData.mail_zip} onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
           </div>
         </fieldset>
 
