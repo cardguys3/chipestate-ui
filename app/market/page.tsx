@@ -1,9 +1,10 @@
-'use client';
+//App-Market Page
+'use client'
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { createBrowserClient } from '@supabase/ssr';
 import { Database } from '@/types/supabase';
+import Link from 'next/link';
 
 interface Property {
   id: string;
@@ -83,24 +84,39 @@ export default function MarketPage() {
   const formatCurrency = (value: number) => `$${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 
   return (
-    <main className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold text-white">Market</h1>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {properties.map((p) => (
-          <div key={p.id} className="bg-gray-900 text-white p-4 rounded-xl shadow-lg border border-gray-700">
-            <h2 className="text-xl font-semibold mb-2">
-              <Link href={`/market/${p.id}`} className="hover:underline text-blue-400">{p.title}</Link>
-            </h2>
-            <p className="text-sm text-gray-300 mb-1">{p.location}</p>
-            <p className="mb-1">💰 <strong>{formatCurrency(p.current_value)}</strong> Property Value</p>
-            <p className="mb-1">🏷️ <strong>{p.total_chips - p.chips_available}/{p.total_chips}</strong> Chips Sold</p>
-            <p className="mb-1">🏠 {p.occupied ? 'Occupied ✅' : 'Vacant ❌'}</p>
-            <p className="mb-1">📈 <strong>{formatCurrency(p.annual_rent)}</strong> Annual Rent</p>
-            <p className="mb-1">💼 Manager: {p.manager_name || 'Unknown'}</p>
-            <p className="mb-1">💵 Reserve Balance: {formatCurrency(p.reserve_balance)}</p>
-          </div>
-        ))}
+    <main className="min-h-screen bg-[#0B1D33] text-white p-6">
+      <h1 className="text-2xl font-bold mb-6">ChipEstate Market</h1>
+      <div className="overflow-x-auto">
+        <table className="w-full table-auto text-sm border-collapse">
+          <thead className="bg-white/5">
+            <tr className="text-left border-b border-blue-800">
+              <th className="p-3 cursor-pointer" onClick={() => toggleSort('title')}>Property</th>
+              <th className="p-3 cursor-pointer" onClick={() => toggleSort('location')}>Location</th>
+              <th className="p-3 cursor-pointer" onClick={() => toggleSort('current_value')}>Property Value</th>
+              <th className="p-3">Chips Sold</th>
+              <th className="p-3">Occupancy</th>
+              <th className="p-3">Annual Rent</th>
+              <th className="p-3">Manager</th>
+              <th className="p-3">Reserve</th>
+            </tr>
+          </thead>
+          <tbody>
+            {properties.map((p, idx) => (
+              <tr key={p.id} className="border-b border-blue-900 hover:bg-blue-900/30">
+                <td className="p-3">
+                  <Link href={`/market/${p.id}`} className="text-blue-400 hover:underline">{p.title}</Link>
+                </td>
+                <td className="p-3">{p.location}</td>
+                <td className="p-3">{formatCurrency(p.current_value)}</td>
+                <td className="p-3">{p.total_chips - p.chips_available}/{p.total_chips}</td>
+                <td className="p-3">{p.occupied ? '✅' : '❌'}</td>
+                <td className="p-3">{formatCurrency(p.annual_rent)}</td>
+                <td className="p-3">{p.manager_name || 'Unknown'}</td>
+                <td className="p-3">{formatCurrency(p.reserve_balance)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </main>
   );
