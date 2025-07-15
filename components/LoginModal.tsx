@@ -29,12 +29,17 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
       return
     }
 
-    if (data.user && ADMIN_EMAILS.includes(data.user.email || '')) {
-      onClose()              // ✅ Hide the modal
-      router.push('/admin') // ✅ Redirect
+    if (data.user) {
+      onClose()
+
+      const isAdmin = ADMIN_EMAILS.includes(data.user.email || '')
+      const redirectPath = isAdmin ? '/admin' : '/dashboard'
+
+      // Route and refresh to update header state
+      router.push(redirectPath)
+      window.location.reload()
     } else {
-      setError('Access denied: not an admin')
-      await supabase.auth.signOut()
+      setError('Unexpected login issue')
     }
 
     setLoading(false)
@@ -87,7 +92,6 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
           </button>
         </form>
 
-        {/* ✅ Login assistance link */}
         <p className="mt-4 text-center text-sm">
           <a href="/forgot-password" className="text-blue-600 hover:underline">
             Login assistance
