@@ -84,7 +84,7 @@ export default function RegisterPage() {
   return (
     <main className="min-h-screen bg-blue-950 text-white p-6">
       {/* Step Graphic */}
-      <div className="mb-6 text-sm font-medium text-center text-gray-300 border border-emerald-700 p-4 rounded max-w-xl mx-auto">
+      <div className="mb-6 text-sm font-medium text-center text-gray-300 border border-emerald-700 px-4 py-2 rounded max-w-2xl mx-auto">
         <div className="flex justify-center items-center gap-4">
           <div className="flex flex-col items-center">
             <div className="w-6 h-6 rounded-full bg-emerald-500 text-white text-xs flex items-center justify-center">1</div>
@@ -111,7 +111,10 @@ export default function RegisterPage() {
           <input name="middle_name" placeholder="Middle Name" onChange={handleChange} className="p-2 border border-emerald-600 rounded bg-blue-900" />
           <input name="last_name" placeholder="Last Name" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
           <input name="phone" placeholder="Mobile Phone" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
-          <input name="dob" type="date" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
+          <div>
+            <label htmlFor="dob" className="text-white text-sm block mb-1">Date of Birth</label>
+            <input id="dob" name="dob" type="date" onChange={handleChange} required className="p-2 w-full border border-emerald-600 rounded bg-blue-900" />
+          </div>
           <input name="email" placeholder="Email" type="email" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
           <input name="password" placeholder="Password" type="password" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
         </div>
