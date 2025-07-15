@@ -60,7 +60,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#0c1a2c] text-white pt-0 pb-0">
       <section className="px-4 text-center">
-        <h1 className="text-4xl font-extrabold text-white mb-4 mt-8">
+        <h1 className="text-4xl font-extrabold text-white mb-4">
           Welcome to ChipEstate
         </h1>
         <p className="text-gray-300 text-lg max-w-2xl mx-auto mb-10">
@@ -83,14 +83,15 @@ export default function Home() {
               <div className="relative w-full h-[200px] [transform-style:preserve-3d] transition-transform duration-700 hover:[transform:rotateY(180deg)]">
                 {/* Front */}
                 <div className="absolute w-full h-full bg-white border-2 border-emerald-400 rounded-lg shadow overflow-hidden backface-hidden text-sm">
-                  <img
-                    src={getImageUrl(property.image_url)}
-                    alt={property.title || 'Property image'}
-                    className="w-full h-48 object-cover"
-                  />
-                  <div className="p-2">
-                    <h2 className="text-md font-bold bg-blue-800 text-white px-2 py-1 rounded">{property.title}</h2>
-                    <p className="text-sm text-gray-600 line-clamp-2">{property.description}</p>
+                  <div className="relative w-full h-full">
+                    <img
+                      src={getImageUrl(property.image_url)}
+                      alt={property.title || 'Property image'}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute bottom-0 left-0 w-full bg-blue-800 bg-opacity-90 text-white text-sm font-bold px-2 py-1 text-center">
+                      {property.title}
+                    </div>
                   </div>
                 </div>
 
