@@ -1,3 +1,4 @@
+//app.page.tsx this is the landing page for chipestate
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -5,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 import PropertyCard from '@/components/PropertyCard'
 import Footer from '@/components/Footer'
-import ChatBubble from '@/components/ChatBubble'
+import ChatButton from '@/components/ChatButton'  // ← Updated component
 import LoginModal from '@/components/LoginModal'
 
 export default function Home() {
@@ -22,7 +23,7 @@ export default function Home() {
         .select('*')
         .eq('is_active', true)
         .eq('is_hidden', false)
-        .limit(9) // <- LIMIT added here
+        .limit(9)
 
       if (error) {
         console.error('Error loading properties:', error.message)
@@ -57,21 +58,21 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 pt-0 pb-0">
+    <main className="min-h-screen bg-[#0c1a2c] text-white pt-0 pb-0">
       <section className="px-4 text-center">
-        <h1 className="text-4xl font-extrabold text-blue-800 mb-4">
+        <h1 className="text-4xl font-extrabold text-white mb-4">
           Welcome to ChipEstate
         </h1>
-        <p className="text-gray-600 text-lg max-w-2xl mx-auto mb-10">
-          The bitcoin of real estate 
+        <p className="text-gray-300 text-lg max-w-2xl mx-auto mb-10">
+          The bitcoin of real estate
         </p>
       </section>
 
       <section className="px-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
         {loading ? (
-          <p className="col-span-full text-center text-gray-500">Loading properties...</p>
+          <p className="col-span-full text-center text-gray-400">Loading properties...</p>
         ) : properties.length === 0 ? (
-          <p className="col-span-full text-center text-gray-500">No active properties found.</p>
+          <p className="col-span-full text-center text-gray-400">No active properties found.</p>
         ) : (
           properties.map((property) => (
             <div
@@ -81,7 +82,7 @@ export default function Home() {
             >
               <div className="relative w-full h-[300px] [transform-style:preserve-3d] transition-transform duration-700 hover:[transform:rotateY(180deg)]">
                 {/* Front */}
-                <div className="absolute w-full h-full bg-white rounded-lg shadow overflow-hidden backface-hidden">
+                <div className="absolute w-full h-full bg-white border-2 border-emerald-400 rounded-lg shadow overflow-hidden backface-hidden">
                   <img
                     src={getImageUrl(property.image_url)}
                     alt={property.title || 'Property image'}
@@ -94,7 +95,7 @@ export default function Home() {
                 </div>
 
                 {/* Back */}
-                <div className="absolute w-full h-full bg-blue-900 text-white rounded-lg p-4 [transform:rotateY(180deg)] backface-hidden overflow-y-auto">
+                <div className="absolute w-full h-full bg-blue-900 text-white border-2 border-emerald-400 rounded-lg p-4 [transform:rotateY(180deg)] backface-hidden overflow-y-auto">
                   <h2 className="text-xl font-bold mb-3 text-center">{property.title}</h2>
                   <ul className="text-sm space-y-1">
                     <li><strong>Type:</strong> {property.property_type}</li>
@@ -110,7 +111,7 @@ export default function Home() {
         )}
       </section>
 
-      <ChatBubble />
+      <ChatButton />
       {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
     </main>
   )
