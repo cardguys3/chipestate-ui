@@ -71,6 +71,20 @@ export default function PropertyFinancialsPage() {
     }
   }
 
+  const handleInactivate = async (id: string) => {
+    const { error } = await supabase
+      .from('property_transactions')
+      .update({ amount: 0, transaction_name: '(inactive)' })
+      .eq('id', id)
+    if (!error) {
+      const { data } = await supabase
+        .from('property_transactions')
+        .select('*')
+        .order('transaction_date', { ascending: false })
+      setTransactions(data || [])
+    }
+  }
+
   const filtered = transactions.filter((t) => {
     const propertyTitle = properties.find(p => p.id === t.property_id)?.title || ''
     const creatorName = users.find(u => u.id === t.created_by)?.first_name || ''
@@ -137,6 +151,7 @@ export default function PropertyFinancialsPage() {
                 <th className="px-4 py-2 text-left">Category</th>
                 <th className="px-4 py-2 text-left">Amount</th>
                 <th className="px-4 py-2 text-left">Created By</th>
+                <th className="px-4 py-2 text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -151,6 +166,12 @@ export default function PropertyFinancialsPage() {
                     <td className="px-4 py-2">{t.category}</td>
                     <td className="px-4 py-2">${parseFloat(t.amount).toFixed(2)}</td>
                     <td className="px-4 py-2">{user?.first_name || t.created_by}</td>
+                    <td className="px-4 py-2">
+                      <div className="flex gap-2">
+                        <button className="text-emerald-400 hover:underline text-xs" disabled>Edit</button>
+                        <button className="text-red-400 hover:underline text-xs" onClick={() => handleInactivate(t.id)}>Inactivate</button>
+                      </div>
+                    </td>
                   </tr>
                 )
               })}
