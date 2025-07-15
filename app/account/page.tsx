@@ -4,6 +4,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
+import toast, { Toaster } from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 import isEqual from 'lodash.isequal'
 
@@ -50,15 +51,21 @@ export default function AccountPage() {
   }
 
   const handleSave = async () => {
+    toast.dismiss();
     if (!isEqual(profile, originalProfile)) {
+      toast.loading('Saving changes...')
       const { error } = await supabase
         .from('users_extended')
         .update(profile)
         .eq('id', profile.id)
 
       if (error) {
+        toast.dismiss();
+        toast.error(`Save failed: ${error.message}`);
         console.error('Error saving profile:', error.message)
       } else {
+        toast.dismiss();
+        toast.success('Profile updated successfully.');
         setOriginalProfile(profile)
       }
     }
@@ -67,6 +74,8 @@ export default function AccountPage() {
   if (!profile) return <div className="text-white p-6">Loading...</div>
 
   return (
+    <>
+      <Toaster position="top-right" />
     <main className="bg-[#0c1a2c] min-h-screen text-white p-6">
       <h1 className="text-3xl font-bold mb-6">Account Details</h1>
 
@@ -86,7 +95,7 @@ export default function AccountPage() {
               value={profile[field] || ''}
               onChange={handleChange}
               disabled={['email', 'dob', 'license_front_url', 'license_back_url'].includes(field)}
-              className={`w-full p-2 rounded ${
+              className={`w-full p-2 rounded border border-white/20 bg-white/10 ${
                 ['email', 'dob', 'license_front_url', 'license_back_url'].includes(field)
                   ? 'bg-gray-700'
                   : 'bg-gray-800'
@@ -136,6 +145,8 @@ export default function AccountPage() {
       <p className="text-xs text-gray-400 mt-8">
         To update any non-editable fields (such as email or verified identity details), please contact ChipEstate Support.
       </p>
-    </main>
+        </main>
+    </>
+
   )
 }
