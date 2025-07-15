@@ -70,36 +70,89 @@ function LicenseForm() {
   }
 
   return (
-    <main className="min-h-screen bg-blue-950 text-white p-4">
-      <h1 className="text-2xl font-bold mb-4">Upload Your Driver's License</h1>
-      <p className="mb-2 text-sm text-emerald-300">
-        To comply with U.S. regulations and ensure identity verification, we require a front and back image of your U.S. driver's license. You may skip this step for now, but you will not be able to purchase chips until verification is complete.
+    <main className="min-h-screen bg-blue-950 text-white p-6">
+      {/* Progress Graphic */}
+      <div className="mb-6 text-sm font-medium text-center text-gray-300 border border-emerald-700 px-4 py-2 rounded w-fit mx-auto">
+        <div className="flex justify-center items-center gap-4">
+          <div className="flex flex-col items-center">
+            <div className="w-6 h-6 rounded-full bg-gray-500 text-white text-xs flex items-center justify-center">1</div>
+            <span className="mt-1">Info</span>
+          </div>
+          <div className="h-px w-8 bg-gray-400" />
+          <div className="flex flex-col items-center">
+            <div className="w-6 h-6 rounded-full bg-emerald-500 text-white text-xs flex items-center justify-center">2</div>
+            <span className="mt-1">License</span>
+          </div>
+          <div className="h-px w-8 bg-gray-400" />
+          <div className="flex flex-col items-center">
+            <div className="w-6 h-6 rounded-full bg-gray-500 text-white text-xs flex items-center justify-center">3</div>
+            <span className="mt-1">Chips</span>
+          </div>
+        </div>
+      </div>
+
+      <h1 className="text-2xl font-bold mb-4 text-center">Upload Your Driver's License</h1>
+
+      <p className="mb-4 text-sm text-emerald-300 max-w-2xl mx-auto border border-emerald-700 p-4 rounded text-center">
+        To comply with U.S. regulations and ensure identity verification, fractional real estate owners are required to supply proof of US citizenship. You may skip this step for now, but you will not be able to purchase chips until verification is complete.
       </p>
-      {error && <p className="text-red-500 mb-2">{error}</p>}
 
-      <div className="mb-4">
-        <label className="block mb-1">Front of License</label>
-        <input type="file" accept="image/*" onChange={(e) => setFront(e.target.files?.[0] || null)} />
-      </div>
-      <div className="mb-4">
-        <label className="block mb-1">Back of License</label>
-        <input type="file" accept="image/*" onChange={(e) => setBack(e.target.files?.[0] || null)} />
-      </div>
+      {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
 
-      <div className="flex gap-4">
-        <button
-          onClick={handleUpload}
-          disabled={loading}
-          className="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded text-white"
-        >
-          {loading ? 'Uploading...' : 'Submit License'}
-        </button>
-        <button
-          onClick={skipUpload}
-          className="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded text-white"
-        >
-          Skip for Now
-        </button>
+      <div className="max-w-lg mx-auto space-y-4">
+        <div>
+          <label className="block mb-1">Front of License</label>
+          <label className="block w-full cursor-pointer border border-emerald-600 px-4 py-2 text-center rounded bg-blue-900 hover:bg-blue-800">
+            Choose Image
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setFront(e.target.files?.[0] || null)}
+              className="hidden"
+            />
+          </label>
+        </div>
+
+        <div>
+          <label className="block mb-1">Back of License</label>
+          <label className="block w-full cursor-pointer border border-emerald-600 px-4 py-2 text-center rounded bg-blue-900 hover:bg-blue-800">
+            Choose Image
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setBack(e.target.files?.[0] || null)}
+              className="hidden"
+            />
+          </label>
+        </div>
+
+        <div className="flex flex-wrap justify-center gap-3 pt-4">
+          <button
+            onClick={() => router.back()}
+            className="px-4 py-2 border border-gray-500 rounded hover:bg-gray-800"
+          >
+            Back
+          </button>
+          <button
+            onClick={() => router.push('/')}
+            className="px-4 py-2 border border-red-500 text-red-400 rounded hover:bg-red-900"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={skipUpload}
+            className="border border-yellow-500 text-yellow-400 px-4 py-2 rounded hover:bg-yellow-900"
+          >
+            Skip License Step
+          </button>
+          <button
+            onClick={handleUpload}
+            disabled={loading}
+            className="bg-emerald-700 hover:bg-emerald-600 px-4 py-2 rounded shadow text-white border border-emerald-500"
+          >
+            {loading ? 'Uploading...' : 'Submit License'}
+          </button>
+        </div>
       </div>
     </main>
   )
