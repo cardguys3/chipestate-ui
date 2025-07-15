@@ -84,7 +84,7 @@ export default function RegisterPage() {
   return (
     <main className="min-h-screen bg-blue-950 text-white p-6">
       {/* Step Graphic */}
-      <div className="mb-6 text-sm font-medium text-center text-gray-300 border border-emerald-700 px-4 py-2 rounded max-w-2xl mx-auto">
+      <div className="mb-6 text-sm font-medium text-center text-gray-300 border border-emerald-700 px-3 py-1 rounded w-fit mx-auto">
         <div className="flex justify-center items-center gap-4">
           <div className="flex flex-col items-center">
             <div className="w-6 h-6 rounded-full bg-emerald-500 text-white text-xs flex items-center justify-center">1</div>
