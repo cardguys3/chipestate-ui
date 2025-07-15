@@ -60,7 +60,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#0c1a2c] text-white pt-0 pb-0">
       <section className="px-4 text-center">
-        <h1 className="text-4xl font-extrabold text-white mb-4">
+        <h1 className="text-4xl font-extrabold text-white mb-4 mt-8">
           Welcome to ChipEstate
         </h1>
         <p className="text-gray-300 text-lg max-w-2xl mx-auto mb-10">
@@ -80,16 +80,16 @@ export default function Home() {
               className="[perspective:1000px] cursor-pointer"
               onClick={() => handleCardClick(property.id)}
             >
-              <div className="relative w-full h-[300px] [transform-style:preserve-3d] transition-transform duration-700 hover:[transform:rotateY(180deg)]">
+              <div className="relative w-full h-[200px] [transform-style:preserve-3d] transition-transform duration-700 hover:[transform:rotateY(180deg)]">
                 {/* Front */}
-                <div className="absolute w-full h-full bg-white border-2 border-emerald-400 rounded-lg shadow overflow-hidden backface-hidden">
+                <div className="absolute w-full h-full bg-white border-2 border-emerald-400 rounded-lg shadow overflow-hidden backface-hidden text-sm">
                   <img
                     src={getImageUrl(property.image_url)}
                     alt={property.title || 'Property image'}
                     className="w-full h-48 object-cover"
                   />
-                  <div className="p-4">
-                    <h2 className="text-xl font-semibold text-blue-800 mb-2">{property.title}</h2>
+                  <div className="p-2">
+                    <h2 className="text-md font-bold bg-blue-800 text-white px-2 py-1 rounded">{property.title}</h2>
                     <p className="text-sm text-gray-600 line-clamp-2">{property.description}</p>
                   </div>
                 </div>
@@ -97,13 +97,14 @@ export default function Home() {
                 {/* Back */}
                 <div className="absolute w-full h-full bg-blue-900 text-white border-2 border-emerald-400 rounded-lg p-4 [transform:rotateY(180deg)] backface-hidden overflow-y-auto">
                   <h2 className="text-xl font-bold mb-3 text-center">{property.title}</h2>
-                  <ul className="text-sm space-y-1">
-                    <li><strong>Type:</strong> {property.property_type}</li>
-                    <li><strong>Subtype:</strong> {property.sub_type}</li>
-                    <li><strong>Return:</strong> {property.projected_return}</li>
-                    <li><strong>Occupied:</strong> {property.property_occupied ? 'Occupied' : 'Vacant'}</li>
-                    <li><strong>Yield:</strong> {property.rental_yield}</li>
-                  </ul>
+                  <ul className="text-xs space-y-1">
+  <li><strong>Projected Return:</strong> {property.projected_return}%</li>
+  <li><strong>Rental Yield:</strong> {property.rental_yield}%</li>
+  <li><strong>Avg Earnings/Chip (mo):</strong> ${property.avg_monthly_chip_earning?.toFixed(2)}</li>
+  <li><strong>Occupancy Rate:</strong> {property.occupancy_rate}%</li>
+  <li><strong>Reserve Balance:</strong> {(property.reserve_balance && property.current_value) ? ((property.reserve_balance / property.current_value) * 100).toFixed(1) + '%' : 'N/A'}</li>
+  <li><strong>Chips Remaining:</strong> {(property.chips_available && property.total_chips) ? ((property.chips_available / property.total_chips) * 100).toFixed(1) + '%' : 'N/A'}</li>
+</ul>
                 </div>
               </div>
             </div>
