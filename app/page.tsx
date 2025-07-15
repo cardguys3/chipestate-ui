@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 import PropertyCard from '@/components/PropertyCard'
 import Footer from '@/components/Footer'
-import ChatButton from '@/components/ChatButton'  // ← Updated component
+import ChatBubble from '@/components/ChatBubble'  // ← Updated component
 import LoginModal from '@/components/LoginModal'
 
 export default function Home() {
@@ -111,7 +111,7 @@ export default function Home() {
         )}
       </section>
 
-      <ChatButton />
+      <ChatBubble />
       {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
     </main>
   )
