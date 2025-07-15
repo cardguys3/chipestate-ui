@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Database } from '@/types/supabase'
 import { Suspense } from 'react'
+import { toast } from 'react-hot-toast'
 
 function LicenseForm() {
   const supabase = createClientComponentClient<Database>()
@@ -19,7 +20,7 @@ function LicenseForm() {
 
   const handleUpload = async () => {
     if (!userId || !front || !back) {
-      setError('Please select both front and back images')
+      setError('Please select both front and back images to continue.')
       return
     }
 
@@ -41,7 +42,7 @@ function LicenseForm() {
 
       if (frontError) {
         console.error('Front upload error:', frontError)
-        setError('Failed to upload front image')
+        setError('Upload failed for front image. Please try again or contact support.')
         setLoading(false)
         return
       }
@@ -52,7 +53,7 @@ function LicenseForm() {
 
       if (backError) {
         console.error('Back upload error:', backError)
-        setError('Failed to upload back image')
+        setError('Upload failed for back image. Please try again or contact support.')
         setLoading(false)
         return
       }
@@ -67,137 +68,141 @@ function LicenseForm() {
 
       if (updateError) {
         console.error('DB update error:', updateError)
-        setError('Failed to save license URLs to your profile')
+        setError('Could not save license info to your profile. Please try again.')
         setLoading(false)
         return
       }
 
-      router.push(`/register/funding?user_id=${userId}`)
+      toast.success('Identity verification submitted successfully!')
+      router.push('/dashboard')
     } catch (err: any) {
-      console.error('Unexpected error during upload:', err)
-      setError('Unexpected error during upload. Please try again.')
+      console.error('Unexpected upload error:', err)
+      setError('Something went wrong. Please check your internet connection or contact support.')
     } finally {
       setLoading(false)
     }
   }
 
   const skipUpload = () => {
-    router.push('/register/funding?user_id=' + userId + '&skipped=true')
+    toast.success('Registration complete. License upload skipped.')
+    router.push('/dashboard')
   }
 
   return (
-    <main className="min-h-screen bg-blue-950 text-white p-6">
-      {/* Progress Graphic */}
-      <div className="mb-6 text-sm font-medium text-center text-gray-300 border border-emerald-700 px-4 py-2 rounded w-fit mx-auto">
-        <div className="flex justify-center items-center gap-4">
-          <div className="flex flex-col items-center">
-            <div className="w-6 h-6 rounded-full bg-gray-500 text-white text-xs flex items-center justify-center">1</div>
-            <span className="mt-1">Info</span>
+    <main className="min-h-screen bg-blue-950 text-white p-6 flex flex-col justify-between">
+      <div>
+        {/* Progress Graphic */}
+        <div className="mb-6 text-sm font-medium text-center text-gray-300 border border-emerald-700 px-4 py-2 rounded w-fit mx-auto">
+          <div className="flex justify-center items-center gap-4">
+            <div className="flex flex-col items-center">
+              <div className="w-6 h-6 rounded-full bg-gray-500 text-white text-xs flex items-center justify-center">1</div>
+              <span className="mt-1">Info</span>
+            </div>
+            <div className="h-px w-8 bg-gray-400" />
+            <div className="flex flex-col items-center">
+              <div className="w-6 h-6 rounded-full bg-emerald-500 text-white text-xs flex items-center justify-center">2</div>
+              <span className="mt-1">Verify</span>
+            </div>
           </div>
-          <div className="h-px w-8 bg-gray-400" />
-          <div className="flex flex-col items-center">
-            <div className="w-6 h-6 rounded-full bg-emerald-500 text-white text-xs flex items-center justify-center">2</div>
-            <span className="mt-1">License</span>
+        </div>
+
+        <h1 className="text-2xl font-bold mb-4 text-center">Identity Verification</h1>
+
+        <p className="mb-4 text-sm text-emerald-300 max-w-2xl mx-auto border border-emerald-700 p-4 rounded text-center">
+          To comply with U.S. regulations which require identity verification, fractional real estate owners are required to supply proof of US citizenship. You may skip this step for now, but you will not be able to purchase chips until verification is complete.
+        </p>
+
+        {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
+
+        <div className="max-w-lg mx-auto space-y-6">
+          {/* Front Upload */}
+          <div>
+            <label className="block mb-1">Front of Driver’s License or State ID Card</label>
+            <label className="block w-64 cursor-pointer border border-emerald-600 px-4 py-2 text-center rounded bg-blue-900 hover:bg-blue-800">
+              Choose Image
+              <input
+                type="file"
+                accept="image/*"
+                multiple={false}
+                onChange={(e) => setFront(e.target.files?.[0] || null)}
+                className="hidden"
+              />
+            </label>
+            {front && (
+              <div className="flex items-center justify-between mt-2 text-sm bg-blue-900 px-3 py-2 rounded border border-blue-700 w-64">
+                <span className="truncate">{front.name}</span>
+                <button
+                  type="button"
+                  onClick={() => setFront(null)}
+                  className="ml-2 text-red-400 hover:text-red-600 font-bold"
+                >
+                  ×
+                </button>
+              </div>
+            )}
           </div>
-          <div className="h-px w-8 bg-gray-400" />
-          <div className="flex flex-col items-center">
-            <div className="w-6 h-6 rounded-full bg-gray-500 text-white text-xs flex items-center justify-center">3</div>
-            <span className="mt-1">Chips</span>
+
+          {/* Back Upload */}
+          <div>
+            <label className="block mb-1">Back of Driver’s License or State ID Card</label>
+            <label className="block w-64 cursor-pointer border border-emerald-600 px-4 py-2 text-center rounded bg-blue-900 hover:bg-blue-800">
+              Choose Image
+              <input
+                type="file"
+                accept="image/*"
+                multiple={false}
+                onChange={(e) => setBack(e.target.files?.[0] || null)}
+                className="hidden"
+              />
+            </label>
+            {back && (
+              <div className="flex items-center justify-between mt-2 text-sm bg-blue-900 px-3 py-2 rounded border border-blue-700 w-64">
+                <span className="truncate">{back.name}</span>
+                <button
+                  type="button"
+                  onClick={() => setBack(null)}
+                  className="ml-2 text-red-400 hover:text-red-600 font-bold"
+                >
+                  ×
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-wrap justify-center gap-3 pt-4">
+            <button
+              onClick={() => router.back()}
+              className="px-4 py-2 border border-gray-500 rounded hover:bg-gray-800"
+            >
+              Back
+            </button>
+            <button
+              onClick={() => router.push('/')}
+              className="px-4 py-2 border border-red-500 text-red-400 rounded hover:bg-red-900"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={skipUpload}
+              className="border border-yellow-500 text-yellow-400 px-4 py-2 rounded hover:bg-yellow-900"
+            >
+              Skip License Step
+            </button>
+            <button
+              onClick={handleUpload}
+              disabled={loading}
+              className="bg-emerald-700 hover:bg-emerald-600 px-4 py-2 rounded shadow text-white border border-emerald-500"
+            >
+              {loading ? 'Uploading...' : 'Next'}
+            </button>
           </div>
         </div>
       </div>
 
-      <h1 className="text-2xl font-bold mb-4 text-center">Identity Verification</h1>
-
-      <p className="mb-4 text-sm text-emerald-300 max-w-2xl mx-auto border border-emerald-700 p-4 rounded text-center">
-        To comply with U.S. regulations which require identity verification, fractional real estate owners are required to supply proof of US citizenship. You may skip this step for now, but you will not be able to purchase chips until verification is complete.
-      </p>
-
-      {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
-
-      <div className="max-w-lg mx-auto space-y-6">
-        {/* Front Upload */}
-        <div>
-          <label className="block mb-1">Front of Driver’s License or State issued ID Card</label>
-          <label className="block w-64 cursor-pointer border border-emerald-600 px-4 py-2 text-center rounded bg-blue-900 hover:bg-blue-800">
-            Choose Image
-            <input
-              type="file"
-              accept="image/*"
-              multiple={false}
-              onChange={(e) => setFront(e.target.files?.[0] || null)}
-              className="hidden"
-            />
-          </label>
-          {front && (
-            <div className="flex items-center justify-between mt-2 text-sm bg-blue-900 px-3 py-2 rounded border border-blue-700 w-64">
-              <span className="truncate">{front.name}</span>
-              <button
-                type="button"
-                onClick={() => setFront(null)}
-                className="ml-2 text-red-400 hover:text-red-600 font-bold"
-              >
-                ×
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Back Upload */}
-        <div>
-          <label className="block mb-1">Back of Driver’s License or State issued ID Card</label>
-          <label className="block w-64 cursor-pointer border border-emerald-600 px-4 py-2 text-center rounded bg-blue-900 hover:bg-blue-800">
-            Choose Image
-            <input
-              type="file"
-              accept="image/*"
-              multiple={false}
-              onChange={(e) => setBack(e.target.files?.[0] || null)}
-              className="hidden"
-            />
-          </label>
-          {back && (
-            <div className="flex items-center justify-between mt-2 text-sm bg-blue-900 px-3 py-2 rounded border border-blue-700 w-64">
-              <span className="truncate">{back.name}</span>
-              <button
-                type="button"
-                onClick={() => setBack(null)}
-                className="ml-2 text-red-400 hover:text-red-600 font-bold"
-              >
-                ×
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex flex-wrap justify-center gap-3 pt-4">
-          <button
-            onClick={() => router.back()}
-            className="px-4 py-2 border border-gray-500 rounded hover:bg-gray-800"
-          >
-            Back
-          </button>
-          <button
-            onClick={() => router.push('/')}
-            className="px-4 py-2 border border-red-500 text-red-400 rounded hover:bg-red-900"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={skipUpload}
-            className="border border-yellow-500 text-yellow-400 px-4 py-2 rounded hover:bg-yellow-900"
-          >
-            Skip License Step
-          </button>
-          <button
-            onClick={handleUpload}
-            disabled={loading}
-            className="bg-emerald-700 hover:bg-emerald-600 px-4 py-2 rounded shadow text-white border border-emerald-500"
-          >
-            {loading ? 'Uploading...' : 'Next'}
-          </button>
-        </div>
+      {/* Step indicator */}
+      <div className="text-center text-xs text-gray-400 mt-10">
+        Step 2 of 2
       </div>
     </main>
   )
