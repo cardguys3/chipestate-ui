@@ -1,116 +1,105 @@
-// File: /app/api/assign-chips/route.ts
-
-import { createServerClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
-import { cookies as nextCookies } from 'next/headers'
-// import nodemailer from 'nodemailer' // Removed for Vercel compatibility
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 export async function POST(req: Request) {
-  const cookieStore = nextCookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: cookieStore as any }
-  )
-
   const { property_id, user_id, quantity, paypal_transaction_id } = await req.json()
-  if (!property_id || !user_id || !quantity || !paypal_transaction_id) {
-    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
-  }
 
-  // Step 1: Get unassigned chips
-  const { data: chips, error: chipError } = await supabase
+  const { data: availableChips, error: chipError } = await supabase
     .from('chips')
-    .select('*')
+    .select('id')
     .eq('property_id', property_id)
-    .is('owner_id', null)
+    .eq('owner_id', null)
+    .eq('is_hidden', false)
+    .eq('is_active', true)
     .limit(quantity)
 
-  if (chipError || !chips || chips.length < quantity) {
+  if (chipError || !availableChips || availableChips.length < quantity) {
     return NextResponse.json({ error: 'Not enough chips available' }, { status: 400 })
   }
 
-  const now = new Date().toISOString()
+  const chipIds = availableChips.map((c) => c.id)
 
-  // Step 2: Update chips
-  const updates = chips.map(chip =>
-    supabase
-      .from('chips')
-      .update({ owner_id: user_id, assigned_at: now })
-      .eq('id', chip.id)
-  )
+  const { error: updateError } = await supabase
+    .from('chips')
+    .update({ owner_id: user_id, assigned_at: new Date().toISOString() })
+    .in('id', chipIds)
 
-  await Promise.all(updates)
+  if (updateError) {
+    return NextResponse.json({ error: 'Failed to assign chips' }, { status: 500 })
+  }
 
-  // Step 3: Insert chip ownerships
-  const ownerships = chips.map(chip => ({
-    chip_id: chip.id,
+  await supabase.from('chip_purchase_transactions').insert({
     user_id,
-    acquired_at: now,
-    acquired_by: 'paypal',
-    is_current: true
-  }))
+    property_id,
+    chip_ids: chipIds,
+    quantity,
+    paypal_transaction_id
+  })
 
-  const { error: ownershipError } = await supabase
-    .from('chip_ownerships')
-    .insert(ownerships)
+  // 🏅 Badge logic
+  await awardBadge(user_id, 'first_chip')
+  await checkDiversifier(user_id)
+  await checkWhaleWatcher(user_id)
+  await checkMetaCollectorBadges(user_id)
 
-  if (ownershipError) {
-    return NextResponse.json({ error: 'Ownership insert failed' }, { status: 500 })
+  return NextResponse.json({ success: true })
+}
+
+async function awardBadge(user_id: string, badge_key: string) {
+  const { data: existing } = await supabase
+    .from('user_badges')
+    .select('id')
+    .eq('user_id', user_id)
+    .eq('badge_key', badge_key)
+
+  if (!existing?.length) {
+    await supabase.from('user_badges').insert({ user_id, badge_key })
   }
+}
 
-  // Step 4: Log to property_logs
-  const { error: logError } = await supabase
-    .from('property_logs')
-    .insert({
-      property_id,
-      admin_email: 'system@chipestate.com',
-      action: 'chip_purchase',
-      changes: {
-        user_id,
-        chips_assigned: chips.map(chip => chip.id),
-        quantity,
-        paypal_transaction_id
-      },
-      created_at: now
-    })
+async function checkDiversifier(user_id: string) {
+  const { data: chips } = await supabase
+    .from('chips')
+    .select('property_id')
+    .eq('owner_id', user_id)
 
-  if (logError) {
-    console.error('Logging failed:', logError.message)
+  const uniqueProps = new Set(chips?.map(c => c.property_id))
+  if (uniqueProps.size >= 3) {
+    await awardBadge(user_id, 'diversifier')
   }
+}
 
-  // Step 5: Insert into chip_purchase_transactions
-  const { error: txnError } = await supabase
-    .from('chip_purchase_transactions')
-    .insert({
-      user_id,
-      property_id,
-      paypal_transaction_id,
-      chip_ids: chips.map(chip => chip.id),
-      quantity,
-      total_amount: quantity * 50,
-      created_at: now
-    })
+async function checkWhaleWatcher(user_id: string) {
+  const { count } = await supabase
+    .from('chips')
+    .select('*', { count: 'exact', head: true })
+    .eq('owner_id', user_id)
 
-  if (txnError) {
-    console.error('Transaction log failed:', txnError.message)
+  if ((count || 0) >= 100) {
+    await awardBadge(user_id, 'whale_watcher')
   }
+}
 
-  // Step 6: Email notification (disabled for Edge Runtime compatibility)
-  // TODO: Offload to Supabase Edge Function or external email service like Resend/Postmark
-  // const transporter = nodemailer.createTransport({
-  //   service: 'gmail',
-  //   auth: {
-  //     user: process.env.SMTP_USER,
-  //     pass: process.env.SMTP_PASS
-  //   }
-  // })
-  // await transporter.sendMail({
-  //   from: 'system@chipestate.com',
-  //   to: 'cardguys3@gmail.com',
-  //   subject: 'Chip Purchase Confirmation',
-  //   text: `${quantity} chip(s) have been successfully purchased for property ID ${property_id}.`
-  // })
+async function checkMetaCollectorBadges(user_id: string) {
+  const { data: userBadges } = await supabase
+    .from('user_badges')
+    .select('badge_key')
+    .eq('user_id', user_id)
 
-  return NextResponse.json({ message: 'Chips successfully assigned' }, { status: 200 })
+  const badgeCount = userBadges?.length || 0
+  if (badgeCount >= 3) await awardBadge(user_id, 'badge_collector_3')
+  if (badgeCount >= 5) await awardBadge(user_id, 'badge_collector_5')
+  if (badgeCount >= 10) await awardBadge(user_id, 'badge_collector_10')
+
+  const { data: allBadges } = await supabase.from('badges_catalog').select('key')
+  const totalAvailable = allBadges?.length || 0
+
+  if (badgeCount >= totalAvailable) {
+    await awardBadge(user_id, 'badge_master')
+  }
 }
