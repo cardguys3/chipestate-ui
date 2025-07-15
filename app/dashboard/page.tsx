@@ -197,7 +197,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ✅ BADGES */}
       <div className="border border-white/10 rounded-xl p-5 mb-8">
         <h2 className="text-xl font-semibold mb-3">🏅 Your Badges</h2>
         {userBadges.length === 0 ? (
@@ -214,5 +213,6 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
-
-      {/* Existing content follows... */}
+    </main>
+  )
+}
