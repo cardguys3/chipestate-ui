@@ -1,15 +1,22 @@
 // this is the user's account page
+# Rebuild the account page with:
+# - All editable fields (except driver's license and DOB)
+# - Removed edit button
+# - Working password toggle (not editable, just visibility toggle)
+# - New footer message
+# - Removed editMode logic entirely (save/cancel based on change detection)
 
 'use client'
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { useRouter } from 'next/navigation'
+import isEqual from 'lodash.isequal'
 
 export default function AccountPage() {
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<any>(null)
-  const [editMode, setEditMode] = useState(false)
+  const [originalProfile, setOriginalProfile] = useState<any>(null)
   const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
 
@@ -27,6 +34,7 @@ export default function AccountPage() {
 
         if (!error) {
           setProfile(data)
+          setOriginalProfile(data)
         } else {
           console.error('Error loading user profile:', error.message)
         }
@@ -43,16 +51,22 @@ export default function AccountPage() {
     }))
   }
 
-  const handleSave = async () => {
-    const { error } = await supabase
-      .from('users_extended')
-      .update(profile)
-      .eq('id', profile.id)
+  const handleCancel = () => {
+    setProfile(originalProfile)
+  }
 
-    if (error) {
-      console.error('Error saving profile:', error.message)
-    } else {
-      setEditMode(false)
+  const handleSave = async () => {
+    if (!isEqual(profile, originalProfile)) {
+      const { error } = await supabase
+        .from('users_extended')
+        .update(profile)
+        .eq('id', profile.id)
+
+      if (error) {
+        console.error('Error saving profile:', error.message)
+      } else {
+        setOriginalProfile(profile)
+      }
     }
   }
 
@@ -63,66 +77,35 @@ export default function AccountPage() {
       <h1 className="text-3xl font-bold mb-6">Account Details</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm mb-1">First Name</label>
-          <input
-            name="first_name"
-            value={profile.first_name || ''}
-            onChange={handleChange}
-            disabled={!editMode}
-            className="w-full p-2 rounded bg-gray-800 text-white"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm mb-1">Last Name</label>
-          <input
-            name="last_name"
-            value={profile.last_name || ''}
-            onChange={handleChange}
-            disabled={!editMode}
-            className="w-full p-2 rounded bg-gray-800 text-white"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm mb-1">Email</label>
-          <input
-            name="email"
-            value={profile.email || ''}
-            disabled
-            className="w-full p-2 rounded bg-gray-700 text-white"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm mb-1">Phone</label>
-          <input
-            name="phone"
-            value={profile.phone || ''}
-            onChange={handleChange}
-            disabled={!editMode}
-            className="w-full p-2 rounded bg-gray-800 text-white"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm mb-1">Date of Birth</label>
-          <input
-            name="dob"
-            type="date"
-            value={profile.dob || ''}
-            onChange={handleChange}
-            disabled={!editMode}
-            className="w-full p-2 rounded bg-gray-800 text-white"
-          />
-        </div>
+        {[
+          'first_name', 'middle_name', 'last_name', 'email', 'phone', 'dob',
+          'res_address_line1', 'res_address_line2', 'res_city', 'res_state', 'res_zip',
+          'mail_address_line1', 'mail_address_line2', 'mail_city', 'mail_state', 'mail_zip'
+        ].map((field) => (
+          <div key={field}>
+            <label className="block text-sm mb-1 capitalize">
+              {field.replace(/_/g, ' ')}
+            </label>
+            <input
+              name={field}
+              type={field === 'dob' ? 'date' : 'text'}
+              value={profile[field] || ''}
+              onChange={handleChange}
+              disabled={['email', 'dob', 'license_front_url', 'license_back_url'].includes(field)}
+              className={`w-full p-2 rounded ${
+                ['email', 'dob', 'license_front_url', 'license_back_url'].includes(field)
+                  ? 'bg-gray-700'
+                  : 'bg-gray-800'
+              } text-white`}
+            />
+          </div>
+        ))}
 
         <div>
           <label className="block text-sm mb-1">Current Password</label>
           <input
             type={showPassword ? 'text' : 'password'}
-            value="********"
+            value={showPassword ? 'your-password' : '********'}
             readOnly
             className="w-full p-2 rounded bg-gray-700 text-white"
           />
@@ -136,30 +119,18 @@ export default function AccountPage() {
       </div>
 
       <div className="mt-6 flex gap-4">
-        {editMode ? (
-          <>
-            <button
-              onClick={handleSave}
-              className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded"
-            >
-              Save Changes
-            </button>
-            <button
-              onClick={() => setEditMode(false)}
-              className="border border-gray-400 px-4 py-2 rounded"
-            >
-              Cancel
-            </button>
-          </>
-        ) : (
-          <button
-            onClick={() => setEditMode(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
-          >
-            Edit Profile
-          </button>
-        )}
-
+        <button
+          onClick={handleSave}
+          className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded"
+        >
+          Save Changes
+        </button>
+        <button
+          onClick={handleCancel}
+          className="border border-gray-400 px-4 py-2 rounded"
+        >
+          Cancel
+        </button>
         <button
           onClick={() => router.push('/forgot-password')}
           className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded"
@@ -167,6 +138,10 @@ export default function AccountPage() {
           Change Password
         </button>
       </div>
+
+      <p className="text-xs text-gray-400 mt-8">
+        To update any non-editable fields (such as email or verified identity details), please contact ChipEstate Support.
+      </p>
     </main>
   )
 }
