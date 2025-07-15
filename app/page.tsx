@@ -1,109 +1,42 @@
-'use client';
+// app/page.tsx
+import { Card, CardContent } from "@/components/ui/card";
+import Link from "next/link";
+import Image from "next/image";
+import { getProperties } from "@/lib/supabase/queries"; // adjust if using server fetch
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { createBrowserClient } from '@supabase/ssr';
-import { Database } from '@/types/supabase';
-
-interface Property {
-  id: string;
-  title: string;
-  location: string;
-  current_value: number;
-  total_chips: number;
-  chips_available: number;
-  occupied: boolean;
-  annual_rent: number;
-  reserve_balance: number;
-  manager_name: string;
-}
-
-export default function MarketPage() {
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [sortField, setSortField] = useState<string>('current_value');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-      const supabase = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey);
-
-      const { data: propertyData, error } = await supabase
-        .from('properties')
-        .select(`
-          id, title, current_value, total_chips, chips_available, city, state, 
-          occupied, reserve_balance, manager_name
-        `)
-        .eq('is_active', true)
-        .eq('is_hidden', false)
-        .order(sortField, { ascending: sortDirection === 'asc' });
-
-      if (!error && propertyData) {
-        const propertyIds = propertyData.map((p) => p.id);
-
-        const { data: rentData } = await supabase
-          .from('property_transactions')
-          .select('property_id, amount')
-          .eq('type', 'rent')
-          .in('property_id', propertyIds);
-
-        const rentMap: Record<string, number> = {};
-        rentData?.forEach((r) => {
-          rentMap[r.property_id] = (rentMap[r.property_id] || 0) + Number(r.amount);
-        });
-
-        const transformed = propertyData.map((p) => ({
-          id: p.id,
-          title: p.title,
-          current_value: p.current_value || 0,
-          total_chips: p.total_chips,
-          chips_available: p.chips_available,
-          occupied: p.occupied || false,
-          annual_rent: rentMap[p.id] || 0,
-          reserve_balance: p.reserve_balance || 0,
-          manager_name: p.manager_name || '',
-          location: `${p.city || ''}, ${p.state || ''}`.replace(/^, |, $/g, '').trim(),
-        }));
-
-        setProperties(transformed);
-      }
-    };
-
-    fetchData();
-  }, [sortField, sortDirection]);
-
-  const toggleSort = (field: string) => {
-    if (sortField === field) {
-      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
-    }
-  };
-
-  const formatCurrency = (value: number) => `$${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+export default async function HomePage() {
+  const properties = await getProperties();
 
   return (
-    <main className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold text-white">Market</h1>
+    <main className="bg-[#0c1a2c] text-white min-h-screen px-4 sm:px-8 py-8">
+      {/* Welcome Banner */}
+      <section className="text-center mb-10">
+        <h1 className="text-4xl font-bold mb-2">Welcome to ChipEstate</h1>
+        <p className="text-lg text-gray-300">
+          Invest in fractional real estate. Earn rental income. Grow wealth passively.
+        </p>
+      </section>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {properties.map((p) => (
-          <div key={p.id} className="bg-gray-900 text-white p-4 rounded-xl shadow-lg border border-gray-700">
-            <h2 className="text-xl font-semibold mb-2">
-              <Link href={`/market/${p.id}`} className="hover:underline text-blue-400">{p.title}</Link>
-            </h2>
-            <p className="text-sm text-gray-300 mb-1">{p.location}</p>
-            <p className="mb-1">💰 <strong>{formatCurrency(p.current_value)}</strong> Property Value</p>
-            <p className="mb-1">🏷️ <strong>{p.total_chips - p.chips_available}/{p.total_chips}</strong> Chips Sold</p>
-            <p className="mb-1">🏠 {p.occupied ? 'Occupied ✅' : 'Vacant ❌'}</p>
-            <p className="mb-1">📈 <strong>{formatCurrency(p.annual_rent)}</strong> Annual Rent</p>
-            <p className="mb-1">💼 Manager: {p.manager_name || 'Unknown'}</p>
-            <p className="mb-1">💵 Reserve Balance: {formatCurrency(p.reserve_balance)}</p>
-          </div>
+      {/* Property Cards */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {properties.map((property: any) => (
+          <Link key={property.id} href={`/properties/${property.id}`}>
+            <Card className="hover:shadow-lg bg-[#14273f] cursor-pointer transition-transform duration-200 hover:scale-[1.02]">
+              <Image
+                src={property.image_url || "/placeholder.jpg"}
+                alt={property.title}
+                width={500}
+                height={300}
+                className="rounded-t-2xl w-full h-48 object-cover"
+              />
+              <CardContent className="p-4">
+                <h2 className="text-xl font-semibold mb-2">{property.title}</h2>
+                <p className="text-sm text-gray-300">{property.city}, {property.state}</p>
+              </CardContent>
+            </Card>
+          </Link>
         ))}
-      </div>
+      </section>
     </main>
   );
 }
