@@ -23,50 +23,66 @@ function LicenseForm() {
       return
     }
 
+    setError('')
     setLoading(true)
 
-    const fileExtFront = front.name.split('.').pop()
-    const fileNameFront = `${userId}_front.${fileExtFront}`
-    const filePathFront = `${fileNameFront}`
+    try {
+      const fileExtFront = front.name.split('.').pop()
+      const fileNameFront = `${userId}_front.${fileExtFront}`
+      const filePathFront = `${fileNameFront}`
 
-    const fileExtBack = back.name.split('.').pop()
-    const fileNameBack = `${userId}_back.${fileExtBack}`
-    const filePathBack = `${fileNameBack}`
+      const fileExtBack = back.name.split('.').pop()
+      const fileNameBack = `${userId}_back.${fileExtBack}`
+      const filePathBack = `${fileNameBack}`
 
-    const { error: frontError } = await supabase.storage
-      .from('licenses')
-      .upload(filePathFront, front, { upsert: true })
+      const { error: frontError } = await supabase.storage
+        .from('licenses')
+        .upload(filePathFront, front, { upsert: true })
 
-    const { error: backError } = await supabase.storage
-      .from('licenses')
-      .upload(filePathBack, back, { upsert: true })
+      if (frontError) {
+        console.error('Front upload error:', frontError)
+        setError('Failed to upload front image')
+        setLoading(false)
+        return
+      }
 
-    if (frontError || backError) {
-      setError('Failed to upload license images')
+      const { error: backError } = await supabase.storage
+        .from('licenses')
+        .upload(filePathBack, back, { upsert: true })
+
+      if (backError) {
+        console.error('Back upload error:', backError)
+        setError('Failed to upload back image')
+        setLoading(false)
+        return
+      }
+
+      const frontUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/licenses/${filePathFront}`
+      const backUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/licenses/${filePathBack}`
+
+      const { error: updateError } = await supabase
+        .from('users_extended')
+        .update({ license_front_url: frontUrl, license_back_url: backUrl })
+        .eq('id', userId)
+
+      if (updateError) {
+        console.error('DB update error:', updateError)
+        setError('Failed to save license URLs to your profile')
+        setLoading(false)
+        return
+      }
+
+      router.push(`/register/funding?user_id=${userId}`)
+    } catch (err: any) {
+      console.error('Unexpected error during upload:', err)
+      setError('Unexpected error during upload. Please try again.')
+    } finally {
       setLoading(false)
-      return
     }
-
-    const baseUrl = `https://szzglzcddjrnrtguwjsc.supabase.co/storage/v1/object/public/licenses`
-    const frontUrl = `${baseUrl}/${filePathFront}`
-    const backUrl = `${baseUrl}/${filePathBack}`
-
-    const { error: updateError } = await supabase
-      .from('users_extended')
-      .update({ license_front_url: frontUrl, license_back_url: backUrl })
-      .eq('id', userId)
-
-    if (updateError) {
-      setError('Failed to save license URLs')
-      setLoading(false)
-      return
-    }
-
-    router.push('/register/success')
   }
 
   const skipUpload = () => {
-    router.push('/register/success?skipped=true')
+    router.push('/register/funding?user_id=' + userId + '&skipped=true')
   }
 
   return (
