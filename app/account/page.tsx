@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import toast, { Toaster } from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
-import isEqual from 'lodash.isequal'
+import { isDeepStrictEqual as isEqual } from 'node:util'
 
 export default function AccountPage() {
   const [user, setUser] = useState<any>(null)
