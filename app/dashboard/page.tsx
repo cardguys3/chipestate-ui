@@ -206,7 +206,7 @@ export default function DashboardPage() {
             {userBadges.map(b => (
               <div key={b.id} className="bg-[#172a45] p-4 rounded-lg shadow text-center">
                 <div className="text-2xl mb-2">🎖️</div>
-                <div className="text-sm font-medium">{b.badge_key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</div>
+                <div className="text-sm font-medium">{b.badge_key.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}</div>
                 <div className="text-xs text-gray-400 mt-1">Earned on {new Date(b.earned_at).toLocaleDateString()}</div>
               </div>
             ))}
