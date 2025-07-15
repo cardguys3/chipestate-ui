@@ -1,269 +1,135 @@
+//app dashboard page.tsx
 'use client'
 
-import { useEffect, useState } from 'react'
-import { createBrowserClient } from '@supabase/ssr'
-import { Line } from 'react-chartjs-2'
-import Link from 'next/link'
-import Slider from 'rc-slider'
-import 'rc-slider/assets/index.css'
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Tooltip,
-  ChartOptions
-} from 'chart.js'
+import { useEffect, useState } from 'react';
+import { createBrowserClient } from '@supabase/ssr';
+import { Database } from '@/types/supabase';
+import Link from 'next/link';
+import { Toaster, toast } from 'react-hot-toast';
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip)
-
-const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
-
-const chartOptionsWithDollarYAxis: ChartOptions<'line'> = {
-  scales: {
-    y: {
-      ticks: {
-        callback: function (value) {
-          return `$${value}`
-        },
-        color: 'white'
-      },
-      grid: {
-        color: '#334155'
-      }
-    },
-    x: {
-      ticks: {
-        color: 'white'
-      },
-      grid: {
-        color: '#334155'
-      }
-    }
-  },
-  plugins: {
-    legend: {
-      labels: {
-        color: 'white'
-      }
-    }
-  }
+interface Property {
+  id: string;
+  title: string;
+  location: string;
+  current_value: number;
+  total_chips: number;
+  chips_available: number;
+  occupied: boolean;
+  annual_rent: number;
+  reserve_balance: number;
+  manager_name: string;
 }
 
-export default function DashboardPage() {
-  const [user, setUser] = useState<any>(null)
-  const [firstName, setFirstName] = useState<string>('User')
-  const [chips, setChips] = useState<any[]>([])
-  const [properties, setProperties] = useState<any[]>([])
-  const [earnings, setEarnings] = useState<any[]>([])
-  const [selectedProps, setSelectedProps] = useState<any[]>([])
-  const [selectedChips, setSelectedChips] = useState<any[]>([])
-  const [months, setMonths] = useState<string[]>([])
-  const [monthIndexes, setMonthIndexes] = useState<[number, number]>([0, 0])
-  const [userBadges, setUserBadges] = useState<any[]>([])
+export default function MarketPage() {
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [sortField, setSortField] = useState<string>('current_value');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [newBadges, setNewBadges] = useState<string[]>([]);
 
   useEffect(() => {
-    const loadData = async () => {
-      const {
-        data: { user }
-      } = await supabase.auth.getUser()
-      setUser(user)
-      if (!user) return
+    const fetchData = async () => {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+      const supabase = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey);
 
-      const { data: userData } = await supabase
-        .from('users_extended')
-        .select('first_name')
-        .eq('id', user.id)
-        .single()
+      const { data: propertyData, error } = await supabase
+        .from('properties')
+        .select(`
+          id, title, current_value, total_chips, chips_available, city, state, 
+          occupied, reserve_balance, manager_name
+        `)
+        .order(sortField, { ascending: sortDirection === 'asc' });
 
-      if (userData?.first_name) setFirstName(userData.first_name)
+      if (!error && propertyData) {
+        const propertyIds = propertyData.map((p) => p.id);
 
-      const { data: chipData } = await supabase.from('chips_view').select('*').eq('owner_id', user.id)
-      setChips(chipData || [])
+        const { data: rentData } = await supabase
+          .from('property_transactions')
+          .select('property_id, amount')
+          .eq('type', 'rent')
+          .in('property_id', propertyIds);
 
-      const propIds = [...new Set((chipData || []).map(chip => chip.property_id))]
-      const { data: ownedProps } = await supabase.from('properties').select('*').in('id', propIds)
-      setProperties(ownedProps || [])
+        const rentMap: Record<string, number> = {};
+        rentData?.forEach((r) => {
+          rentMap[r.property_id] = (rentMap[r.property_id] || 0) + Number(r.amount);
+        });
 
-      const { data: earningsData } = await supabase
-        .from('chip_earnings_monthly')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('month', { ascending: true })
+        const transformed = propertyData.map((p) => ({
+          id: p.id,
+          title: p.title,
+          current_value: p.current_value || 0,
+          total_chips: p.total_chips,
+          chips_available: p.chips_available,
+          occupied: p.occupied || false,
+          annual_rent: rentMap[p.id] || 0,
+          reserve_balance: p.reserve_balance || 0,
+          manager_name: p.manager_name || '',
+          location: `${p.city || ''}, ${p.state || ''}`.replace(/^, |, $/g, '').trim(),
+        }));
 
-      setEarnings(earningsData || [])
-      const uniqueMonths = [...new Set((earningsData || []).map((e) => e.month))]
-      setMonths(uniqueMonths)
-      if (uniqueMonths.length >= 2) setMonthIndexes([0, uniqueMonths.length - 1])
-
-      const chipOptions = [...new Set((chipData || []).map(c => c.id))]
-      setSelectedChips(chipOptions)
-
-      const propOptions = [...new Set((chipData || []).map(c => c.property_id))]
-      setSelectedProps(propOptions)
-
-      const { data: badges } = await supabase
-        .from('user_badges')
-        .select('*')
-        .eq('user_id', user.id)
-
-      setUserBadges(badges || [])
-    }
-    loadData()
-  }, [])
-
-  const getColor = (i: number) => {
-    const colors = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#6366F1', '#EC4899', '#14B8A6', '#F97316']
-    return colors[i % colors.length]
-  }
-
-  const filteredEarnings = earnings.filter((e) => {
-    const inRange = months.indexOf(e.month) >= monthIndexes[0] && months.indexOf(e.month) <= monthIndexes[1]
-    const inProp = selectedProps.length === 0 || selectedProps.includes(e.property_id)
-    const inChip = selectedChips.length === 0 || selectedChips.includes(e.chip_id)
-    return inRange && inProp && inChip
-  })
-
-  const netWorth = filteredEarnings.reduce((sum, e) => sum + Number(e.total || 0), 0)
-  const totalPayout = filteredEarnings.reduce((sum, e) => sum + Number(e.total || 0), 0)
-  const totalEarnings = earnings.reduce((sum, e) => sum + Number(e.total || 0), 0)
-
-  const buildChartData = (items: any[], key: 'chip_id' | 'property_id') => {
-    const grouped = items.reduce((acc, item) => {
-      const id = item[key]
-      if (!acc[id]) acc[id] = []
-      acc[id].push(item)
-      return acc
-    }, {} as Record<string, any[]>)
-
-    return {
-      labels: months.slice(monthIndexes[0], monthIndexes[1] + 1),
-      datasets: Object.entries(grouped).map(([id, data], i) => {
-        return {
-          label: key === 'chip_id'
-            ? `Chip ${chips.find(c => c.id === id)?.serial || id.slice(0, 6)}`
-            : properties.find(p => p.id === id)?.title || `Property ${id.slice(0, 6)}`,
-          data: months.slice(monthIndexes[0], monthIndexes[1] + 1).map((m) => {
-            const match = (data as any[]).find((d) => d.month === m)
-            return match ? Number(match.total || 0) : 0
-          }),
-          borderColor: getColor(i),
-          backgroundColor: getColor(i),
-          fill: false,
-          pointRadius: 0,
-          pointHoverRadius: 0
-        }
-      })
-    }
-  }
-
-  const chipChartData = buildChartData(filteredEarnings, 'chip_id')
-  const propertyChartData = buildChartData(filteredEarnings, 'property_id')
-
-  const monthlyEarningsData = {
-    labels: months.slice(monthIndexes[0], monthIndexes[1] + 1),
-    datasets: [
-      {
-        label: 'Total Monthly Earnings',
-        data: months.slice(monthIndexes[0], monthIndexes[1] + 1).map(month =>
-          filteredEarnings
-            .filter(e => e.month === month)
-            .reduce((sum, e) => sum + Number(e.total || 0), 0)
-        ),
-        borderColor: '#10B981',
-        backgroundColor: '#10B981',
-        fill: false,
-        pointRadius: 2,
-        pointHoverRadius: 4
+        setProperties(transformed);
       }
-    ]
-  }
+    };
+
+    fetchData();
+  }, [sortField, sortDirection]);
+
+  const toggleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const formatCurrency = (value: number) => `$${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+
+  useEffect(() => {
+    if (newBadges.length > 0) {
+      newBadges.forEach(badge => {
+        toast.success(`🎉 Congratulations! You earned the "${badge.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}" badge!`);
+      });
+      setNewBadges([]);
+    }
+  }, [newBadges]);
 
   return (
-    <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-        <h1 className="text-3xl font-bold mb-4 md:mb-0">Welcome, {firstName}!</h1>
-        <div className="flex gap-2 items-center">
-          <span className="text-lg font-semibold">🔗 Quick Access</span>
-          {[{ label: 'Account', href: '/account' }, { label: 'Add Funds', href: '/account/add-funds' }, { label: 'Cash Out', href: '/account/cash-out' }].map(({ label, href }) => (
-            <Link key={label} href={href}>
-              <button className="bg-gray-700 hover:border-emerald-500 border border-transparent px-3 py-1 rounded-xl transition-colors duration-200">{label}</button>
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      <div className="border border-white/10 rounded-xl p-5 mb-8">
-        <h2 className="text-xl font-semibold mb-3">🏅 Your Badges</h2>
-        {userBadges.length === 0 ? (
-          <p className="text-gray-400 text-sm">No badges yet... start earning by buying chips, browsing, or voting on property decisions!</p>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {userBadges.map(b => (
-              <div key={b.id} className="bg-[#172a45] p-4 rounded-lg shadow text-center">
-                <div className="text-2xl mb-2">🎖️</div>
-                <div className="text-sm font-medium">{b.badge_key.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}</div>
-                <div className="text-xs text-gray-400 mt-1">Earned on {new Date(b.earned_at).toLocaleDateString()}</div>
-              </div>
+    <main className="min-h-screen bg-[#0B1D33] text-white p-6">
+      <Toaster position="top-right" />
+      <h1 className="text-2xl font-bold mb-6">ChipEstate Market</h1>
+      <div className="overflow-x-auto">
+        <table className="w-full table-auto text-sm border-collapse">
+          <thead className="bg-white/5">
+            <tr className="text-left border-b border-blue-800">
+              <th className="p-3 cursor-pointer" onClick={() => toggleSort('title')}>Property</th>
+              <th className="p-3 cursor-pointer" onClick={() => toggleSort('location')}>Location</th>
+              <th className="p-3 cursor-pointer" onClick={() => toggleSort('current_value')}>Property Value</th>
+              <th className="p-3">Chips Sold</th>
+              <th className="p-3">Occupancy</th>
+              <th className="p-3">Annual Rent</th>
+              <th className="p-3">Manager</th>
+              <th className="p-3">Reserve</th>
+            </tr>
+          </thead>
+          <tbody>
+            {properties.map((p) => (
+              <tr key={p.id} className="border-b border-blue-900 hover:bg-blue-900/30">
+                <td className="p-3">
+                  <Link href={`/market/${p.id}`} className="text-blue-400 hover:underline">{p.title}</Link>
+                </td>
+                <td className="p-3">{p.location}</td>
+                <td className="p-3">{formatCurrency(p.current_value)}</td>
+                <td className="p-3">{p.total_chips - p.chips_available}/{p.total_chips}</td>
+                <td className="p-3">{p.occupied ? '✅' : '❌'}</td>
+                <td className="p-3">{formatCurrency(p.annual_rent)}</td>
+                <td className="p-3">{p.manager_name || 'Unknown'}</td>
+                <td className="p-3">{formatCurrency(p.reserve_balance)}</td>
+              </tr>
             ))}
-          </div>
-        )}
-      </div>
-
-      {/* Metric Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-        <div className="bg-[#172a45] p-4 rounded-lg shadow">
-          <div className="text-lg font-medium">📈 Net Worth</div>
-          <div className="text-2xl font-bold text-emerald-400">${netWorth.toFixed(2)}</div>
-        </div>
-        <div className="bg-[#172a45] p-4 rounded-lg shadow">
-          <div className="text-lg font-medium">💸 Total Payout</div>
-          <div className="text-2xl font-bold text-emerald-400">${totalPayout.toFixed(2)}</div>
-        </div>
-        <div className="bg-[#172a45] p-4 rounded-lg shadow">
-          <div className="text-lg font-medium">🏦 Total Earnings</div>
-          <div className="text-2xl font-bold text-emerald-400">${totalEarnings.toFixed(2)}</div>
-        </div>
-      </div>
-
-      {/* Slider Filter */}
-      <div className="mb-8">
-        <label className="block text-sm font-medium text-white mb-2">Filter by Date Range:</label>
-        <Slider
-          range
-          min={0}
-          max={months.length - 1}
-          value={monthIndexes}
-          onChange={(range) => setMonthIndexes(range as [number, number])}
-          trackStyle={[{ backgroundColor: '#10B981' }]}
-          handleStyle={[{ borderColor: '#10B981' }, { borderColor: '#10B981' }]}
-          railStyle={{ backgroundColor: '#334155' }}
-        />
-        <div className="text-sm mt-2">
-          {months[monthIndexes[0]]} → {months[monthIndexes[1]]}
-        </div>
-      </div>
-
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-[#172a45] p-4 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-2">Chip Earnings</h3>
-          <Line data={chipChartData} options={chartOptionsWithDollarYAxis} />
-        </div>
-        <div className="bg-[#172a45] p-4 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-2">Property Earnings</h3>
-          <Line data={propertyChartData} options={chartOptionsWithDollarYAxis} />
-        </div>
-      </div>
-
-      <div className="bg-[#172a45] mt-6 p-4 rounded-lg shadow">
-        <h3 className="text-lg font-semibold mb-2">Monthly Earnings Overview</h3>
-        <Line data={monthlyEarningsData} options={chartOptionsWithDollarYAxis} />
+          </tbody>
+        </table>
       </div>
     </main>
-  )
+  );
 }
