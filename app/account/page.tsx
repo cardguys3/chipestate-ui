@@ -1,10 +1,4 @@
 // this is the user's account page
-# Rebuild the account page with:
-# - All editable fields (except driver's license and DOB)
-# - Removed edit button
-# - Working password toggle (not editable, just visibility toggle)
-# - New footer message
-# - Removed editMode logic entirely (save/cancel based on change detection)
 
 'use client'
 
