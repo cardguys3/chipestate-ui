@@ -71,14 +71,14 @@ export default async function PropertyDetailsPage({ params }: Props) {
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm mb-6">
-          {[ 
+          {[
             ['Current Price', property.current_value],
             ['Purchase Price', property.purchase_price],
             ['Cap Rate', property.cap_rate ? `${property.cap_rate}%` : 'N/A'],
             [
               'Operating Reserve',
               `$${property.reserve_balance?.toLocaleString()} (${Math.round(
-                ((property.reserve_balance || 0) / (property.current_value || 1)) * 100,
+                ((property.reserve_balance || 0) / (property.current_value || 1)) * 100
               )}%)`,
             ],
             ['Chips Available', property.chips_available],
