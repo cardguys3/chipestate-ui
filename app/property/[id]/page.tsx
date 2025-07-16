@@ -4,7 +4,6 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import type { Metadata } from 'next'
-import type { InferGetServerSidePropsType } from 'next'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,13 +11,11 @@ export const metadata: Metadata = {
   title: 'Property Details | ChipEstate',
 }
 
-type Props = {
-  params: {
-    id: string
-  }
+interface PageProps {
+  params: { id: string }
 }
 
-export default async function PropertyDetailsPage({ params }: Props) {
+export default async function PropertyDetailsPage({ params }: PageProps) {
   const supabase = createServerComponentClient({ cookies: cookies() })
 
   const {
@@ -73,7 +70,7 @@ export default async function PropertyDetailsPage({ params }: Props) {
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm mb-6">
-          {[
+          {[ 
             ['Current Price', property.current_value],
             ['Purchase Price', property.purchase_price],
             ['Cap Rate', property.cap_rate ? `${property.cap_rate}%` : 'N/A'],
