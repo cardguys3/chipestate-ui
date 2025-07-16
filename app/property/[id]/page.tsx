@@ -5,6 +5,9 @@ import { redirect } from 'next/navigation'
 import { createServerClient } from '@supabase/ssr'
 import { Metadata } from 'next'
 
+// ✅ Ensures this page is treated as dynamic in Next.js 15+
+export const dynamic = 'force-dynamic'
+
 interface PageProps {
   params: {
     id: string
