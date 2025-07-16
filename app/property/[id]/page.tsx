@@ -11,13 +11,13 @@ export const metadata: Metadata = {
   title: 'Property Details | ChipEstate',
 }
 
-interface PropertyPageProps {
+type Props = {
   params: {
     id: string
   }
 }
 
-export default async function PropertyDetailsPage({ params }: PropertyPageProps) {
+export default async function PropertyDetailsPage({ params }: Props) {
   const supabase = createServerComponentClient({ cookies: cookies() })
 
   const {
