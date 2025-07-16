@@ -1,8 +1,10 @@
 // app/property/[id]/page.tsx
 
+'use server'
+
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { createServerClient } from '@supabase/ssr'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
@@ -11,14 +13,8 @@ export const metadata: Metadata = {
   title: 'Property Details | ChipEstate',
 }
 
-export default async function PropertyDetailsPage(props: any) {
-  const { id } = props.params
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: cookies() } // ✅ FIXED: call cookies()
-  )
+export default async function PropertyDetailsPage({ params }: { params: { id: string } }) {
+  const supabase = createServerComponentClient({ cookies })
 
   const {
     data: { session },
@@ -31,7 +27,7 @@ export default async function PropertyDetailsPage(props: any) {
   const { data: property, error } = await supabase
     .from('properties')
     .select('*')
-    .eq('id', id)
+    .eq('id', params.id)
     .single()
 
   if (error || !property) {
