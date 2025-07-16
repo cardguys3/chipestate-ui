@@ -1,13 +1,12 @@
-// File: /app/admin/voting/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/button";
+import { Input } from "@/components/input";
+import { Textarea } from "@/components/textarea";
+import { Label } from "@/components/label";
 
 export default function AdminVotingPage() {
   const [votes, setVotes] = useState([]);
@@ -36,12 +35,19 @@ export default function AdminVotingPage() {
     const { data: session } = await supabase.auth.getSession();
     const userId = session?.data.session?.user?.id;
 
-    const { data, error } = await supabase.from("votes").insert({
+    const { error } = await supabase.from("votes").insert({
       ...newVote,
       created_by: userId
     });
     if (!error) {
-      setNewVote({ title: "", description: "", category: "", threshold_type: "simple", start_date: "", end_date: "" });
+      setNewVote({
+        title: "",
+        description: "",
+        category: "",
+        threshold_type: "simple",
+        start_date: "",
+        end_date: ""
+      });
       fetchVotes();
     }
   }
@@ -55,17 +61,26 @@ export default function AdminVotingPage() {
 
         <div>
           <Label>Title</Label>
-          <Input value={newVote.title} onChange={e => setNewVote({ ...newVote, title: e.target.value })} />
+          <Input
+            value={newVote.title}
+            onChange={e => setNewVote({ ...newVote, title: e.target.value })}
+          />
         </div>
 
         <div>
           <Label>Description</Label>
-          <Textarea value={newVote.description} onChange={e => setNewVote({ ...newVote, description: e.target.value })} />
+          <Textarea
+            value={newVote.description}
+            onChange={e => setNewVote({ ...newVote, description: e.target.value })}
+          />
         </div>
 
         <div>
           <Label>Category</Label>
-          <Input value={newVote.category} onChange={e => setNewVote({ ...newVote, category: e.target.value })} />
+          <Input
+            value={newVote.category}
+            onChange={e => setNewVote({ ...newVote, category: e.target.value })}
+          />
         </div>
 
         <div>
@@ -85,25 +100,40 @@ export default function AdminVotingPage() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Label>Start Date</Label>
-            <Input type="datetime-local" value={newVote.start_date} onChange={e => setNewVote({ ...newVote, start_date: e.target.value })} />
+            <Input
+              type="datetime-local"
+              value={newVote.start_date}
+              onChange={e => setNewVote({ ...newVote, start_date: e.target.value })}
+            />
           </div>
           <div>
             <Label>End Date</Label>
-            <Input type="datetime-local" value={newVote.end_date} onChange={e => setNewVote({ ...newVote, end_date: e.target.value })} />
+            <Input
+              type="datetime-local"
+              value={newVote.end_date}
+              onChange={e => setNewVote({ ...newVote, end_date: e.target.value })}
+            />
           </div>
         </div>
 
-        <Button className="mt-4" onClick={createVote}>Create Vote</Button>
+        <Button className="mt-4" onClick={createVote}>
+          Create Vote
+        </Button>
       </div>
 
       <h2 className="text-xl font-semibold mb-2">All Votes</h2>
       <ul className="space-y-3">
         {votes.map(vote => (
           <li key={vote.id} className="border p-4 rounded-lg">
-            <Link href={`/admin/voting/${vote.id}`} className="text-blue-500 hover:underline font-semibold">
+            <Link
+              href={`/admin/voting/${vote.id}`}
+              className="text-blue-500 hover:underline font-semibold"
+            >
               {vote.title}
             </Link>
-            <p className="text-sm text-gray-500">{vote.category} – {vote.is_open ? "Open" : "Closed"}</p>
+            <p className="text-sm text-gray-500">
+              {vote.category} – {vote.is_open ? "Open" : "Closed"}
+            </p>
           </li>
         ))}
       </ul>

@@ -4,13 +4,13 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/button";  // ✅ FIXED: matches your structure
+import { Input } from "@/components/input";    // ✅ FIXED: matches your structure
 
 export default function VoteDetailPage() {
   const { id } = useParams();
-  const [vote, setVote] = useState(null);
-  const [options, setOptions] = useState([]);
+  const [vote, setVote] = useState<any>(null);
+  const [options, setOptions] = useState<any[]>([]);
   const [newOption, setNewOption] = useState("");
 
   useEffect(() => {
@@ -24,12 +24,18 @@ export default function VoteDetailPage() {
   }
 
   async function fetchOptions() {
-    const { data } = await supabase.from("vote_options").select("*").eq("vote_id", id).order("display_order");
+    const { data } = await supabase
+      .from("vote_options")
+      .select("*")
+      .eq("vote_id", id)
+      .order("display_order");
     setOptions(data || []);
   }
 
   async function addOption() {
-    await supabase.from("vote_options").insert({ vote_id: id, label: newOption, display_order: options.length + 1 });
+    await supabase
+      .from("vote_options")
+      .insert({ vote_id: id, label: newOption, display_order: options.length + 1 });
     setNewOption("");
     fetchOptions();
   }
@@ -49,12 +55,14 @@ export default function VoteDetailPage() {
       <p className="text-sm mb-4">Status: {vote.is_open ? "Open" : "Closed"}</p>
 
       {vote.is_open && (
-        <Button variant="destructive" onClick={closeVote} className="mb-6">Close Vote</Button>
+        <Button variant="destructive" onClick={closeVote} className="mb-6">
+          Close Vote
+        </Button>
       )}
 
       <h2 className="text-lg font-semibold mb-2">Vote Options</h2>
       <ul className="list-disc pl-6 mb-4">
-        {options.map(opt => (
+        {options.map((opt) => (
           <li key={opt.id}>{opt.label}</li>
         ))}
       </ul>
@@ -63,7 +71,7 @@ export default function VoteDetailPage() {
         <Input
           placeholder="Add new option"
           value={newOption}
-          onChange={e => setNewOption(e.target.value)}
+          onChange={(e) => setNewOption(e.target.value)}
         />
         <Button onClick={addOption}>Add Option</Button>
       </div>
