@@ -3,7 +3,7 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { Metadata } from 'next'
+import { type Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,7 +11,11 @@ export const metadata: Metadata = {
   title: 'Property Details | ChipEstate',
 }
 
-export default async function PropertyDetailsPage({ params }: { params: { id: string } }) {
+interface PropertyDetailsPageProps {
+  params: { id: string }
+}
+
+export default async function PropertyDetailsPage({ params }: PropertyDetailsPageProps) {
   const supabase = createServerComponentClient({ cookies })
 
   const {
@@ -66,7 +70,7 @@ export default async function PropertyDetailsPage({ params }: { params: { id: st
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm mb-6">
-          {[
+          {[ 
             ['Current Price', property.current_value],
             ['Purchase Price', property.purchase_price],
             ['Cap Rate', property.cap_rate ? `${property.cap_rate}%` : 'N/A'],
@@ -74,7 +78,7 @@ export default async function PropertyDetailsPage({ params }: { params: { id: st
             ['Chips Available', property.chips_available],
             ['Total Chips', property.total_chips],
             ['Market Cap', property.market_cap ? `$${property.market_cap.toLocaleString()}` : 'N/A'],
-            ['Status', property.is_active ? 'Active' : 'Inactive']
+            ['Status', property.is_active ? 'Active' : 'Inactive'],
           ].map(([label, value], i) => (
             <div key={i}>
               <p className="text-gray-400">{label}</p>
