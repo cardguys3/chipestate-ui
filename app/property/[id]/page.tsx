@@ -1,46 +1,33 @@
-'use client'
+// app/property/[id]/page.tsx
 
-import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import { createBrowserClient } from '@supabase/ssr'
+import { createServerClient } from '@/utils/supabase/server'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 
-const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+export default async function PropertyDetailsPage({ params }: { params: { id: string } }) {
+  const supabase = createServerClient(cookies())
 
-export default function PropertyDetailsPage() {
-  const { id } = useParams()
-  const router = useRouter()
-  const [property, setProperty] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [mainImage, setMainImage] = useState<string>('')
-  const [chipQty, setChipQty] = useState(1)
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
 
-  useEffect(() => {
-    const fetchProperty = async () => {
-      const { data, error } = await supabase
-        .from('properties')
-        .select('*')
-        .eq('id', id)
-        .single()
+  if (!session) {
+    redirect('/login')
+  }
 
-      if (error) {
-        console.error('Error loading property:', error.message)
-      } else {
-        setProperty(data)
-        if (data.image_urls?.length > 0) {
-          setMainImage(resolveImageUrl(data.image_urls[0]))
-        } else if (data.image_url) {
-          setMainImage(resolveImageUrl(data.image_url))
-        }
-      }
+  const { data: property, error } = await supabase
+    .from('properties')
+    .select('*')
+    .eq('id', params.id)
+    .single()
 
-      setLoading(false)
-    }
-
-    fetchProperty()
-  }, [id])
+  if (error || !property) {
+    return (
+      <main className="min-h-screen bg-[#0B1D33] text-white p-8">
+        <p>Property not found.</p>
+      </main>
+    )
+  }
 
   const resolveImageUrl = (url: string): string => {
     if (!url) return ''
@@ -48,21 +35,11 @@ export default function PropertyDetailsPage() {
     return `https://ajburehyunbvpuhnyjbo.supabase.co/storage/v1/object/public/property-images/${url}`
   }
 
-  const handleCheckout = () => {
-    router.push(`/checkout/${id}?qty=${chipQty}`)
-  }
-
-  if (loading) {
-    return <main className="min-h-screen bg-[#0B1D33] text-white p-8">Loading...</main>
-  }
-
-  if (!property) {
-    return (
-      <main className="min-h-screen bg-[#0B1D33] text-white p-8">
-        <p>Property not found.</p>
-      </main>
-    )
-  }
+  const mainImage = property.image_urls?.length
+    ? resolveImageUrl(property.image_urls[0])
+    : property.image_url
+      ? resolveImageUrl(property.image_url)
+      : ''
 
   return (
     <main className="min-h-screen bg-[#0B1D33] text-white p-6">
@@ -79,24 +56,6 @@ export default function PropertyDetailsPage() {
         ) : (
           <div className="h-80 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 mb-4">
             No image available
-          </div>
-        )}
-
-        {/* Thumbnails */}
-        {property.image_urls?.length > 0 && (
-          <div className="flex gap-3 mb-6 overflow-x-auto">
-            {property.image_urls.map((url: string, index: number) => {
-              const resolved = resolveImageUrl(url)
-              return (
-                <img
-                  key={index}
-                  src={resolved}
-                  alt={`Thumbnail ${index + 1}`}
-                  className={`rounded cursor-pointer border w-[120px] h-[80px] object-cover ${resolved === mainImage ? 'border-emerald-400' : 'border-transparent'}`}
-                  onClick={() => setMainImage(resolved)}
-                />
-              )
-            })}
           </div>
         )}
 
@@ -148,29 +107,26 @@ export default function PropertyDetailsPage() {
         {/* Buy Chips Section */}
         <div className="border-t border-gray-700 pt-6 mt-6">
           <h2 className="text-2xl font-bold mb-4">Buy Chips</h2>
-          <div className="flex items-center gap-4 mb-4">
+          <form action={`/checkout/${property.id}`} method="GET" className="flex items-center gap-4 mb-4">
             <label htmlFor="chipQty" className="text-white text-sm">
               Chips to Buy:
             </label>
             <input
               id="chipQty"
+              name="qty"
               type="number"
+              defaultValue={1}
               min={1}
               max={property.chips_available}
-              value={chipQty}
-              onChange={(e) => setChipQty(Math.min(property.chips_available, Math.max(1, Number(e.target.value))))}
               className="w-24 p-2 rounded bg-gray-800 border border-gray-600 text-white"
             />
-            <span className="text-sm text-gray-400">
-  (${(chipQty * 50).toLocaleString()} total)
-</span>
-          </div>
-          <button
-            onClick={handleCheckout}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-xl transition"
-          >
-            Continue to Checkout
-          </button>
+            <button
+              type="submit"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-xl transition"
+            >
+              Continue to Checkout
+            </button>
+          </form>
         </div>
       </div>
     </main>
