@@ -5,20 +5,18 @@ import { redirect } from 'next/navigation'
 import { createServerClient } from '@supabase/ssr'
 import { Metadata } from 'next'
 
-// ✅ Ensures this page is treated as dynamic in Next.js 15+
+// ✅ Required for dynamic data fetching (e.g., Supabase session)
 export const dynamic = 'force-dynamic'
-
-interface PageProps {
-  params: {
-    id: string
-  }
-}
 
 export const metadata: Metadata = {
   title: 'Property Details | ChipEstate',
 }
 
-export default async function PropertyDetailsPage({ params }: PageProps) {
+export default async function PropertyDetailsPage({
+  params,
+}: {
+  params: { id: string }
+}) {
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -56,8 +54,8 @@ export default async function PropertyDetailsPage({ params }: PageProps) {
   const mainImage = property.image_urls?.length
     ? resolveImageUrl(property.image_urls[0])
     : property.image_url
-      ? resolveImageUrl(property.image_url)
-      : ''
+    ? resolveImageUrl(property.image_url)
+    : ''
 
   return (
     <main className="min-h-screen bg-[#0B1D33] text-white p-6">
