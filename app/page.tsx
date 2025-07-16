@@ -1,5 +1,3 @@
-//app.page.tsx this is the landing page for chipestate
-'use client'
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -18,29 +16,28 @@ export default function Home() {
   const [user, setUser] = useState<any>(null)
 
   useEffect(() => {
-    async function fetchProperties() {
-      const { data, error } = await supabase
-        .from('properties')
-        .select('*')
-        .eq('is_active', true)
-        .eq('is_hidden', false)
-        .limit(9)
+    async function fetchData() {
+      const [{ data: props, error: propsError }, { data: userData }] = await Promise.all([
+        supabase
+          .from('properties')
+          .select('*')
+          .eq('is_active', true)
+          .eq('is_hidden', false)
+          .limit(9),
+        supabase.auth.getUser(),
+      ])
 
-      if (error) {
-        console.error('Error loading properties:', error.message)
+      if (propsError) {
+        console.error('Error loading properties:', propsError.message)
       } else {
-        setProperties(data || [])
+        setProperties(props || [])
       }
+
+      setUser(userData?.user || null)
       setLoading(false)
     }
 
-    async function fetchUser() {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
-    }
-
-    fetchProperties()
-    fetchUser()
+    fetchData()
   }, [])
 
   const getImageUrl = (url: string | null) => {
