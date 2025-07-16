@@ -22,7 +22,6 @@ export default async function PropertyDetailsPage({ params }: Props) {
     data: { session },
   } = await supabase.auth.getSession()
 
-  // ✅ Block guest access
   if (!session) {
     redirect('/login')
   }
