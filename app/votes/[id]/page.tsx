@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/button";
 
 export default function VoteDetailPage() {
   const { id } = useParams();
