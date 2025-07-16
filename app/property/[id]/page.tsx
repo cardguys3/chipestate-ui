@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 }
 
 export default async function PropertyDetailsPage({ params }: PageProps<{ id: string }>) {
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = createServerComponentClient({ cookies: cookies() })
 
   const {
     data: { session },
