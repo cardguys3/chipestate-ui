@@ -5,18 +5,21 @@ import { redirect } from 'next/navigation'
 import { createServerClient } from '@supabase/ssr'
 import { Metadata } from 'next'
 
-// ✅ Required for dynamic data fetching (e.g., Supabase session)
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'Property Details | ChipEstate',
 }
 
-export default async function PropertyDetailsPage({
-  params,
-}: {
-  params: { id: string }
-}) {
+type Props = {
+  params: {
+    id: string
+  }
+}
+
+export default async function PropertyDetailsPage(props: Props) {
+  const { id } = props.params
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -34,7 +37,7 @@ export default async function PropertyDetailsPage({
   const { data: property, error } = await supabase
     .from('properties')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (error || !property) {
@@ -75,47 +78,24 @@ export default async function PropertyDetailsPage({
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm mb-6">
-          <div>
-            <p className="text-gray-400">Current Price</p>
-            <p className="text-white font-medium">${property.current_value?.toLocaleString()}</p>
-          </div>
-          <div>
-            <p className="text-gray-400">Purchase Price</p>
-            <p className="text-white font-medium">${property.purchase_price?.toLocaleString()}</p>
-          </div>
-          <div>
-            <p className="text-gray-400">Cap Rate</p>
-            <p className="text-white font-medium">{property.cap_rate || 'N/A'}%</p>
-          </div>
-          <div>
-            <p className="text-gray-400">Operating Reserve</p>
-            <p className="text-white font-medium">
-              ${property.reserve_balance?.toLocaleString()} (
-              {Math.round(
-                ((property.reserve_balance || 0) / (property.current_value || 1)) * 100
-              )}%)
-            </p>
-          </div>
-          <div>
-            <p className="text-gray-400">Chips Available</p>
-            <p className="text-white font-medium">{property.chips_available}</p>
-          </div>
-          <div>
-            <p className="text-gray-400">Total Chips</p>
-            <p className="text-white font-medium">{property.total_chips}</p>
-          </div>
-          <div>
-            <p className="text-gray-400">Market Cap</p>
-            <p className="text-white font-medium">
-              ${property.market_cap ? property.market_cap.toLocaleString() : 'N/A'}
-            </p>
-          </div>
-          <div>
-            <p className="text-gray-400">Status</p>
-            <p className={`font-medium ${property.is_active ? 'text-green-400' : 'text-red-400'}`}>
-              {property.is_active ? 'Active' : 'Inactive'}
-            </p>
-          </div>
+          {/* Property details grid */}
+          {[
+            ['Current Price', property.current_value],
+            ['Purchase Price', property.purchase_price],
+            ['Cap Rate', property.cap_rate ? `${property.cap_rate}%` : 'N/A'],
+            ['Operating Reserve', `$${property.reserve_balance?.toLocaleString()} (${Math.round(((property.reserve_balance || 0) / (property.current_value || 1)) * 100)}%)`],
+            ['Chips Available', property.chips_available],
+            ['Total Chips', property.total_chips],
+            ['Market Cap', property.market_cap ? `$${property.market_cap.toLocaleString()}` : 'N/A'],
+            ['Status', property.is_active ? 'Active' : 'Inactive']
+          ].map(([label, value], i) => (
+            <div key={i}>
+              <p className="text-gray-400">{label}</p>
+              <p className={`text-white font-medium ${value === 'Inactive' ? 'text-red-400' : value === 'Active' ? 'text-green-400' : ''}`}>
+                {value}
+              </p>
+            </div>
+          ))}
         </div>
 
         <div className="border-t border-gray-700 pt-6 mt-6">
