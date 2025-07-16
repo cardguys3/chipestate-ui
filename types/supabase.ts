@@ -117,6 +117,71 @@ export type Database = {
           },
         ]
       }
+      chip_listings: {
+        Row: {
+          asking_price: number
+          buyer_id: string | null
+          chip_id: string
+          id: string
+          listed_at: string | null
+          notes: string | null
+          seller_id: string
+          sold_at: string | null
+          status: string
+        }
+        Insert: {
+          asking_price: number
+          buyer_id?: string | null
+          chip_id: string
+          id?: string
+          listed_at?: string | null
+          notes?: string | null
+          seller_id: string
+          sold_at?: string | null
+          status?: string
+        }
+        Update: {
+          asking_price?: number
+          buyer_id?: string | null
+          chip_id?: string
+          id?: string
+          listed_at?: string | null
+          notes?: string | null
+          seller_id?: string
+          sold_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chip_listings_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "users_extended"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chip_listings_chip_id_fkey"
+            columns: ["chip_id"]
+            isOneToOne: false
+            referencedRelation: "chips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chip_listings_chip_id_fkey"
+            columns: ["chip_id"]
+            isOneToOne: false
+            referencedRelation: "chips_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chip_listings_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "users_extended"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chip_ownerships: {
         Row: {
           acquired_at: string | null
