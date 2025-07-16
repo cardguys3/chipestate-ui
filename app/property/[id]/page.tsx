@@ -2,7 +2,6 @@
 
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import type { Metadata } from 'next'
 
@@ -23,6 +22,7 @@ export default async function PropertyDetailsPage({ params }: Props) {
     data: { session },
   } = await supabase.auth.getSession()
 
+  // ✅ Block guest access
   if (!session) {
     redirect('/login')
   }
