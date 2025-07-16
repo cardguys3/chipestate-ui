@@ -1,12 +1,12 @@
 //App-Market Page
 
-
 'use client';
 
 import { useEffect, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import { Database } from '@/types/supabase';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface Property {
   id: string;
@@ -27,12 +27,22 @@ export default function MarketPage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [sortField, setSortField] = useState<keyof Property>('current_value');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
       const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
       const supabase = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey);
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.push('/login');
+        return;
+      }
 
       const { data: propertyData, error } = await supabase
         .from('properties')
@@ -79,7 +89,20 @@ export default function MarketPage() {
           };
         });
 
-        setProperties(transformed);
+        const sorted = [...transformed].sort((a, b) => {
+          const aValue = a[sortField];
+          const bValue = b[sortField];
+          if (typeof aValue === 'string' && typeof bValue === 'string') {
+            return sortDirection === 'asc'
+              ? aValue.localeCompare(bValue)
+              : bValue.localeCompare(aValue);
+          }
+          return sortDirection === 'asc'
+            ? Number(aValue) - Number(bValue)
+            : Number(bValue) - Number(aValue);
+        });
+
+        setProperties(sorted);
       }
     };
 
@@ -97,7 +120,7 @@ export default function MarketPage() {
 
   const formatCurrency = (value: number) => `$${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
   const formatPercent = (value: number) => `${value.toFixed(1)}%`;
-  const sortArrow = (field: string) =>
+  const sortArrow = (field: keyof Property) =>
     sortField === field ? (sortDirection === 'asc' ? '↑' : '↓') : '';
 
   return (
@@ -114,7 +137,7 @@ export default function MarketPage() {
               <th className="p-3 cursor-pointer" onClick={() => toggleSort('occupied')}>Occupied {sortArrow('occupied')}</th>
               <th className="p-3 cursor-pointer" onClick={() => toggleSort('annual_rent')}>Annual Rent {sortArrow('annual_rent')}</th>
               <th className="p-3 cursor-pointer" onClick={() => toggleSort('roi')}>ROI {sortArrow('roi')}</th>
-              <th className="p-3 cursor-pointer" onClick={() => toggleSort('reserve_percent')}>Reserve % {sortArrow('reserve_percent')}</th>
+              <th className="p-3 cursor-pointer" onClick={() => toggleSort('reserve_percent')}>Reserve {sortArrow('reserve_percent')}</th>
               <th className="p-3 cursor-pointer" onClick={() => toggleSort('manager_name')}>Manager {sortArrow('manager_name')}</th>
             </tr>
           </thead>
