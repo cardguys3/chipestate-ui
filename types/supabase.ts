@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      badge_activity_log: {
+        Row: {
+          badge_key: string
+          created_at: string | null
+          id: string
+          triggered_by: string | null
+          user_id: string | null
+        }
+        Insert: {
+          badge_key: string
+          created_at?: string | null
+          id?: string
+          triggered_by?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          badge_key?: string
+          created_at?: string | null
+          id?: string
+          triggered_by?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      badges_catalog: {
+        Row: {
+          category: string | null
+          description: string | null
+          icon_url: string | null
+          key: string
+          name: string
+          points: number | null
+        }
+        Insert: {
+          category?: string | null
+          description?: string | null
+          icon_url?: string | null
+          key: string
+          name: string
+          points?: number | null
+        }
+        Update: {
+          category?: string | null
+          description?: string | null
+          icon_url?: string | null
+          key?: string
+          name?: string
+          points?: number | null
+        }
+        Relationships: []
+      }
       chip_earnings: {
         Row: {
           amount: number
@@ -218,6 +269,7 @@ export type Database = {
         Row: {
           address_line1: string | null
           address_line2: string | null
+          avg_monthly_chip_earning: number | null
           chips_available: number
           city: string | null
           created_at: string | null
@@ -228,10 +280,13 @@ export type Database = {
           is_active: boolean | null
           is_hidden: boolean | null
           manager_name: string | null
+          occupancy_rate: number | null
           occupied: boolean | null
+          projected_return: number | null
           property_manager_id: string | null
           property_type: string | null
           purchase_price: number | null
+          rental_yield: number | null
           reserve_balance: number | null
           state: string | null
           sub_type: string | null
@@ -243,6 +298,7 @@ export type Database = {
         Insert: {
           address_line1?: string | null
           address_line2?: string | null
+          avg_monthly_chip_earning?: number | null
           chips_available: number
           city?: string | null
           created_at?: string | null
@@ -253,10 +309,13 @@ export type Database = {
           is_active?: boolean | null
           is_hidden?: boolean | null
           manager_name?: string | null
+          occupancy_rate?: number | null
           occupied?: boolean | null
+          projected_return?: number | null
           property_manager_id?: string | null
           property_type?: string | null
           purchase_price?: number | null
+          rental_yield?: number | null
           reserve_balance?: number | null
           state?: string | null
           sub_type?: string | null
@@ -268,6 +327,7 @@ export type Database = {
         Update: {
           address_line1?: string | null
           address_line2?: string | null
+          avg_monthly_chip_earning?: number | null
           chips_available?: number
           city?: string | null
           created_at?: string | null
@@ -278,10 +338,13 @@ export type Database = {
           is_active?: boolean | null
           is_hidden?: boolean | null
           manager_name?: string | null
+          occupancy_rate?: number | null
           occupied?: boolean | null
+          projected_return?: number | null
           property_manager_id?: string | null
           property_type?: string | null
           purchase_price?: number | null
+          rental_yield?: number | null
           reserve_balance?: number | null
           state?: string | null
           sub_type?: string | null
@@ -416,6 +479,50 @@ export type Database = {
         }
         Relationships: []
       }
+      property_occupancy_periods: {
+        Row: {
+          created_at: string | null
+          id: string
+          lease_type: string | null
+          monthly_rent: number | null
+          notes: string | null
+          occupancy_end: string | null
+          occupancy_start: string
+          property_id: string
+          tenant_name: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          lease_type?: string | null
+          monthly_rent?: number | null
+          notes?: string | null
+          occupancy_end?: string | null
+          occupancy_start: string
+          property_id: string
+          tenant_name?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          lease_type?: string | null
+          monthly_rent?: number | null
+          notes?: string | null
+          occupancy_end?: string | null
+          occupancy_start?: string
+          property_id?: string
+          tenant_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_property"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       property_transactions: {
         Row: {
           amount: number
@@ -467,6 +574,35 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "properties"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_badges: {
+        Row: {
+          badge_key: string | null
+          earned_at: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          badge_key?: string | null
+          earned_at?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          badge_key?: string | null
+          earned_at?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_badge_key_fkey"
+            columns: ["badge_key"]
+            isOneToOne: false
+            referencedRelation: "badges_catalog"
+            referencedColumns: ["key"]
           },
         ]
       }
@@ -583,25 +719,78 @@ export type Database = {
         Row: {
           assigned_at: string | null
           created_at: string | null
+          current_value: number | null
           id: string | null
           is_active: boolean | null
           is_hidden: boolean | null
+          owner_id: string | null
           property_id: string | null
-          property_title: string | null
           serial: string | null
-          user_email: string | null
-          user_id: string | null
+        }
+        Insert: {
+          assigned_at?: string | null
+          created_at?: string | null
+          current_value?: number | null
+          id?: string | null
+          is_active?: boolean | null
+          is_hidden?: boolean | null
+          owner_id?: string | null
+          property_id?: string | null
+          serial?: string | null
+        }
+        Update: {
+          assigned_at?: string | null
+          created_at?: string | null
+          current_value?: number | null
+          id?: string | null
+          is_active?: boolean | null
+          is_hidden?: boolean | null
+          owner_id?: string | null
+          property_id?: string | null
+          serial?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "chips_owner_id_fkey"
-            columns: ["user_id"]
+            columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "users_extended"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "chips_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_avg_chip_earning: {
+        Row: {
+          avg_monthly_chip_earning: number | null
+          property_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chip_earnings_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_rental_yield: {
+        Row: {
+          annual_rent: number | null
+          property_id: string | null
+          purchase_price: number | null
+          rental_yield: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_transactions_property_id_fkey"
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
