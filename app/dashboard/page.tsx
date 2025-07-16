@@ -70,9 +70,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const loadData = async () => {
-      const {
-        data: { user }
-      } = await supabase.auth.getUser()
+      const { data: { user } } = await supabase.auth.getUser()
       setUser(user)
       if (!user) return
 
@@ -206,3 +204,6 @@ export default function DashboardPage() {
       </div>
 
       {/* Badges, Metrics, Charts remain unchanged below... */}
+    </main>
+  )
+}
