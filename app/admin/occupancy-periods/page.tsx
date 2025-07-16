@@ -1,4 +1,4 @@
-// app admin occupancy periods page.tsx
+// app/admin/occupancy-periods/page.tsx
 
 'use client'
 
@@ -6,8 +6,8 @@ import { useEffect, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import { Database } from '@/types/supabase';
 import { format } from 'date-fns';
-import { Input } from '@/components/input'; // adjusted path
-import { Button } from '@/components/button'; // adjusted path
+import { Input } from '@/components/input';
+import { Button } from '@/components/button';
 
 export default function OccupancyPeriodsAdminPage() {
   const [occupancyPeriods, setOccupancyPeriods] = useState<any[]>([]);
@@ -23,8 +23,8 @@ export default function OccupancyPeriodsAdminPage() {
     const fetchData = async () => {
       const { data, error } = await supabase
         .from('property_occupancy_periods')
-        .select('id, property_id, start_date, end_date')
-        .order('start_date', { ascending: false });
+        .select('id, property_id, occupancy_start, occupancy_end, tenant_name, lease_type, monthly_rent')
+        .order('occupancy_start', { ascending: false });
 
       if (error) setError(error.message);
       else setOccupancyPeriods(data || []);
@@ -50,16 +50,17 @@ export default function OccupancyPeriodsAdminPage() {
               key={period.id}
               className="p-4 border border-white/10 rounded-xl bg-white/5"
             >
-              <p className="text-sm text-gray-300">
-                <strong>Property ID:</strong> {period.property_id}
-              </p>
+              <p className="text-sm text-gray-300"><strong>Property ID:</strong> {period.property_id}</p>
+              <p className="text-sm text-gray-300"><strong>Tenant:</strong> {period.tenant_name || 'N/A'}</p>
+              <p className="text-sm text-gray-300"><strong>Lease Type:</strong> {period.lease_type || 'N/A'}</p>
+              <p className="text-sm text-gray-300"><strong>Monthly Rent:</strong> ${period.monthly_rent?.toFixed(2) || 'N/A'}</p>
               <p className="text-sm text-gray-300">
                 <strong>Start Date:</strong>{' '}
-                {period.start_date ? format(new Date(period.start_date), 'yyyy-MM-dd') : 'N/A'}
+                {period.occupancy_start ? format(new Date(period.occupancy_start), 'yyyy-MM-dd') : 'N/A'}
               </p>
               <p className="text-sm text-gray-300">
                 <strong>End Date:</strong>{' '}
-                {period.end_date ? format(new Date(period.end_date), 'yyyy-MM-dd') : 'N/A'}
+                {period.occupancy_end ? format(new Date(period.occupancy_end), 'yyyy-MM-dd') : 'N/A'}
               </p>
             </div>
           ))}
