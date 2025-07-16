@@ -1,12 +1,13 @@
 //app.page.tsx this is the landing page for chipestate
 'use client'
+'use client'
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 import PropertyCard from '@/components/PropertyCard'
 import Footer from '@/components/Footer'
-import ChatBubble from '@/components/ChatBubble'  // ← Updated component
+import ChatBubble from '@/components/ChatBubble'
 import LoginModal from '@/components/LoginModal'
 
 export default function Home() {
@@ -99,13 +100,13 @@ export default function Home() {
                 <div className="absolute w-full h-full bg-blue-900 text-white border-2 border-emerald-400 rounded-lg p-4 [transform:rotateY(180deg)] backface-hidden overflow-y-auto">
                   <h2 className="text-xl font-bold mb-3 text-center">{property.title}</h2>
                   <ul className="text-xs space-y-1">
-  <li><strong>Projected Return:</strong> {property.projected_return}%</li>
-  <li><strong>Rental Yield:</strong> {property.rental_yield}%</li>
-  <li><strong>Avg Earnings/Chip (mo):</strong> ${property.avg_monthly_chip_earning?.toFixed(2)}</li>
-  <li><strong>Occupancy Rate:</strong> {property.occupancy_rate}%</li>
-  <li><strong>Reserve Balance:</strong> {(property.reserve_balance && property.current_value) ? ((property.reserve_balance / property.current_value) * 100).toFixed(1) + '%' : 'N/A'}</li>
-  <li><strong>Chips Remaining:</strong> {(property.chips_available && property.total_chips) ? ((property.chips_available / property.total_chips) * 100).toFixed(1) + '%' : 'N/A'}</li>
-</ul>
+                    <li><strong>Projected Return:</strong> {property.projected_return}%</li>
+                    <li><strong>Rental Yield:</strong> {property.rental_yield}%</li>
+                    <li><strong>Avg Earnings/Chip (mo):</strong> ${property.avg_monthly_chip_earning?.toFixed(2)}</li>
+                    <li><strong>Occupancy Rate:</strong> {property.occupancy_rate}%</li>
+                    <li><strong>Reserve:</strong> {(property.reserve_balance && property.current_value) ? ((property.reserve_balance / property.current_value) * 100).toFixed(1) + '%' : 'N/A'}</li>
+                    <li><strong>Chips Remaining:</strong> {(property.chips_available && property.total_chips) ? ((property.chips_available / property.total_chips) * 100).toFixed(1) + '%' : 'N/A'}</li>
+                  </ul>
                 </div>
               </div>
             </div>
