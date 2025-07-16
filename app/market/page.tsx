@@ -1,12 +1,9 @@
-//App-Market Page
-
 'use client';
 
 import { useEffect, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import { Database } from '@/types/supabase';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 interface Property {
   id: string;
@@ -27,7 +24,6 @@ export default function MarketPage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [sortField, setSortField] = useState<keyof Property>('current_value');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -35,21 +31,14 @@ export default function MarketPage() {
       const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
       const supabase = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey);
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        router.push('/login');
-        return;
-      }
-
       const { data: propertyData, error } = await supabase
         .from('properties')
         .select(`
           id, title, current_value, total_chips, chips_available, city, state,
           occupied, reserve_balance, manager_name
         `)
+        .eq('is_active', true)
+        .eq('is_hidden', false)
         .order(sortField, { ascending: sortDirection === 'asc' });
 
       if (!error && propertyData) {
@@ -118,7 +107,8 @@ export default function MarketPage() {
     }
   };
 
-  const formatCurrency = (value: number) => `$${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+  const formatCurrency = (value: number) =>
+    `$${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
   const formatPercent = (value: number) => `${value.toFixed(1)}%`;
   const sortArrow = (field: keyof Property) =>
     sortField === field ? (sortDirection === 'asc' ? '↑' : '↓') : '';
