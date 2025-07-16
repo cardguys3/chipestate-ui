@@ -1,100 +1,69 @@
 //assign-chips route.ts
 
-
 import { NextRequest, NextResponse } from 'next/server';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
 import { Database } from '@/types/supabase';
 
 export async function POST(req: NextRequest) {
   const cookieStore = cookies();
-
-  const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-        set() {},
-        remove() {},
-      },
-    }
-  );
+  const supabase = createRouteHandlerClient<Database>({ cookies: () => cookieStore });
 
   const body = await req.json();
-  const { user_id, property_id, chip_ids, total_amount } = body;
+  const { user_id, property_id, chip_quantity, transaction_id } = body;
 
-  if (!user_id || !property_id || !chip_ids || chip_ids.length === 0) {
-    return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
+  if (!user_id || !property_id || !chip_quantity || !transaction_id) {
+    return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 });
   }
 
-  // Step 1: Mark chips as owned
-  const updates = chip_ids.map((chipId: string) =>
-    supabase
-      .from('chips')
-      .update({ owner_id: user_id, assigned_at: new Date().toISOString() })
-      .eq('id', chipId)
-  );
-
-  await Promise.all(updates);
-
-  // Step 2: Record ownership
-  const ownerships = chip_ids.map((chipId: string) => ({
-    chip_id: chipId,
-    user_id,
-    acquired_by: 'purchase',
-    is_current: true,
-  }));
-
-  await supabase.from('chip_ownerships').insert(ownerships);
-
-  // Step 3: Record transaction
-  await supabase.from('chip_purchase_transactions').insert({
-    user_id,
-    property_id,
-    chip_ids,
-    quantity: chip_ids.length,
-    total_amount,
-  });
-
-  // Step 4: Badge Logic (First_Chip, Whale_Watcher, Diversifier)
-  const { data: ownedChips } = await supabase
+  const { data: chipInsert, error: chipInsertError } = await supabase
     .from('chips')
-    .select('id, property_id')
-    .eq('owner_id', user_id);
+    .insert({
+      user_id,
+      property_id,
+      quantity: chip_quantity,
+      transaction_id
+    });
 
-  const { data: existingBadges } = await supabase
+  if (chipInsertError) {
+    console.error('Chip insert error:', chipInsertError);
+    return NextResponse.json({ error: 'Failed to assign chips.' }, { status: 500 });
+  }
+
+  // --- Badge Logic ---
+  const { data: userBadges } = await supabase
     .from('user_badges')
     .select('badge_key')
     .eq('user_id', user_id);
 
-  const badgeSet = new Set(existingBadges?.map(b => b.badge_key) || []);
+  const ownedBadges = userBadges?.map((b) => b.badge_key) || [];
+
+  const { data: chipHoldings } = await supabase
+    .from('chips')
+    .select('property_id, quantity')
+    .eq('user_id', user_id);
+
+  const totalChips = chipHoldings?.reduce((sum, c) => sum + Number(c.quantity), 0) || 0;
+  const distinctProperties = new Set(chipHoldings?.map((c) => c.property_id)).size;
+
   const newBadges: string[] = [];
 
-  if (!badgeSet.has('first_chip')) {
-    newBadges.push('first_chip');
-  }
+  const awardBadge = async (badge_key: string) => {
+    if (!ownedBadges.includes(badge_key)) {
+      await supabase.from('user_badges').insert({
+        user_id,
+        badge_key
+      });
+      newBadges.push(badge_key);
+    }
+  };
 
-  const uniquePropertyCount = new Set(ownedChips?.map(c => c.property_id)).size;
-  if (uniquePropertyCount >= 3 && !badgeSet.has('diversifier')) {
-    newBadges.push('diversifier');
-  }
+  if (totalChips > 0) await awardBadge('first_chip');
+  if (distinctProperties >= 3) await awardBadge('diversifier');
+  if (totalChips >= 100) await awardBadge('whale_watcher');
 
-  if ((ownedChips?.length || 0) >= 100 && !badgeSet.has('whale_watcher')) {
-    newBadges.push('whale_watcher');
-  }
-
-  if (newBadges.length > 0) {
-    const badgeInserts = newBadges.map(b => ({
-      user_id,
-      badge_key: b,
-      earned_at: new Date().toISOString(),
-    }));
-
-    await supabase.from('user_badges').insert(badgeInserts);
-  }
-
-  return NextResponse.json({ success: true, newBadges });
+  return NextResponse.json({
+    success: true,
+    newBadges
+  });
 }
