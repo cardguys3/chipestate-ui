@@ -3,8 +3,19 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { createServerClient } from '@supabase/ssr'
+import { Metadata } from 'next'
 
-export default async function PropertyDetailsPage({ params }: { params: { id: string } }) {
+interface PageProps {
+  params: {
+    id: string
+  }
+}
+
+export const metadata: Metadata = {
+  title: 'Property Details | ChipEstate',
+}
+
+export default async function PropertyDetailsPage({ params }: PageProps) {
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -50,7 +61,6 @@ export default async function PropertyDetailsPage({ params }: { params: { id: st
       <div className="max-w-5xl mx-auto border border-gray-600 rounded-xl p-6">
         <h1 className="text-3xl font-bold mb-4 border-b pb-2">{property.title}</h1>
 
-        {/* Main Image */}
         {mainImage ? (
           <img
             src={mainImage}
@@ -63,7 +73,6 @@ export default async function PropertyDetailsPage({ params }: { params: { id: st
           </div>
         )}
 
-        {/* Property Details */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm mb-6">
           <div>
             <p className="text-gray-400">Current Price</p>
@@ -108,7 +117,6 @@ export default async function PropertyDetailsPage({ params }: { params: { id: st
           </div>
         </div>
 
-        {/* Buy Chips Section */}
         <div className="border-t border-gray-700 pt-6 mt-6">
           <h2 className="text-2xl font-bold mb-4">Buy Chips</h2>
           <form action={`/checkout/${property.id}`} method="GET" className="flex items-center gap-4 mb-4">
