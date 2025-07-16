@@ -1,6 +1,5 @@
 // app/property/[id]/page.tsx
 
-
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { createServerClient } from '@supabase/ssr'
@@ -12,11 +11,9 @@ export const metadata: Metadata = {
   title: 'Property Details | ChipEstate',
 }
 
-export default async function PropertyDetailsPage({
-  params,
-}: {
-  params: { id: string }
-}) {
+export default async function PropertyDetailsPage(props: any) {
+  const { id } = props.params
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -34,7 +31,7 @@ export default async function PropertyDetailsPage({
   const { data: property, error } = await supabase
     .from('properties')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (error || !property) {
