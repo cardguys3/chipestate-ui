@@ -11,15 +11,11 @@ export const metadata: Metadata = {
   title: 'Property Details | ChipEstate',
 }
 
-type Props = {
-  params: {
-    id: string
-  }
-}
-
-export default async function PropertyDetailsPage(props: Props) {
-  const { id } = props.params
-
+export default async function PropertyDetailsPage({
+  params,
+}: {
+  params: { id: string }
+}) {
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -37,7 +33,7 @@ export default async function PropertyDetailsPage(props: Props) {
   const { data: property, error } = await supabase
     .from('properties')
     .select('*')
-    .eq('id', id)
+    .eq('id', params.id)
     .single()
 
   if (error || !property) {
@@ -78,7 +74,6 @@ export default async function PropertyDetailsPage(props: Props) {
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm mb-6">
-          {/* Property details grid */}
           {[
             ['Current Price', property.current_value],
             ['Purchase Price', property.purchase_price],
