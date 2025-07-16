@@ -1,5 +1,7 @@
 //App-Market Page
-'use client'
+
+
+'use client';
 
 import { useEffect, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
@@ -17,11 +19,13 @@ interface Property {
   annual_rent: number;
   reserve_balance: number;
   manager_name: string;
+  roi: number;
+  reserve_percent: number;
 }
 
 export default function MarketPage() {
   const [properties, setProperties] = useState<Property[]>([]);
-  const [sortField, setSortField] = useState<string>('current_value');
+  const [sortField, setSortField] = useState<keyof Property>('current_value');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   useEffect(() => {
@@ -33,7 +37,7 @@ export default function MarketPage() {
       const { data: propertyData, error } = await supabase
         .from('properties')
         .select(`
-          id, title, current_value, total_chips, chips_available, city, state, 
+          id, title, current_value, total_chips, chips_available, city, state,
           occupied, reserve_balance, manager_name
         `)
         .order(sortField, { ascending: sortDirection === 'asc' });
@@ -52,18 +56,28 @@ export default function MarketPage() {
           rentMap[r.property_id] = (rentMap[r.property_id] || 0) + Number(r.amount);
         });
 
-        const transformed = propertyData.map((p) => ({
-          id: p.id,
-          title: p.title,
-          current_value: p.current_value || 0,
-          total_chips: p.total_chips,
-          chips_available: p.chips_available,
-          occupied: p.occupied || false,
-          annual_rent: rentMap[p.id] || 0,
-          reserve_balance: p.reserve_balance || 0,
-          manager_name: p.manager_name || '',
-          location: `${p.city || ''}, ${p.state || ''}`.replace(/^, |, $/g, '').trim(),
-        }));
+        const transformed = propertyData.map((p) => {
+          const annualRent = rentMap[p.id] || 0;
+          const currentValue = p.current_value || 0;
+          const reserveBalance = p.reserve_balance || 0;
+          const reservePercent = currentValue > 0 ? (reserveBalance / currentValue) * 100 : 0;
+          const roi = currentValue > 0 ? (annualRent / currentValue) * 100 : 0;
+
+          return {
+            id: p.id,
+            title: p.title,
+            current_value: currentValue,
+            total_chips: p.total_chips,
+            chips_available: p.chips_available,
+            occupied: p.occupied || false,
+            annual_rent: annualRent,
+            reserve_balance: reserveBalance,
+            manager_name: p.manager_name || '',
+            location: `${p.city || ''}, ${p.state || ''}`.replace(/^, |, $/g, '').trim(),
+            roi,
+            reserve_percent: reservePercent,
+          };
+        });
 
         setProperties(transformed);
       }
@@ -72,7 +86,7 @@ export default function MarketPage() {
     fetchData();
   }, [sortField, sortDirection]);
 
-  const toggleSort = (field: string) => {
+  const toggleSort = (field: keyof Property) => {
     if (sortField === field) {
       setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
@@ -82,6 +96,9 @@ export default function MarketPage() {
   };
 
   const formatCurrency = (value: number) => `$${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+  const formatPercent = (value: number) => `${value.toFixed(1)}%`;
+  const sortArrow = (field: string) =>
+    sortField === field ? (sortDirection === 'asc' ? '↑' : '↓') : '';
 
   return (
     <main className="min-h-screen bg-[#0B1D33] text-white p-6">
@@ -90,29 +107,33 @@ export default function MarketPage() {
         <table className="w-full table-auto text-sm border-collapse">
           <thead className="bg-white/5">
             <tr className="text-left border-b border-blue-800">
-              <th className="p-3 cursor-pointer" onClick={() => toggleSort('title')}>Property</th>
-              <th className="p-3 cursor-pointer" onClick={() => toggleSort('location')}>Location</th>
-              <th className="p-3 cursor-pointer" onClick={() => toggleSort('current_value')}>Property Value</th>
-              <th className="p-3">Chips Sold</th>
-              <th className="p-3">Occupancy</th>
-              <th className="p-3">Annual Rent</th>
-              <th className="p-3">Manager</th>
-              <th className="p-3">Reserve</th>
+              <th className="p-3 cursor-pointer" onClick={() => toggleSort('title')}>Property {sortArrow('title')}</th>
+              <th className="p-3 cursor-pointer" onClick={() => toggleSort('location')}>Location {sortArrow('location')}</th>
+              <th className="p-3 cursor-pointer" onClick={() => toggleSort('current_value')}>Value {sortArrow('current_value')}</th>
+              <th className="p-3 cursor-pointer" onClick={() => toggleSort('chips_available')}>Chips Available {sortArrow('chips_available')}</th>
+              <th className="p-3 cursor-pointer" onClick={() => toggleSort('occupied')}>Occupied {sortArrow('occupied')}</th>
+              <th className="p-3 cursor-pointer" onClick={() => toggleSort('annual_rent')}>Annual Rent {sortArrow('annual_rent')}</th>
+              <th className="p-3 cursor-pointer" onClick={() => toggleSort('roi')}>ROI {sortArrow('roi')}</th>
+              <th className="p-3 cursor-pointer" onClick={() => toggleSort('reserve_percent')}>Reserve % {sortArrow('reserve_percent')}</th>
+              <th className="p-3 cursor-pointer" onClick={() => toggleSort('manager_name')}>Manager {sortArrow('manager_name')}</th>
             </tr>
           </thead>
           <tbody>
-            {properties.map((p, idx) => (
+            {properties.map((p) => (
               <tr key={p.id} className="border-b border-blue-900 hover:bg-blue-900/30">
                 <td className="p-3">
-                  <Link href={`/market/${p.id}`} className="text-blue-400 hover:underline">{p.title}</Link>
+                  <Link href={`/property/${p.id}`} className="text-blue-400 hover:underline">
+                    {p.title}
+                  </Link>
                 </td>
                 <td className="p-3">{p.location}</td>
                 <td className="p-3">{formatCurrency(p.current_value)}</td>
-                <td className="p-3">{p.total_chips - p.chips_available}/{p.total_chips}</td>
+                <td className="p-3">{p.chips_available} / {p.total_chips}</td>
                 <td className="p-3">{p.occupied ? '✅' : '❌'}</td>
                 <td className="p-3">{formatCurrency(p.annual_rent)}</td>
-                <td className="p-3">{p.manager_name || 'Unknown'}</td>
-                <td className="p-3">{formatCurrency(p.reserve_balance)}</td>
+                <td className="p-3">{formatPercent(p.roi)}</td>
+                <td className="p-3">{formatPercent(p.reserve_percent)}</td>
+                <td className="p-3">{p.manager_name}</td>
               </tr>
             ))}
           </tbody>
