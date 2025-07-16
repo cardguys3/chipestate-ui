@@ -70,19 +70,35 @@ export default async function PropertyDetailsPage({ params }: PropertyDetailsPag
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm mb-6">
-          {[ 
+          {[
             ['Current Price', property.current_value],
             ['Purchase Price', property.purchase_price],
             ['Cap Rate', property.cap_rate ? `${property.cap_rate}%` : 'N/A'],
-            ['Operating Reserve', `$${property.reserve_balance?.toLocaleString()} (${Math.round(((property.reserve_balance || 0) / (property.current_value || 1)) * 100)}%)`],
+            [
+              'Operating Reserve',
+              `$${property.reserve_balance?.toLocaleString()} (${Math.round(
+                ((property.reserve_balance || 0) / (property.current_value || 1)) * 100,
+              )}%)`,
+            ],
             ['Chips Available', property.chips_available],
             ['Total Chips', property.total_chips],
-            ['Market Cap', property.market_cap ? `$${property.market_cap.toLocaleString()}` : 'N/A'],
+            [
+              'Market Cap',
+              property.market_cap ? `$${property.market_cap.toLocaleString()}` : 'N/A',
+            ],
             ['Status', property.is_active ? 'Active' : 'Inactive'],
           ].map(([label, value], i) => (
             <div key={i}>
               <p className="text-gray-400">{label}</p>
-              <p className={`text-white font-medium ${value === 'Inactive' ? 'text-red-400' : value === 'Active' ? 'text-green-400' : ''}`}>
+              <p
+                className={`text-white font-medium ${
+                  value === 'Inactive'
+                    ? 'text-red-400'
+                    : value === 'Active'
+                    ? 'text-green-400'
+                    : ''
+                }`}
+              >
                 {value}
               </p>
             </div>
@@ -91,7 +107,11 @@ export default async function PropertyDetailsPage({ params }: PropertyDetailsPag
 
         <div className="border-t border-gray-700 pt-6 mt-6">
           <h2 className="text-2xl font-bold mb-4">Buy Chips</h2>
-          <form action={`/checkout/${property.id}`} method="GET" className="flex items-center gap-4 mb-4">
+          <form
+            action={`/checkout/${property.id}`}
+            method="GET"
+            className="flex items-center gap-4 mb-4"
+          >
             <label htmlFor="chipQty" className="text-white text-sm">
               Chips to Buy:
             </label>
