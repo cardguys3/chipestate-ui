@@ -1,6 +1,7 @@
 // app/property/[id]/page.tsx
 
 import { cookies } from 'next/headers'
+
 import { redirect } from 'next/navigation'
 import { createServerClient } from '@supabase/ssr'
 import { Metadata } from 'next'
