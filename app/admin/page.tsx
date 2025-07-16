@@ -1,3 +1,5 @@
+//App admin dashboard
+
 'use server'
 
 import { cookies as getCookies } from 'next/headers'
@@ -50,6 +52,8 @@ export default async function AdminPage() {
           <AdminCard title="Financials" href="/admin/financials" />
           <AdminCard title="Approvals" href="/admin/approvals" />
           <AdminCard title="Analytics" href="/admin/analytics" />
+          <AdminCard title="Occupancy Periods" href="/admin/occupancy-periods" />
+          <AdminCard title="Badges" href="/admin/badges" />
         </div>
       </div>
     </main>
