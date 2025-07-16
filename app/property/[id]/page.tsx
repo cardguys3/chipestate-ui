@@ -11,12 +11,11 @@ export const metadata: Metadata = {
   title: 'Property Details | ChipEstate',
 }
 
-// ✅ Rename this to avoid type conflict
-interface PropertyPageProps {
+export default async function PropertyDetailsPage({
+  params,
+}: {
   params: { id: string }
-}
-
-export default async function PropertyDetailsPage({ params }: PropertyPageProps) {
+}) {
   const supabase = createServerComponentClient({ cookies: cookies() })
 
   const {
