@@ -9,7 +9,7 @@ import { Textarea } from "@/components/textarea";
 import { Label } from "@/components/label";
 
 export default function AdminVotingPage() {
-  const [votes, setVotes] = useState([]);
+  const [votes, setVotes] = useState<any[]>([]);
   const [newVote, setNewVote] = useState({
     title: "",
     description: "",
@@ -39,6 +39,7 @@ export default function AdminVotingPage() {
       ...newVote,
       created_by: userId
     });
+
     if (!error) {
       setNewVote({
         title: "",

@@ -1,17 +1,19 @@
-// File: /app/admin/voting/[id]/page.tsx
+// File: /app/votes/[id]/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { Button } from "@/components/button";  // ✅ FIXED: matches your structure
-import { Input } from "@/components/input";    // ✅ FIXED: matches your structure
+import { Button } from "@/components/button";
+import { Card } from "@/components/card";
+import { Badge } from "@/components/badge";
 
-export default function VoteDetailPage() {
+export default function VotePage() {
   const { id } = useParams();
   const [vote, setVote] = useState<any>(null);
   const [options, setOptions] = useState<any[]>([]);
-  const [newOption, setNewOption] = useState("");
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
     fetchVote();
@@ -32,49 +34,49 @@ export default function VoteDetailPage() {
     setOptions(data || []);
   }
 
-  async function addOption() {
-    await supabase
-      .from("vote_options")
-      .insert({ vote_id: id, label: newOption, display_order: options.length + 1 });
-    setNewOption("");
-    fetchOptions();
-  }
-
-  async function closeVote() {
-    await supabase.from("votes").update({ is_open: false }).eq("id", id);
-    fetchVote();
+  async function submitVote() {
+    if (!selectedOption) return;
+    await supabase.from("vote_responses").insert({
+      vote_id: id,
+      option_id: selectedOption,
+    });
+    setSubmitted(true);
   }
 
   if (!vote) return <div className="p-6">Loading...</div>;
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">{vote.title}</h1>
-      <p className="mb-2 text-gray-600">{vote.description}</p>
-      <p className="text-sm">Start: {vote.start_date} | End: {vote.end_date}</p>
-      <p className="text-sm mb-4">Status: {vote.is_open ? "Open" : "Closed"}</p>
+    <div className="max-w-xl mx-auto p-6">
+      <Card>
+        <h1 className="text-xl font-bold mb-2">{vote.title}</h1>
+        <p className="text-gray-600 mb-1">{vote.description}</p>
+        <p className="text-sm mb-4">
+          From {vote.start_date} to {vote.end_date}
+        </p>
 
-      {vote.is_open && (
-        <Button variant="destructive" onClick={closeVote} className="mb-6">
-          Close Vote
-        </Button>
-      )}
+        {submitted ? (
+          <Badge variant="success">Thank you for voting!</Badge>
+        ) : (
+          <div className="space-y-2">
+            {options.map((opt) => (
+              <label key={opt.id} className="block">
+                <input
+                  type="radio"
+                  name="voteOption"
+                  value={opt.id}
+                  onChange={() => setSelectedOption(opt.id)}
+                  className="mr-2"
+                />
+                {opt.label}
+              </label>
+            ))}
 
-      <h2 className="text-lg font-semibold mb-2">Vote Options</h2>
-      <ul className="list-disc pl-6 mb-4">
-        {options.map((opt) => (
-          <li key={opt.id}>{opt.label}</li>
-        ))}
-      </ul>
-
-      <div className="flex gap-2">
-        <Input
-          placeholder="Add new option"
-          value={newOption}
-          onChange={(e) => setNewOption(e.target.value)}
-        />
-        <Button onClick={addOption}>Add Option</Button>
-      </div>
+            <Button onClick={submitVote} disabled={!selectedOption}>
+              Submit Vote
+            </Button>
+          </div>
+        )}
+      </Card>
     </div>
   );
 }
