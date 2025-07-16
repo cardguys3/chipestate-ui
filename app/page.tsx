@@ -1,3 +1,5 @@
+//landing page
+
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -16,28 +18,29 @@ export default function Home() {
   const [user, setUser] = useState<any>(null)
 
   useEffect(() => {
-    async function fetchData() {
-      const [{ data: props, error: propsError }, { data: userData }] = await Promise.all([
-        supabase
-          .from('properties')
-          .select('*')
-          .eq('is_active', true)
-          .eq('is_hidden', false)
-          .limit(9),
-        supabase.auth.getUser(),
-      ])
+    // fetch properties first, regardless of user status
+    async function fetchProperties() {
+      const { data, error } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('is_active', true)
+        .eq('is_hidden', false)
+        .limit(9)
 
-      if (propsError) {
-        console.error('Error loading properties:', propsError.message)
+      if (error) {
+        console.error('Error loading properties:', error.message)
       } else {
-        setProperties(props || [])
+        setProperties(data || [])
       }
-
-      setUser(userData?.user || null)
       setLoading(false)
     }
 
-    fetchData()
+    fetchProperties()
+
+    // fetch user in the background
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user || null)
+    })
   }, [])
 
   const getImageUrl = (url: string | null) => {

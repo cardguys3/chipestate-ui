@@ -1,3 +1,5 @@
+//Market
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -27,9 +29,10 @@ export default function MarketPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-      const supabase = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey);
+      const supabase = createBrowserClient<Database>(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
 
       const { data: propertyData, error } = await supabase
         .from('properties')
@@ -41,58 +44,60 @@ export default function MarketPage() {
         .eq('is_hidden', false)
         .order(sortField, { ascending: sortDirection === 'asc' });
 
-      if (!error && propertyData) {
-        const propertyIds = propertyData.map((p) => p.id);
-
-        const { data: rentData } = await supabase
-          .from('property_transactions')
-          .select('property_id, amount')
-          .eq('type', 'rent')
-          .in('property_id', propertyIds);
-
-        const rentMap: Record<string, number> = {};
-        rentData?.forEach((r) => {
-          rentMap[r.property_id] = (rentMap[r.property_id] || 0) + Number(r.amount);
-        });
-
-        const transformed = propertyData.map((p) => {
-          const annualRent = rentMap[p.id] || 0;
-          const currentValue = p.current_value || 0;
-          const reserveBalance = p.reserve_balance || 0;
-          const reservePercent = currentValue > 0 ? (reserveBalance / currentValue) * 100 : 0;
-          const roi = currentValue > 0 ? (annualRent / currentValue) * 100 : 0;
-
-          return {
-            id: p.id,
-            title: p.title,
-            current_value: currentValue,
-            total_chips: p.total_chips,
-            chips_available: p.chips_available,
-            occupied: p.occupied || false,
-            annual_rent: annualRent,
-            reserve_balance: reserveBalance,
-            manager_name: p.manager_name || '',
-            location: `${p.city || ''}, ${p.state || ''}`.replace(/^, |, $/g, '').trim(),
-            roi,
-            reserve_percent: reservePercent,
-          };
-        });
-
-        const sorted = [...transformed].sort((a, b) => {
-          const aValue = a[sortField];
-          const bValue = b[sortField];
-          if (typeof aValue === 'string' && typeof bValue === 'string') {
-            return sortDirection === 'asc'
-              ? aValue.localeCompare(bValue)
-              : bValue.localeCompare(aValue);
-          }
-          return sortDirection === 'asc'
-            ? Number(aValue) - Number(bValue)
-            : Number(bValue) - Number(aValue);
-        });
-
-        setProperties(sorted);
+      if (error || !propertyData) {
+        console.error('Error loading properties:', error?.message);
+        return;
       }
+
+      const propertyIds = propertyData.map((p) => p.id);
+      const { data: rentData } = await supabase
+        .from('property_transactions')
+        .select('property_id, amount')
+        .eq('type', 'rent')
+        .in('property_id', propertyIds);
+
+      const rentMap: Record<string, number> = {};
+      rentData?.forEach((r) => {
+        rentMap[r.property_id] = (rentMap[r.property_id] || 0) + Number(r.amount);
+      });
+
+      const transformed = propertyData.map((p) => {
+        const annualRent = rentMap[p.id] || 0;
+        const currentValue = p.current_value || 0;
+        const reserveBalance = p.reserve_balance || 0;
+        const reservePercent = currentValue > 0 ? (reserveBalance / currentValue) * 100 : 0;
+        const roi = currentValue > 0 ? (annualRent / currentValue) * 100 : 0;
+
+        return {
+          id: p.id,
+          title: p.title,
+          current_value: currentValue,
+          total_chips: p.total_chips,
+          chips_available: p.chips_available,
+          occupied: p.occupied || false,
+          annual_rent: annualRent,
+          reserve_balance: reserveBalance,
+          manager_name: p.manager_name || '',
+          location: `${p.city || ''}, ${p.state || ''}`.replace(/^, |, $/g, '').trim(),
+          roi,
+          reserve_percent: reservePercent,
+        };
+      });
+
+      const sorted = [...transformed].sort((a, b) => {
+        const aValue = a[sortField];
+        const bValue = b[sortField];
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          return sortDirection === 'asc'
+            ? aValue.localeCompare(bValue)
+            : bValue.localeCompare(aValue);
+        }
+        return sortDirection === 'asc'
+          ? Number(aValue) - Number(bValue)
+          : Number(bValue) - Number(aValue);
+      });
+
+      setProperties(sorted);
     };
 
     fetchData();
