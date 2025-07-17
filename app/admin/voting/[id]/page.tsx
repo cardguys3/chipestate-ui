@@ -1,4 +1,4 @@
-// File: /app/votes/[id]/page.tsx
+// File: /app/admin/voting/[id]/page.tsx
 "use client";
 
 import { useParams } from "next/navigation";
@@ -6,7 +6,39 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/button";
 import { Card } from "@/components/card";
-import { Badge } from "@/components/badge";
+import { cn } from "@/lib/utils";
+
+// Inline patch or local override for Badge component
+function Badge({
+  children,
+  variant = "default",
+  className,
+  ...props
+}: {
+  children: React.ReactNode;
+  variant?: "success" | "default" | "warning" | "error";
+  className?: string;
+} & React.HTMLAttributes<HTMLDivElement>) {
+  const variantClasses = {
+    success: "bg-green-100 text-green-800",
+    warning: "bg-yellow-100 text-yellow-800",
+    error: "bg-red-100 text-red-800",
+    default: "bg-gray-100 text-gray-800",
+  };
+
+  return (
+    <div
+      className={cn(
+        "inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium",
+        variantClasses[variant],
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+}
 
 export default function VotePage() {
   const { id } = useParams();
