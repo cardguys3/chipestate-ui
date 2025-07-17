@@ -3,13 +3,21 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClient } from '@/utils/supabase/client'
+import { supabase } from '@/lib/supabaseClient'
 import { getMonthRange } from '@/lib/dateHelpers'
-import Chart from '@/components/dashboard/Chart'
 import Slider from 'rc-slider'
 import 'rc-slider/assets/index.css'
 
-const supabase = createClient()
+// Stub chart replacement for now since /components/dashboard/Chart doesn't exist
+// You can replace this later with a real charting component like Recharts or Chart.js
+function Chart({ title, data, color }: { title: string; data: number[]; color: string }) {
+  return (
+    <div className="bg-[#0B1D33] p-4 rounded shadow border border-white/10">
+      <div className="text-sm text-gray-400 mb-1">{title}</div>
+      <div className="text-2xl font-bold text-white">{data.length > 0 ? `$${data[data.length - 1].toFixed(2)}` : '—'}</div>
+    </div>
+  )
+}
 
 export default function DashboardPage() {
   const [earningsData, setEarningsData] = useState<number[]>([])
@@ -128,21 +136,4 @@ export default function DashboardPage() {
             value={sliderRange}
             onChange={(val) => setSliderRange(val as [number, number])}
             className="flex-grow"
-            trackStyle={[{ backgroundColor: '#10b981' }]}
-            handleStyle={[{ borderColor: '#10b981' }, { borderColor: '#10b981' }]}
-          />
-          <span className="text-sm text-gray-300 w-20">{endLabel}</span>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function MetricCard({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div className="bg-[#0B1D33] border border-white/10 p-4 rounded shadow">
-      <div className="text-sm text-gray-400">{label}</div>
-      <div className="text-xl font-bold text-white">{value}</div>
-    </div>
-  )
-}
+            trackStyle={[{ backgroundColor: '#10b
