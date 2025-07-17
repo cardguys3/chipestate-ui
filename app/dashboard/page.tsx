@@ -1,23 +1,23 @@
-// app/dashboard/page.tsx
+// /app/dashboard/page.tsx
 
 'use client'
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
-import { getMonthRange } from '@/lib/dateHelpers'
+import { Line } from 'react-chartjs-2'
 import Slider from 'rc-slider'
 import 'rc-slider/assets/index.css'
+import {
+  Chart as ChartJS,
+  LineElement,
+  PointElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+  Legend,
+} from 'chart.js'
 
-// Stub chart replacement for now since /components/dashboard/Chart doesn't exist
-// You can replace this later with a real charting component like Recharts or Chart.js
-function Chart({ title, data, color }: { title: string; data: number[]; color: string }) {
-  return (
-    <div className="bg-[#0B1D33] p-4 rounded shadow border border-white/10">
-      <div className="text-sm text-gray-400 mb-1">{title}</div>
-      <div className="text-2xl font-bold text-white">{data.length > 0 ? `$${data[data.length - 1].toFixed(2)}` : '—'}</div>
-    </div>
-  )
-}
+ChartJS.register(LineElement, PointElement, CategoryScale, LinearScale, Tooltip, Legend)
 
 export default function DashboardPage() {
   const [earningsData, setEarningsData] = useState<number[]>([])
@@ -79,11 +79,35 @@ export default function DashboardPage() {
   }, [])
 
   const badgeList = ['verified', 'early_backer', 'collector', 'diversified', 'consistent_investor']
-  const [startLabel, endLabel] = getMonthRange(sliderRange, earningsData.length)
+
+  const getMonthLabel = (i: number) => {
+    const now = new Date()
+    now.setMonth(now.getMonth() - (earningsData.length - 1 - i))
+    return now.toLocaleString('default', { month: 'short', year: '2-digit' })
+  }
+
+  const [start, end] = sliderRange
+  const startLabel = getMonthLabel(start)
+  const endLabel = getMonthLabel(end)
+
+  const earningsSubset = earningsData.slice(start, end + 1)
+
+  const makeChartData = (label: string, values: number[], color: string) => ({
+    labels: values.map((_, i) => getMonthLabel(i + start)),
+    datasets: [
+      {
+        label,
+        data: values,
+        fill: false,
+        borderColor: color,
+        tension: 0.3,
+      },
+    ],
+  })
 
   return (
     <div className="p-6 text-white space-y-8">
-      {/* Badge Section */}
+      {/* Badges */}
       <div>
         <h2 className="text-lg font-semibold mb-3">Your Badges</h2>
         <div className="flex gap-4 flex-wrap">
@@ -96,16 +120,14 @@ export default function DashboardPage() {
                   earned ? '' : 'grayscale opacity-40'
                 }`}
                 title={badge.replaceAll('_', ' ')}
-                style={{
-                  backgroundImage: `url(/badges/${badge}.png)`,
-                }}
+                style={{ backgroundImage: `url(/badges/${badge}.png)` }}
               />
             )
           })}
         </div>
       </div>
 
-      {/* Metrics Row */}
+      {/* Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <MetricCard label="Total Earnings" value={`$${metrics.totalEarnings.toFixed(2)}`} />
         <MetricCard label="Avg. Monthly" value={`$${metrics.avgMonthly.toFixed(2)}`} />
@@ -117,15 +139,23 @@ export default function DashboardPage() {
         <MetricCard label="Investment Span" value={`${metrics.spanMonths} months`} />
       </div>
 
-      {/* Charts Row */}
+      {/* Charts */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Chart title="Earnings Over Time" data={earningsData} color="#10b981" />
-        <Chart title="ROI Over Time" data={earningsData.map((v, i) => (i === 0 ? 0 : (v - earningsData[i - 1]) / earningsData[i - 1] || 0))} color="#facc15" />
-        <Chart title="Projected Earnings" data={earningsData.map(v => v * 12)} color="#3b82f6" />
+        <Line data={makeChartData('Earnings', earningsSubset, '#10b981')} />
+        <Line
+          data={makeChartData(
+            'ROI Change',
+            earningsSubset.map((v, i, arr) =>
+              i === 0 ? 0 : ((v - arr[i - 1]) / arr[i - 1]) * 100 || 0
+            ),
+            '#facc15'
+          )}
+        />
+        <Line data={makeChartData('Projected Earnings', earningsSubset.map(v => v * 12), '#3b82f6')} />
       </div>
 
-      {/* Earnings Slider */}
-      <div className="pt-8">
+      {/* Slider */}
+      <div className="pt-6">
         <h3 className="font-semibold mb-2">Earnings Range</h3>
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-300 w-20 text-right">{startLabel}</span>
@@ -135,5 +165,22 @@ export default function DashboardPage() {
             max={earningsData.length - 1}
             value={sliderRange}
             onChange={(val) => setSliderRange(val as [number, number])}
-            className="flex-grow"
-            trackStyle={[{ backgroundColor: '#10b
+            className="flex-grow max-w-2xl"
+            trackStyle={[{ backgroundColor: '#10b981' }]}
+            handleStyle={[{ borderColor: '#10b981' }, { borderColor: '#10b981' }]}
+          />
+          <span className="text-sm text-gray-300 w-20">{endLabel}</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function MetricCard({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="bg-[#0B1D33] border border-white/10 p-4 rounded shadow">
+      <div className="text-sm text-gray-400">{label}</div>
+      <div className="text-xl font-bold text-white">{value}</div>
+    </div>
+  )
+}
