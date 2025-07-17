@@ -51,13 +51,14 @@ export default function DashboardPage() {
 
       const allMonths = earnings?.map((e) => e.amount) || []
       const total = allMonths.reduce((sum, val) => sum + val, 0)
-      const avg = total / allMonths.length || 0
+      const avg = total / (allMonths.length || 1)
 
       const chipsOwned = chips?.length ?? 0
       const propertiesOwned = chips ? new Set(chips.map((c) => c.property_id)).size : 0
+
       const roi =
         chips && chipsOwned > 0
-          ? chips.reduce((acc, c) => acc + (c.earnings / c.purchase_price), 0) / chipsOwned
+          ? chips.reduce((acc, c) => acc + (c.earnings / c.purchase_price || 0), 0) / chipsOwned
           : 0
 
       const avgChipValue = chipsOwned ? total / chipsOwned : 0
@@ -82,7 +83,13 @@ export default function DashboardPage() {
     fetchData()
   }, [])
 
-  const badgeList = ['verified', 'early_backer', 'collector', 'diversified', 'consistent_investor']
+  const badgeList = [
+    'verified',
+    'early_backer',
+    'collector',
+    'diversified',
+    'consistent_investor',
+  ]
 
   const getMonthLabel = (i: number) => {
     const now = new Date()
@@ -111,7 +118,7 @@ export default function DashboardPage() {
 
   return (
     <div className="p-6 text-white space-y-8">
-      {/* Badges */}
+      {/* Badges Section */}
       <div>
         <h2 className="text-lg font-semibold mb-3">Your Badges</h2>
         <div className="flex gap-4 flex-wrap">
@@ -131,7 +138,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Metrics */}
+      {/* Performance Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <MetricCard label="Total Earnings" value={`$${metrics.totalEarnings.toFixed(2)}`} />
         <MetricCard label="Avg. Monthly" value={`$${metrics.avgMonthly.toFixed(2)}`} />
@@ -143,24 +150,34 @@ export default function DashboardPage() {
         <MetricCard label="Investment Span" value={`${metrics.spanMonths} months`} />
       </div>
 
-      {/* Charts */}
+      {/* Charts in 1 Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Line data={makeChartData('Earnings', earningsSubset, '#10b981')} />
-        <Line
-          data={makeChartData(
-            'ROI Change',
-            earningsSubset.map((v, i, arr) =>
-              i === 0 ? 0 : ((v - arr[i - 1]) / arr[i - 1]) * 100 || 0
-            ),
-            '#facc15'
-          )}
-        />
-        <Line
-          data={makeChartData('Projected Earnings', earningsSubset.map((v) => v * 12), '#3b82f6')}
-        />
+        <div className="bg-[#0B1D33] p-4 rounded-lg shadow">
+          <Line data={makeChartData('Earnings', earningsSubset, '#10b981')} />
+        </div>
+        <div className="bg-[#0B1D33] p-4 rounded-lg shadow">
+          <Line
+            data={makeChartData(
+              'ROI Change',
+              earningsSubset.map((v, i, arr) =>
+                i === 0 ? 0 : ((v - arr[i - 1]) / arr[i - 1]) * 100 || 0
+              ),
+              '#facc15'
+            )}
+          />
+        </div>
+        <div className="bg-[#0B1D33] p-4 rounded-lg shadow">
+          <Line
+            data={makeChartData(
+              'Projected Earnings',
+              earningsSubset.map((v) => v * 12),
+              '#3b82f6'
+            )}
+          />
+        </div>
       </div>
 
-      {/* Slider */}
+      {/* Slider Control */}
       <div className="pt-6">
         <h3 className="font-semibold mb-2">Earnings Range</h3>
         <div className="flex items-center gap-4">
