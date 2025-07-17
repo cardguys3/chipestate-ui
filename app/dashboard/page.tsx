@@ -84,11 +84,11 @@ export default function DashboardPage() {
   }, [])
 
   const badgeList = [
-    'verified',
-    'early_backer',
-    'collector',
-    'diversified',
-    'consistent_investor',
+    { id: 'verified', label: 'Verified' },
+    { id: 'early_backer', label: 'Early Backer' },
+    { id: 'collector', label: 'Collector' },
+    { id: 'diversified', label: 'Diversified' },
+    { id: 'consistent_investor', label: 'Consistent Investor' },
   ]
 
   const getMonthLabel = (i: number) => {
@@ -117,43 +117,48 @@ export default function DashboardPage() {
   })
 
   return (
-    <div className="p-6 text-white space-y-8">
+    <div className="p-6 bg-[#050F20] text-white min-h-screen space-y-10">
       {/* Badges Section */}
-      <div>
-        <h2 className="text-lg font-semibold mb-3">Your Badges</h2>
-        <div className="flex gap-4 flex-wrap">
-          {badgeList.map((badge) => {
-            const earned = badges.includes(badge)
+      <section>
+        <h2 className="text-lg font-semibold mb-4">Your Badges</h2>
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-4">
+          {badgeList.map(({ id, label }) => {
+            const earned = badges.includes(id)
             return (
-              <div
-                key={badge}
-                className={`w-16 h-16 rounded-full bg-center bg-contain bg-no-repeat ${
-                  earned ? '' : 'grayscale opacity-40'
-                }`}
-                title={badge.replaceAll('_', ' ')}
-                style={{ backgroundImage: `url(/badges/${badge}.png)` }}
-              />
+              <div key={id} className="flex flex-col items-center text-center">
+                <div
+                  className={`w-16 h-16 rounded-full bg-center bg-contain bg-no-repeat border ${
+                    earned ? '' : 'grayscale opacity-40'
+                  }`}
+                  title={label}
+                  style={{ backgroundImage: `url(/badges/${id}.png)` }}
+                />
+                <span className="text-xs mt-2 text-gray-300">{label}</span>
+              </div>
             )
           })}
         </div>
-      </div>
+      </section>
 
       {/* Performance Metrics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <MetricCard label="Total Earnings" value={`$${metrics.totalEarnings.toFixed(2)}`} />
-        <MetricCard label="Avg. Monthly" value={`$${metrics.avgMonthly.toFixed(2)}`} />
-        <MetricCard label="Chips Owned" value={metrics.chipsOwned} />
-        <MetricCard label="Properties" value={metrics.propertiesOwned} />
-        <MetricCard label="Avg ROI" value={`${(metrics.avgROI * 100).toFixed(1)}%`} />
-        <MetricCard label="Avg Chip Value" value={`$${metrics.avgChipValue.toFixed(2)}`} />
-        <MetricCard label="Projected Annual" value={`$${metrics.projectedAnnual.toFixed(2)}`} />
-        <MetricCard label="Investment Span" value={`${metrics.spanMonths} months`} />
-      </div>
+      <section>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <MetricCard label="Total Earnings" value={`$${metrics.totalEarnings.toFixed(2)}`} />
+          <MetricCard label="Avg. Monthly" value={`$${metrics.avgMonthly.toFixed(2)}`} />
+          <MetricCard label="Chips Owned" value={metrics.chipsOwned} />
+          <MetricCard label="Properties" value={metrics.propertiesOwned} />
+          <MetricCard label="Avg ROI" value={`${(metrics.avgROI * 100).toFixed(1)}%`} />
+          <MetricCard label="Avg Chip Value" value={`$${metrics.avgChipValue.toFixed(2)}`} />
+          <MetricCard label="Projected Annual" value={`$${metrics.projectedAnnual.toFixed(2)}`} />
+          <MetricCard label="Investment Span" value={`${metrics.spanMonths} months`} />
+        </div>
+      </section>
 
-      {/* Charts in 1 Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Charts Section */}
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-[#0B1D33] p-4 rounded-lg shadow">
           <Line data={makeChartData('Earnings', earningsSubset, '#10b981')} />
+          <div className="text-xs text-gray-400 mt-2">Earnings</div>
         </div>
         <div className="bg-[#0B1D33] p-4 rounded-lg shadow">
           <Line
@@ -165,6 +170,7 @@ export default function DashboardPage() {
               '#facc15'
             )}
           />
+          <div className="text-xs text-gray-400 mt-2">Return on Investment (ROI)</div>
         </div>
         <div className="bg-[#0B1D33] p-4 rounded-lg shadow">
           <Line
@@ -174,11 +180,12 @@ export default function DashboardPage() {
               '#3b82f6'
             )}
           />
+          <div className="text-xs text-gray-400 mt-2">Projected Annual Earnings</div>
         </div>
-      </div>
+      </section>
 
       {/* Slider Control */}
-      <div className="pt-6">
+      <section className="pt-6">
         <h3 className="font-semibold mb-2">Earnings Range</h3>
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-300 w-20 text-right">{startLabel}</span>
@@ -194,7 +201,7 @@ export default function DashboardPage() {
           />
           <span className="text-sm text-gray-300 w-20">{endLabel}</span>
         </div>
-      </div>
+      </section>
     </div>
   )
 }
