@@ -32,8 +32,13 @@ export default function AdminVotingPage() {
   }
 
   async function createVote() {
-    const { data: session } = await supabase.auth.getSession();
-    const userId = session?.data.session?.user?.id;
+    const { data, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !data?.session?.user) {
+      console.error("No authenticated user found.");
+      return;
+    }
+
+    const userId = data.session.user.id;
 
     const { error } = await supabase.from("votes").insert({
       ...newVote,
