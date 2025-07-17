@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import toast, { Toaster } from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
+import { ArrowLeft } from 'lucide-react'
 
 const isEqual = (a: any, b: any) => JSON.stringify(a) === JSON.stringify(b)
 
@@ -76,6 +77,13 @@ export default function AccountPage() {
     <>
       <Toaster position="top-right" />
       <main className="bg-[#0c1a2c] min-h-screen text-white p-6">
+        <button
+          onClick={() => router.back()}
+          className="mb-6 flex items-center gap-2 text-white border border-red-500 hover:bg-red-600 bg-red-500 px-4 py-2 rounded transition"
+        >
+          <ArrowLeft size={18} /> Back
+        </button>
+
         <h1 className="text-3xl font-bold mb-6">Account Details</h1>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -135,7 +143,7 @@ export default function AccountPage() {
           </button>
           <button
             onClick={() => router.push('/forgot-password')}
-            className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded"
+            className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded border border-white/20"
           >
             Change Password
           </button>
