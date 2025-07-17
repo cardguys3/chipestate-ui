@@ -5,7 +5,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
-import LoginModal from '@/components/LoginModal'
+import ClientWrapper from './ClientWrapper'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -24,10 +24,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} bg-[#0B1D33] text-white`}>
-        <Header />
-        {children}
-        <Footer />
-        <LoginModal onClose={() => {}} />
+        <ClientWrapper>
+          <Header />
+          {children}
+          <Footer />
+        </ClientWrapper>
       </body>
     </html>
   )
