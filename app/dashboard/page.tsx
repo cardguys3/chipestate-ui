@@ -1,5 +1,3 @@
-// /app/dashboard/page.tsx
-
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -47,7 +45,7 @@ export default function DashboardPage() {
 
       const { data: badgeData } = await supabase
         .from('user_badges')
-        .select('badge_id')
+        .select('badge_key')
 
       const allMonths = earnings?.map((e) => e.amount) || []
       const total = allMonths.reduce((sum, val) => sum + val, 0)
@@ -77,30 +75,32 @@ export default function DashboardPage() {
         spanMonths,
       })
 
-      setBadges(badgeData?.map((b) => b.badge_id) || [])
+      setBadges(badgeData?.map((b) => b.badge_key) || [])
     }
 
     fetchData()
   }, [])
 
   const badgeList = [
+    { id: 'registered', label: 'Registered' },
     { id: 'verified', label: 'Verified' },
-  { id: 'early_backer', label: 'Early Backer' },
-  { id: 'collector_3', label: 'Collector (3 Badges)' },
-  { id: 'collector_5', label: 'Collector (5 Badges)' },
-  { id: 'collector_10', label: 'Collector (10+ Badges)' },
-  { id: 'bulk_buyer_3', label: 'Bulk Buyer (3+ Chips)' },
-  { id: 'bulk_buyer_5', label: 'Bulk Buyer (5–9 Chips)' },
-  { id: 'bulk_buyer_10', label: 'Bulk Buyer (10+ Chips)' },
-  { id: 'diversified', label: 'Diversified' },
-  { id: 'consistent_investor', label: 'Consistent Investor' },
-  { id: 'early_voter', label: 'Early Voter' },
-  { id: 'feedback_champion', label: 'Feedback Champion' },
-  { id: 'renter_friendly', label: 'Renter Friendly' },
-  { id: 'reserve_guardian', label: 'Reserve Guardian' },
-  { id: 'estate_planner', label: 'Estate Planner' },
-  { id: 'market_mover', label: 'Market Mover' },
-  { id: 'voting_citizen', label: 'Voting Citizen' },
+    { id: 'early_backer', label: 'Early Backer' },
+    { id: 'collector_3', label: 'L1 Collector' },
+    { id: 'collector_5', label: 'L2 Collector' },
+    { id: 'collector_10', label: 'L3 Collector' },
+    { id: 'bulk_buyer_3', label: 'L1 Bulk' },
+    { id: 'bulk_buyer_5', label: 'L2 Bulk' },
+    { id: 'bulk_buyer_10', label: 'L3 Bulk' },
+    { id: 'diversified', label: 'Diversifyer' },
+    { id: 'consistent_investor', label: 'Consistent' },
+    { id: 'early_voter', label: 'Early Voter' },
+    { id: 'feedback_champion', label: 'Feedback Champ' },
+    { id: 'renter_friendly', label: 'Renter Friendly' },
+    { id: 'reserve_guardian', label: 'Reserve Guardian' },
+    { id: 'estate_planner', label: 'Estate Planner' },
+    { id: 'market_mover', label: 'Market Mover' },
+    { id: 'voting_citizen', label: 'Voting Citizen' },
+    { id: 'alpha_tester', label: 'Alpha Tester' },
   ]
 
   const getMonthLabel = (i: number) => {
@@ -132,19 +132,19 @@ export default function DashboardPage() {
       {/* Badges Section */}
       <section>
         <h2 className="text-lg font-semibold mb-4">Your Badges</h2>
-        <div className="grid grid-cols-4 sm:grid-cols-8 gap-4">
+        <div className="grid grid-cols-4 sm:grid-cols-9 md:grid-cols-12 lg:grid-cols-18 gap-3">
           {badgeList.map(({ id, label }) => {
             const earned = badges.includes(id)
             return (
               <div key={id} className="flex flex-col items-center text-center">
                 <div
-                  className={`w-12 h-12 rounded-full bg-center bg-contain bg-no-repeat border ${
-                    earned ? '' : 'grayscale opacity-40'
+                  className={`w-10 h-10 rounded-full bg-center bg-contain bg-no-repeat border ${
+                    earned ? '' : 'grayscale opacity-30'
                   }`}
                   title={label}
                   style={{ backgroundImage: `url(/badges/${id}.png)` }}
                 />
-                <span className="text-[10px] mt-1 text-gray-300">{label}</span>
+                <span className="text-[9px] mt-1 text-gray-300">{label}</span>
               </div>
             )
           })}
