@@ -1,3 +1,4 @@
+//LoginModal
 'use client'
 
 import { useState } from 'react'
@@ -35,7 +36,6 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
       const isAdmin = ADMIN_EMAILS.includes(data.user.email || '')
       const redirectPath = isAdmin ? '/admin' : '/dashboard'
 
-      // Route and refresh to update header state
       router.push(redirectPath)
       window.location.reload()
     } else {
@@ -46,10 +46,10 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 backdrop-blur-sm bg-black/10 z-50 flex justify-center items-center">
-      <div className="bg-white w-full max-w-md p-6 rounded-lg relative shadow-xl">
+    <div className="fixed inset-0 backdrop-blur-md bg-black/60 z-50 flex justify-center items-center">
+      <div className="bg-[#0c1a2c] text-white w-full max-w-md p-6 rounded-lg relative shadow-xl border border-white/10">
         <button
-          className="absolute top-3 right-4 text-gray-500 hover:text-gray-700 text-2xl"
+          className="absolute top-3 right-4 text-gray-400 hover:text-white text-2xl"
           onClick={onClose}
           aria-label="Close"
         >
@@ -58,7 +58,7 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
 
         <h2 className="text-xl font-semibold mb-4 text-center">Login</h2>
 
-        {error && <p className="text-red-600 mb-3 text-center">{error}</p>}
+        {error && <p className="text-red-400 mb-3 text-center">{error}</p>}
 
         <form onSubmit={handleLogin}>
           <label className="block mb-3">
@@ -67,7 +67,7 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full border px-3 py-2 rounded mt-1"
+              className="w-full border border-white/20 bg-white/10 text-white px-3 py-2 rounded mt-1"
               required
             />
           </label>
@@ -78,7 +78,7 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full border px-3 py-2 rounded mt-1"
+              className="w-full border border-white/20 bg-white/10 text-white px-3 py-2 rounded mt-1"
               required
             />
           </label>
@@ -86,14 +86,14 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-emerald-600 text-white py-2 rounded hover:bg-emerald-700 transition"
+            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded border border-white/20 shadow-md transition"
           >
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
 
         <p className="mt-4 text-center text-sm">
-          <a href="/forgot-password" className="text-blue-600 hover:underline">
+          <a href="/forgot-password" className="text-blue-400 hover:underline">
             Login assistance
           </a>
         </p>
