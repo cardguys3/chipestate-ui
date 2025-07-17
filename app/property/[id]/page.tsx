@@ -11,8 +11,7 @@ export const metadata: Metadata = {
   title: 'Property Details | ChipEstate',
 }
 
-export default async function PropertyDetailsPage({ params }: { params: { id: string } }) {
-  // ✅ FIX: pass a FUNCTION, not the result of cookies()
+export default async function PropertyDetailsPage(props: { params: { id: string } }) {
   const supabase = createServerComponentClient({ cookies })
 
   const {
@@ -26,7 +25,7 @@ export default async function PropertyDetailsPage({ params }: { params: { id: st
   const { data: property, error } = await supabase
     .from('properties')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', props.params.id)
     .single()
 
   if (error || !property) {
