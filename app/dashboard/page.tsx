@@ -34,31 +34,38 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function fetchData() {
-      const { data: earnings } = await supabase
-        .from('user_earnings')
-        .select('month, amount')
-        .order('month')
+      const {
+        data: userResult,
+        error: userError,
+      } = await supabase.auth.getUser()
+      const userId = userResult?.user?.id
+      if (!userId) return
+
+      const { data: earningsRaw } = await supabase
+        .from('chip_earnings')
+        .select('earning_date, amount')
+        .eq('user_id', userId)
+        .order('earning_date')
 
       const { data: chips } = await supabase
-        .from('user_chips')
-        .select('property_id, purchase_price, earnings')
+        .from('chips')
+        .select('property_id, current_value')
+        .eq('owner_id', userId)
 
       const { data: badgeData } = await supabase
         .from('user_badges')
         .select('badge_key')
+        .eq('user_id', userId)
 
-      const allMonths = earnings?.map((e) => e.amount) || []
+      const earningsByMonth = groupEarningsByMonth(earningsRaw || [])
+      const allMonths = Object.values(earningsByMonth)
       const total = allMonths.reduce((sum, val) => sum + val, 0)
       const avg = total / (allMonths.length || 1)
 
       const chipsOwned = chips?.length ?? 0
       const propertiesOwned = chips ? new Set(chips.map((c) => c.property_id)).size : 0
 
-      const roi =
-        chips && chipsOwned > 0
-          ? chips.reduce((acc, c) => acc + (c.earnings / c.purchase_price || 0), 0) / chipsOwned
-          : 0
-
+      const roi = 0 // Placeholder until ROI calc is properly implemented
       const avgChipValue = chipsOwned ? total / chipsOwned : 0
       const projectedAnnual = avg * 12
       const spanMonths = allMonths.length
@@ -80,6 +87,18 @@ export default function DashboardPage() {
 
     fetchData()
   }, [])
+
+  function groupEarningsByMonth(raw: { earning_date: string; amount: number }[]) {
+    const monthly: Record<string, number> = {}
+    for (const row of raw) {
+      const key = new Date(row.earning_date).toLocaleDateString('en-US', {
+        year: '2-digit',
+        month: 'short',
+      })
+      monthly[key] = (monthly[key] || 0) + Number(row.amount || 0)
+    }
+    return monthly
+  }
 
   const badgeList = [
     { id: 'registered', label: 'Registered' },
@@ -103,19 +122,14 @@ export default function DashboardPage() {
     { id: 'alpha_tester', label: 'Alpha Tester' },
   ]
 
-  const getMonthLabel = (i: number) => {
-    const now = new Date()
-    now.setMonth(now.getMonth() - (earningsData.length - 1 - i))
-    return now.toLocaleString('default', { month: 'short', year: '2-digit' })
-  }
-
+  const monthLabels = Object.keys(groupEarningsByMonth([]))
   const [start, end] = sliderRange
-  const startLabel = getMonthLabel(start)
-  const endLabel = getMonthLabel(end)
+  const startLabel = monthLabels[start] || ''
+  const endLabel = monthLabels[end] || ''
   const earningsSubset = earningsData.slice(start, end + 1)
 
   const makeChartData = (label: string, values: number[], color: string) => ({
-    labels: values.map((_, i) => getMonthLabel(i + start)),
+    labels: values.map((_, i) => monthLabels[i + start]),
     datasets: [
       {
         label,
@@ -129,7 +143,7 @@ export default function DashboardPage() {
 
   return (
     <div className="p-6 bg-[#050F20] text-white min-h-screen space-y-10">
-      {/* Badges Section */}
+      {/* Badges */}
       <section>
         <h2 className="text-lg font-semibold mb-4">Your Badges</h2>
         <div className="grid grid-cols-4 sm:grid-cols-9 md:grid-cols-12 lg:grid-cols-18 gap-3">
@@ -151,7 +165,7 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* Performance Metrics */}
+      {/* Metrics */}
       <section>
         <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-4">
           <MetricCard label="Total Earnings" value={`$${metrics.totalEarnings.toFixed(2)}`} />
@@ -165,7 +179,7 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* Charts Section */}
+      {/* Charts */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-[#0B1D33] p-4 rounded-lg shadow">
           <Line data={makeChartData('Earnings', earningsSubset, '#10b981')} />
@@ -195,7 +209,7 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* Slider Control */}
+      {/* Slider */}
       <section className="pt-6">
         <h3 className="font-semibold mb-2">Earnings Range</h3>
         <div className="flex items-center gap-4">
