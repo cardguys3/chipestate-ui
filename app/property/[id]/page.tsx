@@ -3,7 +3,7 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import type { Metadata, PageProps } from 'next'
+import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,10 +11,11 @@ export const metadata: Metadata = {
   title: 'Property Details | ChipEstate',
 }
 
-export default async function PropertyDetailsPage(
-  props: PageProps<{ id: string }>
-) {
-  const { params } = props
+export default async function PropertyDetailsPage({
+  params,
+}: {
+  params: { id: string }
+}) {
   const supabase = createServerComponentClient({ cookies: cookies() })
 
   const {
