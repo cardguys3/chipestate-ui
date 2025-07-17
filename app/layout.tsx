@@ -1,46 +1,29 @@
-// /app/ClientLayout.tsx
-'use client'
+// /app/layout.tsx
 
-import { useState, useEffect, useRef } from 'react'
-import Header from '@/components/Header'
-import Footer from '@/components/Footer'
-import LoginModal from '@/components/LoginModal'
+import './globals.css'
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import ClientLayout from './ClientLayout'
 
-export default function ClientLayout({ children }: { children: React.ReactNode }) {
-  const [showLogin, setShowLogin] = useState(false)
-  const modalRef = useRef<HTMLDivElement | null>(null)
+const inter = Inter({
+  subsets: ['latin'],
+})
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        modalRef.current &&
-        !modalRef.current.contains(event.target as Node)
-      ) {
-        setShowLogin(false)
-      }
-    }
+export const metadata: Metadata = {
+  title: 'ChipEstate',
+  description: 'Invest in fractional real estate.',
+}
 
-    if (showLogin) {
-      document.addEventListener('mousedown', handleClickOutside)
-    } else {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [showLogin])
-
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <>
-      <Header onLoginClick={() => setShowLogin(true)} />
-      <main>{children}</main>
-      <Footer />
-      {showLogin && (
-        <div ref={modalRef}>
-          <LoginModal onClose={() => setShowLogin(false)} />
-        </div>
-      )}
-    </>
+    <html lang="en">
+      <body className={inter.className}>
+        <ClientLayout>{children}</ClientLayout>
+      </body>
+    </html>
   )
 }
