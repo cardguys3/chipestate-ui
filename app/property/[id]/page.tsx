@@ -1,54 +1,69 @@
 // app/property/[id]/page.tsx
 
-import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import type { Metadata } from 'next'
+'use client'
 
-export const dynamic = 'force-dynamic'
+import { useEffect, useState } from 'react'
+import { useParams } from 'next/navigation'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import LoginModal from '@/components/LoginModal'
 
-export const metadata: Metadata = {
-  title: 'Property Details | ChipEstate',
-}
+export default function PropertyDetailsPage() {
+  const [property, setProperty] = useState<any>(null)
+  const [sessionChecked, setSessionChecked] = useState(false)
+  const [showLogin, setShowLogin] = useState(false)
+  const supabase = createClientComponentClient()
+  const { id } = useParams()
 
-export default async function PropertyDetailsPage(props: any) {
-  const supabase = createServerComponentClient({ cookies })
+  useEffect(() => {
+    const fetchData = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
 
-  const id = props?.params?.id
-  if (!id) {
-    return (
-      <main className="min-h-screen bg-[#0B1D33] text-white p-8">
-        <p>Invalid property ID.</p>
-      </main>
-    )
-  }
+      if (!session) {
+        setShowLogin(true)
+        setSessionChecked(true)
+        return
+      }
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
+      const { data, error } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('id', id)
+        .single()
 
-  if (!session) {
-    redirect('/login')
-  }
+      if (!error && data) {
+        setProperty(data)
+      }
 
-  const { data: property, error } = await supabase
-    .from('properties')
-    .select('*')
-    .eq('id', id)
-    .single()
+      setSessionChecked(true)
+    }
 
-  if (error || !property) {
-    return (
-      <main className="min-h-screen bg-[#0B1D33] text-white p-8">
-        <p>Property not found.</p>
-      </main>
-    )
-  }
+    fetchData()
+  }, [id, supabase])
 
   const resolveImageUrl = (url: string): string => {
     if (!url) return ''
     if (url.startsWith('http')) return url
     return `https://ajburehyunbvpuhnyjbo.supabase.co/storage/v1/object/public/property-images/${url}`
+  }
+
+  if (showLogin) {
+    return <LoginModal onClose={() => setShowLogin(false)} />
+  }
+
+  if (!sessionChecked) {
+    return (
+      <main className="min-h-screen bg-[#0B1D33] text-white p-8">
+        <p>Loading...</p>
+      </main>
+    )
+  }
+
+  if (!property) {
+    return (
+      <main className="min-h-screen bg-[#0B1D33] text-white p-8">
+        <p>Property not found.</p>
+      </main>
+    )
   }
 
   const mainImage = property.image_urls?.length
@@ -75,7 +90,7 @@ export default async function PropertyDetailsPage(props: any) {
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm mb-6">
-          {[ 
+          {[
             ['Current Price', property.current_value],
             ['Purchase Price', property.purchase_price],
             ['Cap Rate', property.cap_rate ? `${property.cap_rate}%` : 'N/A'],

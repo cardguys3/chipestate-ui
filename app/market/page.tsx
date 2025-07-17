@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import { Database } from '@/types/supabase';
 import Link from 'next/link';
-import LoginModal from '@/components/LoginModal'; // Ensure this exists
+import LoginModal from '@/components/LoginModal';
 import { useRouter } from 'next/navigation';
 
 interface Property {
@@ -44,7 +44,6 @@ export default function MarketPage() {
       } = await supabase.auth.getUser();
       setUser(user);
     };
-
     fetchUser();
   }, []);
 
