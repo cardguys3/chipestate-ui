@@ -128,7 +128,7 @@ export default function VoteDetailPage() {
               </div>
               {vote.is_open && (
                 <Button
-                  variant={isSelected ? "default" : "outline"}
+                  variant={isSelected ? "primary" : "secondary"}
                   onClick={() => castVote(opt.id)}
                 >
                   {isSelected ? "Voted" : "Vote"}
