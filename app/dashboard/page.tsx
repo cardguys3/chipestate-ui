@@ -1,3 +1,5 @@
+// app/dashboard/page.tsx
+
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -19,6 +21,7 @@ ChartJS.register(LineElement, PointElement, CategoryScale, LinearScale, Tooltip,
 
 export default function DashboardPage() {
   const [earningsData, setEarningsData] = useState<number[]>([])
+  const [monthLabels, setMonthLabels] = useState<string[]>([])
   const [sliderRange, setSliderRange] = useState<[number, number]>([0, 11])
   const [badges, setBadges] = useState<string[]>([])
   const [metrics, setMetrics] = useState({
@@ -58,6 +61,7 @@ export default function DashboardPage() {
         .eq('user_id', userId)
 
       const earningsByMonth = groupEarningsByMonth(earningsRaw || [])
+      const months = Object.keys(earningsByMonth)
       const allMonths = Object.values(earningsByMonth)
       const total = allMonths.reduce((sum, val) => sum + val, 0)
       const avg = total / (allMonths.length || 1)
@@ -65,12 +69,13 @@ export default function DashboardPage() {
       const chipsOwned = chips?.length ?? 0
       const propertiesOwned = chips ? new Set(chips.map((c) => c.property_id)).size : 0
 
-      const roi = 0 // Placeholder until ROI calc is properly implemented
+      const roi = 0 // Placeholder
       const avgChipValue = chipsOwned ? total / chipsOwned : 0
       const projectedAnnual = avg * 12
       const spanMonths = allMonths.length
 
       setEarningsData(allMonths)
+      setMonthLabels(months)
       setMetrics({
         totalEarnings: total,
         avgMonthly: avg,
@@ -101,12 +106,12 @@ export default function DashboardPage() {
   }
 
   const badgeList = [
-    { id: 'registered', label: 'Registered' },
+    { id: 'registration_complete', label: 'Registered' },
     { id: 'verified', label: 'Verified' },
     { id: 'early_backer', label: 'Early Backer' },
-    { id: 'collector_3', label: 'L1 Collector' },
-    { id: 'collector_5', label: 'L2 Collector' },
-    { id: 'collector_10', label: 'L3 Collector' },
+    { id: 'badge_collector_3', label: 'L1 Collector' },
+    { id: 'badge_collector_5', label: 'L2 Collector' },
+    { id: 'badge_collector_10', label: 'L3 Collector' },
     { id: 'bulk_buyer_3', label: 'L1 Bulk' },
     { id: 'bulk_buyer_5', label: 'L2 Bulk' },
     { id: 'bulk_buyer_10', label: 'L3 Bulk' },
@@ -122,7 +127,6 @@ export default function DashboardPage() {
     { id: 'alpha_tester', label: 'Alpha Tester' },
   ]
 
-  const monthLabels = Object.keys(groupEarningsByMonth([]))
   const [start, end] = sliderRange
   const startLabel = monthLabels[start] || ''
   const endLabel = monthLabels[end] || ''
