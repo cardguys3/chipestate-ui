@@ -3,7 +3,9 @@
 import './globals.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import ClientLayout from './ClientLayout'
+import Header from '@/components/Header'
+import Footer from '@/components/Footer'
+import LoginModal from '@/components/LoginModal'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -21,8 +23,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <ClientLayout>{children}</ClientLayout>
+      <body className={`${inter.className} bg-[#0B1D33] text-white`}>
+        <Header />
+        {children}
+        <Footer />
+        <LoginModal onClose={() => {}} />
       </body>
     </html>
   )
