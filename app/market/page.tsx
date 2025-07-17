@@ -2,102 +2,43 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
-import { useRouter } from 'next/navigation'
+import LoginModal from '@/components/LoginModal'
+import PropertyCard from '@/components/PropertyCard'
 
-const ADMIN_EMAILS = ['mark@chipestate.com', 'cardguys3@gmail.com']
+export default function MarketPage() {
+  const [properties, setProperties] = useState<any[]>([])
+  const [showLogin, setShowLogin] = useState(false)
 
-export default function LoginModal({ onClose }: { onClose: () => void }) {
-  const router = useRouter()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  useEffect(() => {
+    const fetchProperties = async () => {
+      const { data, error } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('hidden', false)
+        .eq('active', true)
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setLoading(true)
-
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-
-    if (error) {
-      setError('Invalid credentials')
-      setLoading(false)
-      return
+      if (data) setProperties(data)
     }
 
-    if (data.user) {
-      onClose()
-
-      const isAdmin = ADMIN_EMAILS.includes(data.user.email || '')
-      const redirectPath = isAdmin ? '/admin' : '/dashboard'
-
-      router.push(redirectPath)
-      window.location.reload()
-    } else {
-      setError('Unexpected login issue')
-    }
-
-    setLoading(false)
-  }
+    fetchProperties()
+  }, [])
 
   return (
-    <div className="fixed inset-0 backdrop-blur-md bg-black/70 z-50 flex justify-center items-center">
-      <div className="bg-[#0B1D33] text-white w-full max-w-md p-6 rounded-lg relative shadow-xl border border-white/10">
-        <button
-          className="absolute top-3 right-4 text-gray-400 hover:text-white text-2xl"
-          onClick={onClose}
-          aria-label="Close"
-        >
-          &times;
-        </button>
+    <div className="min-h-screen bg-[#0B1D33] text-white p-6">
+      <h1 className="text-3xl font-bold mb-6 text-center">Explore the Market</h1>
 
-        <h2 className="text-xl font-semibold mb-4 text-center">Login</h2>
+      {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
 
-        {error && <p className="text-red-400 mb-3 text-center">{error}</p>}
-
-        <form onSubmit={handleLogin}>
-          <label className="block mb-3">
-            <span className="text-sm">Email</span>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full border border-white/20 bg-white/10 text-white px-3 py-2 rounded mt-1 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              required
-            />
-          </label>
-
-          <label className="block mb-4">
-            <span className="text-sm">Password</span>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full border border-white/20 bg-white/10 text-white px-3 py-2 rounded mt-1 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              required
-            />
-          </label>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded border border-white/20 shadow-md transition"
-          >
-            {loading ? 'Logging in...' : 'Login'}
-          </button>
-        </form>
-
-        <p className="mt-4 text-center text-sm">
-          <a href="/forgot-password" className="text-blue-400 hover:underline">
-            Login assistance
-          </a>
-        </p>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {properties.map((property) => (
+          <PropertyCard
+            key={property.id}
+            property={property}
+            onLoginClick={() => setShowLogin(true)}
+          />
+        ))}
       </div>
     </div>
   )
