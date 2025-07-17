@@ -52,9 +52,13 @@ export default function DashboardPage() {
       const allMonths = earnings?.map((e) => e.amount) || []
       const total = allMonths.reduce((sum, val) => sum + val, 0)
       const avg = total / allMonths.length || 0
-      const chipsOwned = chips?.length || 0
-      const propertiesOwned = new Set(chips?.map((c) => c.property_id)).size
-      const roi = chips?.reduce((acc, c) => acc + (c.earnings / c.purchase_price), 0) / chipsOwned || 0
+
+      const chipsOwned = chips?.length ?? 0
+      const propertiesOwned = chips ? new Set(chips.map((c) => c.property_id)).size : 0
+      const roi =
+        chips && chipsOwned > 0
+          ? chips.reduce((acc, c) => acc + (c.earnings / c.purchase_price), 0) / chipsOwned
+          : 0
 
       const avgChipValue = chipsOwned ? total / chipsOwned : 0
       const projectedAnnual = avg * 12
@@ -151,7 +155,9 @@ export default function DashboardPage() {
             '#facc15'
           )}
         />
-        <Line data={makeChartData('Projected Earnings', earningsSubset.map(v => v * 12), '#3b82f6')} />
+        <Line
+          data={makeChartData('Projected Earnings', earningsSubset.map((v) => v * 12), '#3b82f6')}
+        />
       </div>
 
       {/* Slider */}
