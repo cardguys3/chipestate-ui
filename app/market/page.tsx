@@ -1,9 +1,13 @@
+// app/market/page.tsx
+
 'use client';
 
 import { useEffect, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import { Database } from '@/types/supabase';
 import Link from 'next/link';
+import LoginModal from '@/components/LoginModal'; // Ensure this exists
+import { useRouter } from 'next/navigation';
 
 interface Property {
   id: string;
@@ -24,14 +28,28 @@ export default function MarketPage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [sortField, setSortField] = useState<keyof Property>('current_value');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const router = useRouter();
+
+  const supabase = createBrowserClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setUser(user);
+    };
+
+    fetchUser();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
-      const supabase = createBrowserClient<Database>(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
-
       const { data: propertyData, error } = await supabase
         .from('properties')
         .select(`
@@ -115,8 +133,17 @@ export default function MarketPage() {
   const sortArrow = (field: keyof Property) =>
     sortField === field ? (sortDirection === 'asc' ? '↑' : '↓') : '';
 
+  const handlePropertyClick = (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    if (user) {
+      router.push(`/property/${id}`);
+    } else {
+      setShowLoginModal(true);
+    }
+  };
+
   return (
-    <main className="min-h-screen bg-[#0B1D33] text-white p-6">
+    <main className="min-h-screen bg-[#0B1D33] text-white p-6 relative">
       <h1 className="text-2xl font-bold mb-6">ChipEstate Market</h1>
       <div className="overflow-x-auto">
         <table className="w-full table-auto text-sm border-collapse">
@@ -137,9 +164,9 @@ export default function MarketPage() {
             {properties.map((p) => (
               <tr key={p.id} className="border-b border-blue-900 hover:bg-blue-900/30">
                 <td className="p-3">
-                  <Link href={`/property/${p.id}`} className="text-blue-400 hover:underline">
+                  <a href="#" className="text-blue-400 hover:underline" onClick={(e) => handlePropertyClick(p.id, e)}>
                     {p.title}
-                  </Link>
+                  </a>
                 </td>
                 <td className="p-3">{p.location}</td>
                 <td className="p-3">{formatCurrency(p.current_value)}</td>
@@ -154,6 +181,10 @@ export default function MarketPage() {
           </tbody>
         </table>
       </div>
+
+      {showLoginModal && (
+        <LoginModal onClose={() => setShowLoginModal(false)} />
+      )}
     </main>
   );
 }
