@@ -1,4 +1,4 @@
-//Market
+//app/market/page.tsx
 
 'use client';
 
@@ -41,8 +41,7 @@ export default function MarketPage() {
           occupied, reserve_balance, manager_name
         `)
         .eq('is_active', true)
-        .eq('is_hidden', false)
-        .order(sortField, { ascending: sortDirection === 'asc' });
+        .eq('is_hidden', false);
 
       if (error || !propertyData) {
         console.error('Error loading properties:', error?.message);
