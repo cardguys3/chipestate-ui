@@ -21,6 +21,9 @@ export default function DashboardPage() {
     chipsOwned: 0,
     propertiesOwned: 0,
     avgROI: 0,
+    avgChipValue: 0,
+    projectedAnnual: 0,
+    spanMonths: 0,
   })
 
   useEffect(() => {
@@ -45,6 +48,10 @@ export default function DashboardPage() {
       const propertiesOwned = new Set(chips?.map((c) => c.property_id)).size
       const roi = chips?.reduce((acc, c) => acc + (c.earnings / c.purchase_price), 0) / chipsOwned || 0
 
+      const avgChipValue = chipsOwned ? total / chipsOwned : 0
+      const projectedAnnual = avg * 12
+      const spanMonths = allMonths.length
+
       setEarningsData(allMonths)
       setMetrics({
         totalEarnings: total,
@@ -52,6 +59,9 @@ export default function DashboardPage() {
         chipsOwned,
         propertiesOwned,
         avgROI: roi,
+        avgChipValue,
+        projectedAnnual,
+        spanMonths,
       })
 
       setBadges(badgeData?.map((b) => b.badge_id) || [])
@@ -88,21 +98,18 @@ export default function DashboardPage() {
       </div>
 
       {/* Metrics Row */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <MetricCard label="Total Earnings" value={`$${metrics.totalEarnings.toFixed(2)}`} />
         <MetricCard label="Avg. Monthly" value={`$${metrics.avgMonthly.toFixed(2)}`} />
         <MetricCard label="Chips Owned" value={metrics.chipsOwned} />
         <MetricCard label="Properties" value={metrics.propertiesOwned} />
-        <MetricCard label="Avg. ROI" value={`${(metrics.avgROI * 100).toFixed(1)}%`} />
+        <MetricCard label="Avg ROI" value={`${(metrics.avgROI * 100).toFixed(1)}%`} />
+        <MetricCard label="Avg Chip Value" value={`$${metrics.avgChipValue.toFixed(2)}`} />
+        <MetricCard label="Projected Annual" value={`$${metrics.projectedAnnual.toFixed(2)}`} />
+        <MetricCard label="Investment Span" value={`${metrics.spanMonths} months`} />
       </div>
 
-      {/* Chart Row */}
+      {/* Charts Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Chart title="Earnings Over Time" data={earningsData} color="#10b981" />
-        <Chart title="ROI Over Time" data={earningsData.map((v, i) => v / (i + 1))} color="#facc15" />
-        <Chart title="Chip Value Growth" data={earningsData.map((v, i) => v * 1.1)} color="#3b82f6" />
-      </div>
-
-      {/* Time Slider */}
-      <div className="pt-8">
-        <h2 className="text-sm font-medium text-gray-300 mb-2">
+        <Chart title="ROI Over Time" data={earningsData.map((v,
