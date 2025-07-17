@@ -11,8 +11,17 @@ export const metadata: Metadata = {
   title: 'Property Details | ChipEstate',
 }
 
-export default async function PropertyDetailsPage(props: { params: { id: string } }) {
+export default async function PropertyDetailsPage(props: any) {
   const supabase = createServerComponentClient({ cookies })
+
+  const id = props?.params?.id
+  if (!id) {
+    return (
+      <main className="min-h-screen bg-[#0B1D33] text-white p-8">
+        <p>Invalid property ID.</p>
+      </main>
+    )
+  }
 
   const {
     data: { session },
@@ -25,7 +34,7 @@ export default async function PropertyDetailsPage(props: { params: { id: string 
   const { data: property, error } = await supabase
     .from('properties')
     .select('*')
-    .eq('id', props.params.id)
+    .eq('id', id)
     .single()
 
   if (error || !property) {
@@ -66,7 +75,7 @@ export default async function PropertyDetailsPage(props: { params: { id: string 
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm mb-6">
-          {[
+          {[ 
             ['Current Price', property.current_value],
             ['Purchase Price', property.purchase_price],
             ['Cap Rate', property.cap_rate ? `${property.cap_rate}%` : 'N/A'],
