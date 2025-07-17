@@ -24,6 +24,7 @@ export default function DashboardPage() {
   const [monthLabels, setMonthLabels] = useState<string[]>([])
   const [sliderRange, setSliderRange] = useState<[number, number]>([0, 11])
   const [badges, setBadges] = useState<string[]>([])
+  const [investmentActivity, setInvestmentActivity] = useState<number[]>([])
   const [metrics, setMetrics] = useState({
     totalEarnings: 0,
     avgMonthly: 0,
@@ -52,7 +53,7 @@ export default function DashboardPage() {
 
       const { data: chips } = await supabase
         .from('chips')
-        .select('property_id, current_value')
+        .select('property_id, current_value, created_at')
         .eq('owner_id', userId)
 
       const { data: badgeData } = await supabase
@@ -68,26 +69,36 @@ export default function DashboardPage() {
 
       const chipsOwned = chips?.length ?? 0
       const propertiesOwned = chips ? new Set(chips.map((c) => c.property_id)).size : 0
+      const avgChipValue = chipsOwned
+        ? chips.reduce((sum, c) => sum + (c.current_value || 0), 0) / chipsOwned
+        : 0
 
-      const roi = 0 // Placeholder
-      const avgChipValue = chipsOwned ? total / chipsOwned : 0
       const projectedAnnual = avg * 12
       const spanMonths = allMonths.length
 
       setEarningsData(allMonths)
       setMonthLabels(months)
+      setBadges(badgeData?.map((b) => b.badge_key) || [])
       setMetrics({
         totalEarnings: total,
         avgMonthly: avg,
         chipsOwned,
         propertiesOwned,
-        avgROI: roi,
+        avgROI: 0,
         avgChipValue,
         projectedAnnual,
         spanMonths,
       })
 
-      setBadges(badgeData?.map((b) => b.badge_key) || [])
+      const investmentByMonth: Record<string, number> = {}
+      for (const chip of chips || []) {
+        const dateKey = new Date(chip.created_at).toLocaleDateString('en-US', {
+          year: '2-digit',
+          month: 'short',
+        })
+        investmentByMonth[dateKey] = (investmentByMonth[dateKey] || 0) + 1
+      }
+      setInvestmentActivity(months.map((m) => investmentByMonth[m] || 0))
     }
 
     fetchData()
@@ -109,12 +120,12 @@ export default function DashboardPage() {
     { id: 'registration_complete', label: 'Registered' },
     { id: 'verified', label: 'Verified' },
     { id: 'early_backer', label: 'Early Backer' },
-    { id: 'badge_collector_3', label: 'L1 Collector' },
-    { id: 'badge_collector_5', label: 'L2 Collector' },
-    { id: 'badge_collector_10', label: 'L3 Collector' },
-    { id: 'bulk_buyer_3', label: 'L1 Bulk' },
-    { id: 'bulk_buyer_5', label: 'L2 Bulk' },
-    { id: 'bulk_buyer_10', label: 'L3 Bulk' },
+    { id: 'badge_collector_3', label: 'Bronze Collector' },
+    { id: 'badge_collector_5', label: 'Silver Collector' },
+    { id: 'badge_collector_10', label: 'Gold Collector' },
+    { id: 'bulk_buyer_3', label: 'Bronze Bulk' },
+    { id: 'bulk_buyer_5', label: 'Silver Bulk' },
+    { id: 'bulk_buyer_10', label: 'Gold Bulk' },
     { id: 'diversified', label: 'Diversifyer' },
     { id: 'consistent_investor', label: 'Consistent' },
     { id: 'early_voter', label: 'Early Voter' },
@@ -131,6 +142,7 @@ export default function DashboardPage() {
   const startLabel = monthLabels[start] || ''
   const endLabel = monthLabels[end] || ''
   const earningsSubset = earningsData.slice(start, end + 1)
+  const chipActivitySubset = investmentActivity.slice(start, end + 1)
 
   const makeChartData = (label: string, values: number[], color: string) => ({
     labels: values.map((_, i) => monthLabels[i + start]),
@@ -183,34 +195,47 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* Charts */}
+      {/* First Row Charts */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-[#0B1D33] p-4 rounded-lg shadow">
-          <Line data={makeChartData('Earnings', earningsSubset, '#10b981')} />
-          <div className="text-xs text-gray-400 mt-2">Earnings</div>
-        </div>
-        <div className="bg-[#0B1D33] p-4 rounded-lg shadow">
-          <Line
-            data={makeChartData(
-              'ROI Change',
-              earningsSubset.map((v, i, arr) =>
-                i === 0 ? 0 : ((v - arr[i - 1]) / arr[i - 1]) * 100 || 0
-              ),
-              '#facc15'
-            )}
-          />
-          <div className="text-xs text-gray-400 mt-2">Return on Investment (ROI)</div>
-        </div>
-        <div className="bg-[#0B1D33] p-4 rounded-lg shadow">
-          <Line
-            data={makeChartData(
-              'Projected Earnings',
-              earningsSubset.map((v) => v * 12),
-              '#3b82f6'
-            )}
-          />
-          <div className="text-xs text-gray-400 mt-2">Projected Annual Earnings</div>
-        </div>
+        <ChartCard title="Earnings" data={makeChartData('Earnings', earningsSubset, '#10b981')} />
+        <ChartCard
+          title="Return on Investment (ROI)"
+          data={makeChartData(
+            'ROI Change',
+            earningsSubset.map((v, i, arr) =>
+              i === 0 ? 0 : ((v - arr[i - 1]) / arr[i - 1]) * 100 || 0
+            ),
+            '#facc15'
+          )}
+        />
+        <ChartCard
+          title="Projected Annual Earnings"
+          data={makeChartData('Projected Earnings', earningsSubset.map((v) => v * 12), '#3b82f6')}
+        />
+      </section>
+
+      {/* Second Row Charts */}
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <ChartCard
+          title="Investment Activity"
+          data={makeChartData('Chips Purchased', chipActivitySubset, '#e879f9')}
+        />
+        <ChartCard
+          title="Overall Chip Value"
+          data={makeChartData(
+            'Total Value',
+            earningsSubset.map((_, i) => metrics.avgChipValue * (metrics.chipsOwned || 1)),
+            '#22d3ee'
+          )}
+        />
+        <ChartCard
+          title="Portfolio Growth Projection"
+          data={makeChartData(
+            'Growth Projection',
+            earningsSubset.map((v, i) => (i + 1) * v * 2),
+            '#8b5cf6'
+          )}
+        />
       </section>
 
       {/* Slider */}
@@ -240,6 +265,15 @@ function MetricCard({ label, value }: { label: string; value: string | number })
     <div className="bg-[#0B1D33] border border-white/10 p-3 rounded shadow">
       <div className="text-[10px] text-gray-400">{label}</div>
       <div className="text-lg font-bold text-white">{value}</div>
+    </div>
+  )
+}
+
+function ChartCard({ title, data }: { title: string; data: any }) {
+  return (
+    <div className="bg-[#0B1D33] p-4 rounded-lg shadow">
+      <Line data={data} />
+      <div className="text-xs text-gray-400 mt-2">{title}</div>
     </div>
   )
 }
