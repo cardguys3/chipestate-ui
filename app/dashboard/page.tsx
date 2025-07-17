@@ -1,4 +1,4 @@
-//app/dashboard/page.tsx
+// app/dashboard/page.tsx
 
 'use client'
 
@@ -112,4 +112,37 @@ export default function DashboardPage() {
       {/* Charts Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Chart title="Earnings Over Time" data={earningsData} color="#10b981" />
-        <Chart title="ROI Over Time" data={earningsData.map((v,
+        <Chart title="ROI Over Time" data={earningsData.map((v, i) => (i === 0 ? 0 : (v - earningsData[i - 1]) / earningsData[i - 1] || 0))} color="#facc15" />
+        <Chart title="Projected Earnings" data={earningsData.map(v => v * 12)} color="#3b82f6" />
+      </div>
+
+      {/* Earnings Slider */}
+      <div className="pt-8">
+        <h3 className="font-semibold mb-2">Earnings Range</h3>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-gray-300 w-20 text-right">{startLabel}</span>
+          <Slider
+            range
+            min={0}
+            max={earningsData.length - 1}
+            value={sliderRange}
+            onChange={(val) => setSliderRange(val as [number, number])}
+            className="flex-grow"
+            trackStyle={[{ backgroundColor: '#10b981' }]}
+            handleStyle={[{ borderColor: '#10b981' }, { borderColor: '#10b981' }]}
+          />
+          <span className="text-sm text-gray-300 w-20">{endLabel}</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function MetricCard({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="bg-[#0B1D33] border border-white/10 p-4 rounded shadow">
+      <div className="text-sm text-gray-400">{label}</div>
+      <div className="text-xl font-bold text-white">{value}</div>
+    </div>
+  )
+}
