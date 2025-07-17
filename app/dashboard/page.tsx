@@ -85,10 +85,22 @@ export default function DashboardPage() {
 
   const badgeList = [
     { id: 'verified', label: 'Verified' },
-    { id: 'early_backer', label: 'Early Backer' },
-    { id: 'collector', label: 'Collector' },
-    { id: 'diversified', label: 'Diversified' },
-    { id: 'consistent_investor', label: 'Consistent Investor' },
+  { id: 'early_backer', label: 'Early Backer' },
+  { id: 'collector_3', label: 'Collector (3 Badges)' },
+  { id: 'collector_5', label: 'Collector (5 Badges)' },
+  { id: 'collector_10', label: 'Collector (10+ Badges)' },
+  { id: 'bulk_buyer_3', label: 'Bulk Buyer (3+ Chips)' },
+  { id: 'bulk_buyer_5', label: 'Bulk Buyer (5–9 Chips)' },
+  { id: 'bulk_buyer_10', label: 'Bulk Buyer (10+ Chips)' },
+  { id: 'diversified', label: 'Diversified' },
+  { id: 'consistent_investor', label: 'Consistent Investor' },
+  { id: 'early_voter', label: 'Early Voter' },
+  { id: 'feedback_champion', label: 'Feedback Champion' },
+  { id: 'renter_friendly', label: 'Renter Friendly' },
+  { id: 'reserve_guardian', label: 'Reserve Guardian' },
+  { id: 'estate_planner', label: 'Estate Planner' },
+  { id: 'market_mover', label: 'Market Mover' },
+  { id: 'voting_citizen', label: 'Voting Citizen' },
   ]
 
   const getMonthLabel = (i: number) => {
@@ -100,7 +112,6 @@ export default function DashboardPage() {
   const [start, end] = sliderRange
   const startLabel = getMonthLabel(start)
   const endLabel = getMonthLabel(end)
-
   const earningsSubset = earningsData.slice(start, end + 1)
 
   const makeChartData = (label: string, values: number[], color: string) => ({
@@ -121,19 +132,19 @@ export default function DashboardPage() {
       {/* Badges Section */}
       <section>
         <h2 className="text-lg font-semibold mb-4">Your Badges</h2>
-        <div className="grid grid-cols-3 sm:grid-cols-5 gap-4">
+        <div className="grid grid-cols-4 sm:grid-cols-8 gap-4">
           {badgeList.map(({ id, label }) => {
             const earned = badges.includes(id)
             return (
               <div key={id} className="flex flex-col items-center text-center">
                 <div
-                  className={`w-16 h-16 rounded-full bg-center bg-contain bg-no-repeat border ${
+                  className={`w-12 h-12 rounded-full bg-center bg-contain bg-no-repeat border ${
                     earned ? '' : 'grayscale opacity-40'
                   }`}
                   title={label}
                   style={{ backgroundImage: `url(/badges/${id}.png)` }}
                 />
-                <span className="text-xs mt-2 text-gray-300">{label}</span>
+                <span className="text-[10px] mt-1 text-gray-300">{label}</span>
               </div>
             )
           })}
@@ -142,7 +153,7 @@ export default function DashboardPage() {
 
       {/* Performance Metrics */}
       <section>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-4">
           <MetricCard label="Total Earnings" value={`$${metrics.totalEarnings.toFixed(2)}`} />
           <MetricCard label="Avg. Monthly" value={`$${metrics.avgMonthly.toFixed(2)}`} />
           <MetricCard label="Chips Owned" value={metrics.chipsOwned} />
@@ -208,9 +219,9 @@ export default function DashboardPage() {
 
 function MetricCard({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="bg-[#0B1D33] border border-white/10 p-4 rounded shadow">
-      <div className="text-sm text-gray-400">{label}</div>
-      <div className="text-xl font-bold text-white">{value}</div>
+    <div className="bg-[#0B1D33] border border-white/10 p-3 rounded shadow">
+      <div className="text-[10px] text-gray-400">{label}</div>
+      <div className="text-lg font-bold text-white">{value}</div>
     </div>
   )
 }
