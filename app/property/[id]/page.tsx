@@ -11,7 +11,11 @@ export const metadata: Metadata = {
   title: 'Property Details | ChipEstate',
 }
 
-export default async function PropertyDetailsPage({ params }: { params: { id: string } }) {
+type Props = {
+  params: { id: string }
+}
+
+export default async function PropertyDetailsPage({ params }: Props) {
   const supabase = createServerComponentClient({ cookies: cookies() })
 
   const {
@@ -66,7 +70,7 @@ export default async function PropertyDetailsPage({ params }: { params: { id: st
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm mb-6">
-          {[
+          {[ 
             ['Current Price', property.current_value],
             ['Purchase Price', property.purchase_price],
             ['Cap Rate', property.cap_rate ? `${property.cap_rate}%` : 'N/A'],
