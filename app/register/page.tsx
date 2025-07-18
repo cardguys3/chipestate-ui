@@ -1,165 +1,272 @@
-// File: app/register/page.tsx
+// File: app/register/license/page.tsx
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { Database } from '@/types/supabase'
+import { Suspense } from 'react'
+import { toast } from 'react-hot-toast'
 
-export default function RegisterPage() {
+function LicenseForm() {
+  const supabase = createClientComponentClient<Database>()
   const router = useRouter()
-  const supabase = createClientComponentClient()
+  const searchParams = useSearchParams()
+  const userId = searchParams.get('user_id')
 
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    first_name: '',
-    middle_name: '',
-    last_name: '',
-    phone: '',
-    dob: '',
-    res_address_line1: '',
-    res_address_line2: '',
-    res_city: '',
-    res_state: '',
-    res_zip: '',
-    mail_address_line1: '',
-    mail_address_line2: '',
-    mail_city: '',
-    mail_state: '',
-    mail_zip: '',
-  })
+  const [front, setFront] = useState<File | null>(null)
+  const [back, setBack] = useState<File | null>(null)
+  const [error, setError] = useState<string>('')
+  const [loading, setLoading] = useState<boolean>(false)
 
-  const [error, setError] = useState<string | null>(null)
-  const [sameAsResidential, setSameAsResidential] = useState(false)
+  // ✅ Fix for hydration logic that caused Vercel type error
+  useEffect(() => {
+    const hydrateProfile = async () => {
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      if (userError || !user) return
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+      const { data: exists } = await supabase
+        .from('users_extended')
+        .select('id')
+        .eq('id', user.id)
+        .single()
 
-  const handleSameAsResidential = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const checked = e.target.checked
-    setSameAsResidential(checked)
+      if (!exists) {
+        const { data: buffer } = await supabase
+          .from('registration_buffer' as any) // ✅ Fixes type error on Vercel
+          .select('*')
+          .eq('email', user.email)
+          .single()
 
-    if (checked) {
-      setFormData((prev) => ({
-        ...prev,
-        mail_address_line1: prev.res_address_line1,
-        mail_address_line2: prev.res_address_line2,
-        mail_city: prev.res_city,
-        mail_state: prev.res_state,
-        mail_zip: prev.res_zip,
-      }))
+        if (buffer) {
+          const { error: insertError } = await supabase
+            .from('users_extended')
+            .insert({
+              id: user.id,
+              email: user.email,
+              first_name: buffer.first_name,
+              middle_name: buffer.middle_name,
+              last_name: buffer.last_name,
+              phone: buffer.phone,
+              dob: buffer.dob,
+              res_address_line1: buffer.res_address_line1,
+              res_address_line2: buffer.res_address_line2,
+              res_city: buffer.res_city,
+              res_state: buffer.res_state,
+              res_zip: buffer.res_zip,
+              mail_address_line1: buffer.mail_address_line1,
+              mail_address_line2: buffer.mail_address_line2,
+              mail_city: buffer.mail_city,
+              mail_state: buffer.mail_state,
+              mail_zip: buffer.mail_zip,
+            })
+
+          if (!insertError) {
+            await supabase.from('registration_buffer' as any).delete().eq('email', user.email)
+          } else {
+            console.error('Hydration insert error:', insertError)
+          }
+        }
+      }
     }
-  }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
+    hydrateProfile()
+  }, [supabase])
 
-    const { email, password, ...profileData } = formData
-
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-    })
-
-    if (signUpError || !signUpData.user) {
-      setError(signUpError?.message || 'Registration failed.')
+  const handleUpload = async () => {
+    if (!userId || !front || !back) {
+      setError('Please select both front and back images to continue.')
       return
     }
 
-    const { error: bufferError } = await supabase.from('registration_buffer').upsert({
-      email,
-      ...profileData,
-    })
+    setError('')
+    setLoading(true)
 
-    if (bufferError) {
-      setError(bufferError.message)
-    } else {
-      router.push(`/register/license?user_id=${signUpData.user.id}`)
+    try {
+      const fileExtFront = front.name.split('.').pop()
+      const fileNameFront = `${userId}_front.${fileExtFront}`
+      const filePathFront = `${fileNameFront}`
+
+      const fileExtBack = back.name.split('.').pop()
+      const fileNameBack = `${userId}_back.${fileExtBack}`
+      const filePathBack = `${fileNameBack}`
+
+      const { error: frontError } = await supabase.storage
+        .from('licenses')
+        .upload(filePathFront, front, { upsert: true })
+
+      if (frontError) {
+        console.error('Front upload error:', frontError)
+        setError('Upload failed for front image. Please try again or contact support.')
+        setLoading(false)
+        return
+      }
+
+      const { error: backError } = await supabase.storage
+        .from('licenses')
+        .upload(filePathBack, back, { upsert: true })
+
+      if (backError) {
+        console.error('Back upload error:', backError)
+        setError('Upload failed for back image. Please try again or contact support.')
+        setLoading(false)
+        return
+      }
+
+      const frontUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/licenses/${filePathFront}`
+      const backUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/licenses/${filePathBack}`
+
+      const { error: updateError } = await supabase
+        .from('users_extended')
+        .update({ license_front_url: frontUrl, license_back_url: backUrl })
+        .eq('id', userId)
+
+      if (updateError) {
+        console.error('DB update error:', updateError)
+        setError('Could not save license info to your profile. Please try again.')
+        setLoading(false)
+        return
+      }
+
+      toast.success('Identity verification submitted successfully!')
+      router.push('/dashboard')
+    } catch (err: any) {
+      console.error('Unexpected upload error:', err)
+      setError('Something went wrong. Please check your internet connection or contact support.')
+    } finally {
+      setLoading(false)
     }
+  }
+
+  const skipUpload = () => {
+    toast.success('Registration complete. License upload skipped.')
+    router.push('/dashboard')
   }
 
   return (
     <main className="min-h-screen bg-blue-950 text-white p-6 flex flex-col justify-between">
       <div>
-        {/* Step Graphic */}
-        <div className="mb-6 text-sm font-medium text-center text-gray-300 border border-emerald-700 px-3 py-1 rounded w-fit mx-auto">
+        {/* Progress Graphic */}
+        <div className="mb-6 text-sm font-medium text-center text-gray-300 border border-emerald-700 px-4 py-2 rounded w-fit mx-auto">
           <div className="flex justify-center items-center gap-4">
             <div className="flex flex-col items-center">
-              <div className="w-6 h-6 rounded-full bg-emerald-500 text-white text-xs flex items-center justify-center">1</div>
+              <div className="w-6 h-6 rounded-full bg-gray-500 text-white text-xs flex items-center justify-center">1</div>
               <span className="mt-1">Info</span>
             </div>
             <div className="h-px w-8 bg-gray-400" />
             <div className="flex flex-col items-center">
-              <div className="w-6 h-6 rounded-full bg-gray-500 text-white text-xs flex items-center justify-center">2</div>
+              <div className="w-6 h-6 rounded-full bg-emerald-500 text-white text-xs flex items-center justify-center">2</div>
               <span className="mt-1">Verify</span>
             </div>
           </div>
         </div>
 
-        <h1 className="text-xl font-bold mb-4 text-center">Step 1: Personal Info</h1>
+        <h1 className="text-2xl font-bold mb-4 text-center">Identity Verification</h1>
 
-        <form onSubmit={handleSubmit} className="space-y-4 max-w-2xl text-sm border border-emerald-700 p-6 rounded mx-auto">
-          <div className="grid grid-cols-2 gap-3">
-            <input name="first_name" placeholder="First Name" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
-            <input name="middle_name" placeholder="Middle Name" onChange={handleChange} className="p-2 border border-emerald-600 rounded bg-blue-900" />
-            <input name="last_name" placeholder="Last Name" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
-            <input name="phone" placeholder="Mobile Phone" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
-            <div>
-              <label htmlFor="dob" className="text-white text-sm block mb-1">Date of Birth</label>
-              <input id="dob" name="dob" type="date" onChange={handleChange} required className="p-2 w-full border border-emerald-600 rounded bg-blue-900" />
-            </div>
-            <input name="email" placeholder="Email" type="email" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
-            <input name="password" placeholder="Password" type="password" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
-          </div>
-          <p className="text-xs text-gray-400">
-            {"Password must be 10–72 characters and include at least one uppercase letter, one lowercase letter, one number, and one special character. These are the special characters !@#$%^&*()_+-=[]{};':\"|<>?,./`~."}
-          </p>
+        <p className="mb-4 text-sm text-emerald-300 max-w-2xl mx-auto border border-emerald-700 p-4 rounded text-center">
+          To comply with U.S. regulations which require identity verification, fractional real estate owners are required to supply proof of US citizenship. You may skip this step for now, but you will not be able to purchase chips until verification is complete.
+        </p>
 
-          <fieldset className="border border-blue-700 p-4 rounded">
-            <legend className="text-base font-semibold">Residential Address (optional)</legend>
-            <div className="grid grid-cols-2 gap-3 mt-2">
-              <input name="res_address_line1" placeholder="Address Line 1" onChange={handleChange} className="p-2 border border-emerald-600 rounded bg-blue-900" />
-              <input name="res_address_line2" placeholder="Address Line 2" onChange={handleChange} className="p-2 border border-emerald-600 rounded bg-blue-900" />
-              <input name="res_city" placeholder="City" onChange={handleChange} className="p-2 border border-emerald-600 rounded bg-blue-900" />
-              <input name="res_state" placeholder="State" onChange={handleChange} className="p-2 border border-emerald-600 rounded bg-blue-900" />
-              <input name="res_zip" placeholder="Zip Code" onChange={handleChange} className="p-2 border border-emerald-600 rounded bg-blue-900" />
-            </div>
-          </fieldset>
+        {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
 
-          <fieldset className="border border-blue-700 p-4 rounded">
-            <legend className="text-base font-semibold">Mailing Address <span className="text-red-400">*</span></legend>
-            <label className="flex items-center mb-3 text-sm">
-              <input type="checkbox" checked={sameAsResidential} onChange={handleSameAsResidential} className="mr-2" />
-              Mailing address is the same as residential
+        <div className="max-w-lg mx-auto space-y-6">
+          {/* Front Upload */}
+          <div>
+            <label className="block mb-1">Front of Driver’s License or State ID Card</label>
+            <label className="block w-64 cursor-pointer border border-emerald-600 px-4 py-2 text-center rounded bg-blue-900 hover:bg-blue-800">
+              Choose Image
+              <input
+                type="file"
+                accept="image/*"
+                multiple={false}
+                onChange={(e) => setFront(e.target.files?.[0] || null)}
+                className="hidden"
+              />
             </label>
-            <div className="grid grid-cols-2 gap-3 mt-2">
-              <input name="mail_address_line1" placeholder="Address Line 1" value={formData.mail_address_line1} onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
-              <input name="mail_address_line2" placeholder="Address Line 2" value={formData.mail_address_line2} onChange={handleChange} className="p-2 border border-emerald-600 rounded bg-blue-900" />
-              <input name="mail_city" placeholder="City" value={formData.mail_city} onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
-              <input name="mail_state" placeholder="State" value={formData.mail_state} onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
-              <input name="mail_zip" placeholder="Zip Code" value={formData.mail_zip} onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
-            </div>
-          </fieldset>
+            {front && (
+              <div className="flex items-center justify-between mt-2 text-sm bg-blue-900 px-3 py-2 rounded border border-blue-700 w-64">
+                <span className="truncate">{front.name}</span>
+                <button
+                  type="button"
+                  onClick={() => setFront(null)}
+                  className="ml-2 text-red-400 hover:text-red-600 font-bold"
+                >
+                  ×
+                </button>
+              </div>
+            )}
+          </div>
 
-          {error && <p className="text-red-400">{error}</p>}
+          {/* Back Upload */}
+          <div>
+            <label className="block mb-1">Back of Driver’s License or State ID Card</label>
+            <label className="block w-64 cursor-pointer border border-emerald-600 px-4 py-2 text-center rounded bg-blue-900 hover:bg-blue-800">
+              Choose Image
+              <input
+                type="file"
+                accept="image/*"
+                multiple={false}
+                onChange={(e) => setBack(e.target.files?.[0] || null)}
+                className="hidden"
+              />
+            </label>
+            {back && (
+              <div className="flex items-center justify-between mt-2 text-sm bg-blue-900 px-3 py-2 rounded border border-blue-700 w-64">
+                <span className="truncate">{back.name}</span>
+                <button
+                  type="button"
+                  onClick={() => setBack(null)}
+                  className="ml-2 text-red-400 hover:text-red-600 font-bold"
+                >
+                  ×
+                </button>
+              </div>
+            )}
+          </div>
 
-          <div className="flex justify-end gap-3 pt-4">
-			<button type="button" onClick={() => router.back()} className="px-4 py-2 border border-gray-500 rounded hover:bg-gray-800">
-				Back
-			</button>
-			<button type="submit" className="bg-emerald-700 hover:bg-emerald-600 px-4 py-2 text-white rounded shadow border border-emerald-500">
-				Next
-			</button>
-		  </div>
-        </form>
+          {/* Action Buttons */}
+          <div className="flex flex-wrap justify-center gap-3 pt-4">
+            <button
+              onClick={() => router.back()}
+              className="px-4 py-2 border border-gray-500 rounded hover:bg-gray-800"
+            >
+              Back
+            </button>
+            <button
+              onClick={() => router.push('/')}
+              className="px-4 py-2 border border-red-500 text-red-400 rounded hover:bg-red-900"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={skipUpload}
+              className="border border-yellow-500 text-yellow-400 px-4 py-2 rounded hover:bg-yellow-900"
+            >
+              Skip License Step
+            </button>
+            <button
+              onClick={handleUpload}
+              disabled={loading}
+              className="bg-emerald-700 hover:bg-emerald-600 px-4 py-2 rounded shadow text-white border border-emerald-500"
+            >
+              {loading ? 'Uploading...' : 'Next'}
+            </button>
+          </div>
+        </div>
       </div>
 
+      {/* Step indicator */}
       <div className="text-center text-xs text-gray-400 mt-10">
-        Step 1 of 2
+        Step 2 of 2
       </div>
     </main>
+  )
+}
+
+export default function LicenseUploadPage() {
+  return (
+    <Suspense fallback={<p className="text-white p-4">Loading license form...</p>}>
+      <LicenseForm />
+    </Suspense>
   )
 }
