@@ -21,7 +21,7 @@ export default function ViewUserPage() {
       const { data, error } = await supabase
         .from('users_extended')
         .select('*')
-        .eq('id', id)
+        .eq('id', id as string)
         .single()
 
       if (error) {
