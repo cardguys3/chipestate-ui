@@ -85,10 +85,8 @@ export default function RegisterPage() {
 
     if (bufferError) {
 	  setError(bufferError.message)
-	} else if (signUpData?.user?.id) {
-	  router.push(`/register/license?user_id=${signUpData.user.id}`)
 	} else {
-	  setError("User ID is missing after signup. Please check email confirmation status.")
+	router.push(`/register/license?email=${encodeURIComponent(email)}`)
 	}
   }
 
