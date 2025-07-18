@@ -56,52 +56,51 @@ export default function RegisterPage() {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault()
-  setError(null)
+    e.preventDefault()
+    setError(null)
 
-  const { email, password, ...profileData } = formData
+    const { email, password, ...profileData } = formData
 
-  // Sign up user
-  const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-    email,
-    password,
-  })
-
-  console.log('Signup error:', signUpError)
-  console.log('Signup data:', signUpData)
-
-  if (signUpError || !signUpData.user) {
-    setError(signUpError?.message || 'Registration failed.')
-    return
-  }
-
-  // ✅ Define adminSupabase before use
-  const adminSupabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY! // Make sure this is set in Vercel → Project Settings → Environment Variables
-  )
-
-  // ✅ Now call upsert and then log
-  const { error: bufferError } = await adminSupabase
-    .from('registration_buffer')
-    .upsert({
+    // Sign up user
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
-      ...profileData,
+      password,
     })
 
-  if (bufferError) {
-    console.error('Upsert failed:', bufferError)
-    setError(bufferError.message)
-    return
-  } else {
+    console.log('Signup error:', signUpError)
+    console.log('Signup data:', signUpData)
+
+    if (signUpError || !signUpData.user) {
+      setError(signUpError?.message || 'Registration failed.')
+      return
+    }
+
+    // ✅ Define adminSupabase before use
+    const adminSupabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY! // Make sure this is set in Vercel → Project Settings → Environment Variables
+    )
+
+    // ✅ Now call upsert and then log
+    const { error: bufferError } = await adminSupabase
+      .from('registration_buffer')
+      .upsert(
+        { email, ...profileData },
+        { onConflict: 'email' }
+      )
+
+    if (bufferError) {
+      console.error('Upsert failed:', bufferError)
+      setError(bufferError.message)
+      return
+    }
+
     console.log('Upsert succeeded')
+    router.push(`/register/license?email=${encodeURIComponent(email)}`)
   }
 
-router.push(`/register/license?email=${encodeURIComponent(email)}`)
-}
-
-
   return (
+
     <main className="min-h-screen bg-blue-950 text-white p-6 flex flex-col justify-between">
       <div>
         {/* Step Graphic */}
