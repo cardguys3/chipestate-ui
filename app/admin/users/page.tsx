@@ -13,12 +13,17 @@ function formatDate(dateStr: string | null) {
 }
 
 export default async function AdminUsersPage() {
-  const supabase = createServerComponentClient<Database>({ cookies });
+  import { createClient } from '@supabase/supabase-js'
 
-  const { data: users, error } = await supabase
-    .from('users_extended')
-    .select('id, email, first_name, last_name, res_state, created_at')
-    .order('created_at', { ascending: false });
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
+
+const { data: users, error } = await supabase
+  .from('users_extended')
+  .select('id, email, first_name, last_name, res_state, created_at')
+  .order('created_at', { ascending: false });
 
   return (
     <main className="p-6 space-y-6">

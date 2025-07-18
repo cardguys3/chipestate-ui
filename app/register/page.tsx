@@ -127,19 +127,42 @@ const handleSubmit = async (e: React.FormEvent) => {
             <input name="middle_name" placeholder="Middle Name" onChange={handleChange} className="p-2 border border-emerald-600 rounded bg-blue-900" />
             <input name="last_name" placeholder="Last Name" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
             <input name="phone" placeholder="Mobile Phone" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
-          
-		  <div className="col-span-2 flex gap-3 items-end">
-		  <div className="flex items-center space-x-2 mb-4">
-			<label htmlFor="dob" className="text-sm font-medium text-white whitespace-nowrap">
-			  Date of Birth
-			</label>
-			<input type="date" id="dob" name="dob" value={formData.dob} onChange={handleChange} required  className="p-2 border border-emerald-600 rounded bg-blue-900" />
-		  </div>
-		  <input type="email" id="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
-		</div>
+
+            <div className="col-span-2 grid grid-cols-2 gap-3">
+              <div className="flex flex-col">
+                <label htmlFor="dob" className="text-sm font-medium text-white mb-1">
+                  Date of Birth
+                </label>
+                <input
+                  type="date"
+                  id="dob"
+                  name="dob"
+                  value={formData.dob}
+                  onChange={handleChange}
+                  required
+                  className="p-2 border border-emerald-600 rounded bg-blue-900"
+                />
+              </div>
+              <div className="flex flex-col">
+                <label htmlFor="email" className="text-sm font-medium text-white mb-1">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  placeholder="Email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  className="p-2 border border-emerald-600 rounded bg-blue-900"
+                />
+              </div>
+            </div>
+
             <input name="password" placeholder="Password" type="password" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
           </div>
-		  
+
           <p className="text-xs text-gray-400">
             {"Password must be 10–72 characters and include at least one uppercase letter, one lowercase letter, one number, and one special character. These are the special characters !@#$%^&*()_+-=[]{};':\"|<>?,./`~."}
           </p>

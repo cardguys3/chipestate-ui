@@ -121,10 +121,14 @@ useEffect(() => {
 
       const frontUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/licenses/${filePathFront}`
       const backUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/licenses/${filePathBack}`
-
+//fix here for submit button issue to dashboard
       const { error: updateError } = await supabase
         .from('users_extended')
-        .update({ license_front_url: frontUrl, license_back_url: backUrl })
+        .update({
+          license_front_url: frontUrl,
+          license_back_url: backUrl,
+          registration_status: 'pending'
+        })
         .eq('id', userId)
 
       if (updateError) {
@@ -134,8 +138,12 @@ useEffect(() => {
         return
       }
 
-      toast.success('Identity verification submitted successfully!')
+      toast.success('Welcome to ChipEstate! Please confirm your email to activate your account.')
+      console.log('Redirecting to dashboard...')
       router.push('/dashboard')
+
+	  
+// end fix for submit button issue to dashboard
     } catch (err: any) {
       console.error('Unexpected upload error:', err)
       setError('Something went wrong. Please check your internet connection or contact support.')
