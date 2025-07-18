@@ -33,7 +33,7 @@ function LicenseForm() {
 
       if (!exists) {
         const { data: buffer } = await supabase
-          .from('registration_buffer' as any) // ✅ Fixes type error on Vercel
+          .from('registration_buffer') // I have updated this to avoid the as any sql issue
           .select('*')
           .eq('email', user.email)
           .single()

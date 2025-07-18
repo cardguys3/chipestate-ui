@@ -642,6 +642,69 @@ export type Database = {
           },
         ]
       }
+      registration_buffer: {
+        Row: {
+          created_at: string | null
+          dob: string | null
+          email: string
+          first_name: string | null
+          id: string
+          last_name: string | null
+          mail_address_line1: string | null
+          mail_address_line2: string | null
+          mail_city: string | null
+          mail_state: string | null
+          mail_zip: string | null
+          middle_name: string | null
+          phone: string | null
+          res_address_line1: string | null
+          res_address_line2: string | null
+          res_city: string | null
+          res_state: string | null
+          res_zip: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          dob?: string | null
+          email: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          mail_address_line1?: string | null
+          mail_address_line2?: string | null
+          mail_city?: string | null
+          mail_state?: string | null
+          mail_zip?: string | null
+          middle_name?: string | null
+          phone?: string | null
+          res_address_line1?: string | null
+          res_address_line2?: string | null
+          res_city?: string | null
+          res_state?: string | null
+          res_zip?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          dob?: string | null
+          email?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          mail_address_line1?: string | null
+          mail_address_line2?: string | null
+          mail_city?: string | null
+          mail_state?: string | null
+          mail_zip?: string | null
+          middle_name?: string | null
+          phone?: string | null
+          res_address_line1?: string | null
+          res_address_line2?: string | null
+          res_city?: string | null
+          res_state?: string | null
+          res_zip?: string | null
+        }
+        Relationships: []
+      }
       user_badges: {
         Row: {
           badge_key: string | null
@@ -668,6 +731,55 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "badges_catalog"
             referencedColumns: ["key"]
+          },
+        ]
+      }
+      user_votes: {
+        Row: {
+          chips_owned_at_vote: number
+          id: string
+          option_id: string
+          user_id: string
+          vote_id: string
+          voted_at: string | null
+        }
+        Insert: {
+          chips_owned_at_vote: number
+          id?: string
+          option_id: string
+          user_id: string
+          vote_id: string
+          voted_at?: string | null
+        }
+        Update: {
+          chips_owned_at_vote?: number
+          id?: string
+          option_id?: string
+          user_id?: string
+          vote_id?: string
+          voted_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_votes_option_id_fkey"
+            columns: ["option_id"]
+            isOneToOne: false
+            referencedRelation: "vote_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_votes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users_extended"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_votes_vote_id_fkey"
+            columns: ["vote_id"]
+            isOneToOne: false
+            referencedRelation: "votes"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -745,6 +857,98 @@ export type Database = {
           res_zip?: string | null
         }
         Relationships: []
+      }
+      vote_options: {
+        Row: {
+          created_at: string | null
+          display_order: number | null
+          id: string
+          label: string
+          vote_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          label: string
+          vote_id: string
+        }
+        Update: {
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          label?: string
+          vote_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vote_options_vote_id_fkey"
+            columns: ["vote_id"]
+            isOneToOne: false
+            referencedRelation: "votes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      votes: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          is_open: boolean | null
+          property_id: string | null
+          start_date: string | null
+          threshold_type: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_open?: boolean | null
+          property_id?: string | null
+          start_date?: string | null
+          threshold_type: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_open?: boolean | null
+          property_id?: string | null
+          start_date?: string | null
+          threshold_type?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "votes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users_extended"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "votes_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
