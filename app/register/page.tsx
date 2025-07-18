@@ -115,7 +115,8 @@ export default function RegisterPage() {
             <input name="password" placeholder="Password" type="password" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
           </div>
           <p className="text-xs text-gray-400">
-            Password must be 10–100 characters and include at least one uppercase letter, one lowercase letter, one number, and one special character.
+            Password must be 10–72 characters and include at least one uppercase letter, one lowercase letter, one number, and one special character.
+			and must contain at least one character of each: abcdefghijklmnopqrstuvwxyz, ABCDEFGHIJKLMNOPQRSTUVWXYZ, 0123456789, !@#$%^&*()_+-=[]{};':"|<>?,./`~.
           </p>
 
           <fieldset className="border border-blue-700 p-4 rounded">
