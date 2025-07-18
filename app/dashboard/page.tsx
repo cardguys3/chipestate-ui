@@ -247,6 +247,60 @@ export default function DashboardPage() {
         />
       </section>
 
+
+      {/* Additional Charts Row 3 */}
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <ChartCard
+          title="Property Earnings by Month"
+          data={{
+            labels: monthLabels.slice(start, end + 1),
+            datasets: [
+              {
+                label: "Property A",
+                data: earningsSubset.map((val) => val * 0.4),
+                backgroundColor: "#34d399"
+              },
+              {
+                label: "Property B",
+                data: earningsSubset.map((val) => val * 0.35),
+                backgroundColor: "#60a5fa"
+              },
+              {
+                label: "Property C",
+                data: earningsSubset.map((val) => val * 0.25),
+                backgroundColor: "#facc15"
+              }
+            ]
+          }}
+        />
+        <ChartCard
+          title="Total Earnings by Property"
+          data={{
+            labels: monthLabels.slice(start, end + 1),
+            datasets: [
+              {
+                label: "Property A",
+                data: earningsSubset.map((val) => val * 0.4),
+                backgroundColor: "#34d399",
+                stack: "stack1"
+              },
+              {
+                label: "Property B",
+                data: earningsSubset.map((val) => val * 0.35),
+                backgroundColor: "#60a5fa",
+                stack: "stack1"
+              },
+              {
+                label: "Property C",
+                data: earningsSubset.map((val) => val * 0.25),
+                backgroundColor: "#facc15",
+                stack: "stack1"
+              }
+            ]
+          }}
+        />
+      </section>
+
       {/* Slider */}
       <section className="pt-6">
         <h3 className="font-semibold mb-2">Earnings Range</h3>
