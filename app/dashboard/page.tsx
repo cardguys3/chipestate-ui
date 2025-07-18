@@ -187,7 +187,7 @@ export default function DashboardPage() {
   }
 
   return (
-     <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
+//     <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
   <h1 className="text-3xl font-bold mb-4 md:mb-0">Welcome, {firstName}!</h1>
