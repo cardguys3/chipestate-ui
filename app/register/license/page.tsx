@@ -1,4 +1,3 @@
-// File: app/register/license/page.tsx
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -23,7 +22,7 @@ function LicenseForm() {
   useEffect(() => {
     const hydrateProfile = async () => {
       const { data: { user }, error: userError } = await supabase.auth.getUser()
-      if (userError || !user) return
+      if (userError || !user || !user.email) return
 
       const { data: exists } = await supabase
         .from('users_extended')
@@ -32,18 +31,16 @@ function LicenseForm() {
         .single()
 
       if (!exists) {
-        const { data: buffer } = user.email
-  ? await supabase
-      .from('registration_buffer')
-      .select('*')
-      .eq('email', user.email)
-      .single()
-  : { data: null }
+        const { data: buffer } = await supabase
+          .from('registration_buffer')
+          .select('*')
+          .eq('email', user.email)
+          .single()
 
         if (buffer) {
           const { error: insertError } = await supabase
             .from('users_extended')
-            .insert({
+            .insert([{
               id: user.id,
               email: user.email,
               first_name: buffer.first_name,
@@ -61,7 +58,7 @@ function LicenseForm() {
               mail_city: buffer.mail_city,
               mail_state: buffer.mail_state,
               mail_zip: buffer.mail_zip,
-            })
+            }])
 
           if (!insertError) {
             await supabase.from('registration_buffer').delete().eq('email', user.email)
@@ -166,7 +163,8 @@ function LicenseForm() {
         <h1 className="text-2xl font-bold mb-4 text-center">Identity Verification</h1>
 
         <p className="mb-4 text-sm text-emerald-300 max-w-2xl mx-auto border border-emerald-700 p-4 rounded text-center">
-          To comply with U.S. regulations which require identity verification, fractional real estate owners are required to supply proof of US citizenship. You may skip this step for now, but you will not be able to purchase chips until verification is complete.
+          To comply with U.S. regulations which require identity verification, fractional real estate owners are required to supply proof of US citizenship. 
+		  You may skip this step for now, but you will not be able to purchase chips until verification is complete.
         </p>
 
         {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
