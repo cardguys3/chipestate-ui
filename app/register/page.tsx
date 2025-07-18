@@ -116,13 +116,20 @@ export default function RegisterPage() {
             <input name="middle_name" placeholder="Middle Name" onChange={handleChange} className="p-2 border border-emerald-600 rounded bg-blue-900" />
             <input name="last_name" placeholder="Last Name" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
             <input name="phone" placeholder="Mobile Phone" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
-            <div>
-              <label htmlFor="dob" className="text-white text-sm block mb-1">Date of Birth</label>
-              <input id="dob" name="dob" type="date" onChange={handleChange} required className="p-2 w-full border border-emerald-600 rounded bg-blue-900" />
-            </div>
-            <input name="email" placeholder="Email" type="email" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
+          
+		  <div className="col-span-2 flex items-end gap-4">
+		  <div className="flex flex-col w-1/3">
+			<label htmlFor="dob" className="text-white text-sm mb-1">Date of Birth</label>
+			<input id="dob" name="dob" type="date" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900"/>
+		  </div>
+		  <div className="flex flex-col flex-1">
+			<label htmlFor="email" className="text-white text-sm mb-1">Email</label>
+			<input id="email" name="email" type="email" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900 w-full" />
+		  </div>
+		</div> //tHIS IS QUESTIONABLE
             <input name="password" placeholder="Password" type="password" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
           </div>
+		  
           <p className="text-xs text-gray-400">
             {"Password must be 10–72 characters and include at least one uppercase letter, one lowercase letter, one number, and one special character. These are the special characters !@#$%^&*()_+-=[]{};':\"|<>?,./`~."}
           </p>
@@ -159,9 +166,9 @@ export default function RegisterPage() {
             <button type="button" onClick={() => router.back()} className="px-4 py-2 border border-gray-500 rounded hover:bg-gray-800">
               Back
             </button>
-            <button type="submit" className="bg-emerald-700 hover:bg-emerald-600 px-4 py-2 border border-red-500 text-red-400 rounded hover:bg-red-900">
-              Next
-            </button>
+            <button type="submit"  className="px-4 py-2 border border-emerald-500 text-emerald-400 rounded hover:bg-emerald-900 hover:text-white transition">
+			  Next
+			</button>
           </div>
         </form>
       </div>
