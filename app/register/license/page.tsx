@@ -1,6 +1,7 @@
+// File: app/register/license/page.tsx
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Database } from '@/types/supabase'
@@ -17,6 +18,60 @@ function LicenseForm() {
   const [back, setBack] = useState<File | null>(null)
   const [error, setError] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(false)
+
+  // 🔁 STEP 3: Migrate from registration_buffer to users_extended
+  useEffect(() => {
+    const hydrateProfile = async () => {
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      if (userError || !user) return
+
+      const { data: exists } = await supabase
+        .from('users_extended')
+        .select('id')
+        .eq('id', user.id)
+        .single()
+
+      if (!exists) {
+        const { data: buffer } = await supabase
+          .from('registration_buffer')
+          .select('*')
+          .eq('email', user.email)
+          .single()
+
+        if (buffer) {
+          const { error: insertError } = await supabase
+            .from('users_extended')
+            .insert({
+              id: user.id,
+              email: user.email,
+              first_name: buffer.first_name,
+              middle_name: buffer.middle_name,
+              last_name: buffer.last_name,
+              phone: buffer.phone,
+              dob: buffer.dob,
+              res_address_line1: buffer.res_address_line1,
+              res_address_line2: buffer.res_address_line2,
+              res_city: buffer.res_city,
+              res_state: buffer.res_state,
+              res_zip: buffer.res_zip,
+              mail_address_line1: buffer.mail_address_line1,
+              mail_address_line2: buffer.mail_address_line2,
+              mail_city: buffer.mail_city,
+              mail_state: buffer.mail_state,
+              mail_zip: buffer.mail_zip,
+            })
+
+          if (!insertError) {
+            await supabase.from('registration_buffer').delete().eq('email', user.email)
+          } else {
+            console.error('Hydration insert error:', insertError)
+          }
+        }
+      }
+    }
+
+    hydrateProfile()
+  }, [supabase])
 
   const handleUpload = async () => {
     if (!userId || !front || !back) {

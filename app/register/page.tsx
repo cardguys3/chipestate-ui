@@ -146,14 +146,14 @@ export default function RegisterPage() {
 
           {error && <p className="text-red-400">{error}</p>}
 
-          <div className="flex gap-3 pt-4">
-            <button type="button" onClick={() => router.back()} className="px-4 py-2 border border-gray-500 rounded hover:bg-gray-800">
-              Back
-            </button>
-            <button type="submit" className="bg-emerald-700 hover:bg-emerald-600 px-4 py-2 border border-red-500 text-red-400 rounded hover:bg-red-900">
-              Next
-            </button>
-          </div>
+          <div className="flex justify-end gap-3 pt-4">
+			<button type="button" onClick={() => router.back()} className="px-4 py-2 border border-gray-500 rounded hover:bg-gray-800">
+				Back
+			</button>
+			<button type="submit" className="bg-emerald-700 hover:bg-emerald-600 px-4 py-2 text-white rounded shadow border border-emerald-500">
+				Next
+			</button>
+		  </div>
         </form>
       </div>
 
