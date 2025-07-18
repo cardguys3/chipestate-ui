@@ -54,6 +54,8 @@ export default function RegisterPage() {
       }))
     }
   }
+  
+//begin handle submit function
 
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault()
@@ -61,13 +63,13 @@ const handleSubmit = async (e: React.FormEvent) => {
 
   const { email, password, ...profileData } = formData
 
-  // Step 1: Sign up user
+  console.log('Submitted')
+
   const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
     email,
     password,
   })
 
-  console.log('Submitted')
   console.log('Signup error:', signUpError)
   console.log('Signup data:', signUpData)
 
@@ -77,30 +79,26 @@ const handleSubmit = async (e: React.FormEvent) => {
     return
   }
 
+  // 🚨 Use secure server route for the upsert
+  const response = await fetch('/api/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, ...profileData }),
+  })
 
-    // ✅ Define adminSupabase before use
-    const adminSupabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY! // Make sure this is set in Vercel → Project Settings → Environment Variables
-    )
+  const result = await response.json()
+  console.log('API response:', result)
 
-    // ✅ Now call upsert and then log
-const { error: bufferError } = await adminSupabase
-  .from('registration_buffer')
-  .upsert({ email, ...profileData }, { onConflict: 'email' })
-
-console.log('Upsert error:', bufferError)
-
-if (bufferError) {
-
-      console.error('Upsert failed:', bufferError)
-      setError(bufferError.message)
-      return
-    }
-	console.log('Redirecting to license step...')
-    console.log('Upsert succeeded')
-    router.push(`/register/license?email=${encodeURIComponent(email)}`)
+  if (!response.ok) {
+    setError(result.message || 'Upsert failed.')
+    return
   }
+
+  console.log('Redirecting to license step...')
+  router.push(`/register/license?email=${encodeURIComponent(email)}`)
+}
+
+  //end handle submit function
 
   return (
 

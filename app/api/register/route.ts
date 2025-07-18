@@ -1,33 +1,27 @@
 // File: app/api/register/route.ts
-
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY! // THIS IS SERVER ONLY — never used in client
+)
 
-const supabase = createClient(supabaseUrl, serviceRoleKey)
-
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    const body = await request.json()
-
-    if (!body?.email) {
-      return NextResponse.json({ error: 'Missing email' }, { status: 400 })
-    }
+    const body = await req.json()
+    const { email, ...profileData } = body
 
     const { error } = await supabase
       .from('registration_buffer')
-      .upsert(body)
+      .upsert({ email, ...profileData }, { onConflict: 'email' })
 
     if (error) {
-      console.error('Upsert failed:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ message: error.message }, { status: 500 })
     }
 
-    return NextResponse.json({ message: 'Upsert successful' })
+    return NextResponse.json({ message: 'Upsert successful' }, { status: 200 })
   } catch (err: any) {
-    console.error('Unexpected error in API route:', err)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ message: err.message || 'Unexpected error' }, { status: 500 })
   }
 }
