@@ -1,6 +1,7 @@
+// File: app/admin/users/page.tsx
 'use server';
 
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@supabase/supabase-js'; // ✅ FIXED: moved out of the function
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 
@@ -13,17 +14,15 @@ function formatDate(dateStr: string | null) {
 }
 
 export default async function AdminUsersPage() {
-  import { createClient } from '@supabase/supabase-js'
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
-const { data: users, error } = await supabase
-  .from('users_extended')
-  .select('id, email, first_name, last_name, res_state, created_at')
-  .order('created_at', { ascending: false });
+  const { data: users, error } = await supabase
+    .from('users_extended')
+    .select('id, email, first_name, last_name, res_state, created_at')
+    .order('created_at', { ascending: false });
 
   return (
     <main className="p-6 space-y-6">
