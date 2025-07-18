@@ -55,25 +55,28 @@ export default function RegisterPage() {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault()
+  setError(null)
 
-    const { email, password, ...profileData } = formData
+  const { email, password, ...profileData } = formData
 
-    // Sign up user
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-    })
+  // Step 1: Sign up user
+  const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+    email,
+    password,
+  })
 
-    console.log('Signup error:', signUpError)
-    console.log('Signup data:', signUpData)
+  console.log('Submitted')
+  console.log('Signup error:', signUpError)
+  console.log('Signup data:', signUpData)
 
-    if (signUpError || !signUpData.user) {
-      setError(signUpError?.message || 'Registration failed.')
-      return
-    }
+  if (signUpError || !signUpData?.user) {
+    console.error('Registration failed:', signUpError)
+    setError(signUpError?.message || 'Registration failed.')
+    return
+  }
+
 
     // ✅ Define adminSupabase before use
     const adminSupabase = createClient(
@@ -82,19 +85,19 @@ export default function RegisterPage() {
     )
 
     // ✅ Now call upsert and then log
-    const { error: bufferError } = await adminSupabase
-      .from('registration_buffer')
-      .upsert(
-        { email, ...profileData },
-        { onConflict: 'email' }
-      )
+const { error: bufferError } = await adminSupabase
+  .from('registration_buffer')
+  .upsert({ email, ...profileData }, { onConflict: 'email' })
 
-    if (bufferError) {
+console.log('Upsert error:', bufferError)
+
+if (bufferError) {
+
       console.error('Upsert failed:', bufferError)
       setError(bufferError.message)
       return
     }
-
+	console.log('Redirecting to license step...')
     console.log('Upsert succeeded')
     router.push(`/register/license?email=${encodeURIComponent(email)}`)
   }
