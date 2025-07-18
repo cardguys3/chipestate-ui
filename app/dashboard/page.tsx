@@ -3,6 +3,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+
 import { supabase } from '@/lib/supabaseClient'
 import { Line } from 'react-chartjs-2'
 import Slider from 'rc-slider'
