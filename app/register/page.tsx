@@ -69,10 +69,19 @@ export default function RegisterPage() {
       return
     }
 
-    const { error: bufferError } = await supabase.from('registration_buffer').upsert({
-      email,
-      ...profileData,
-    })
+    import { createClient } from '@supabase/supabase-js'
+
+	// Inside handleSubmit:
+	const adminSupabase = createClient(
+	  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+	  process.env.SUPABASE_SERVICE_ROLE_KEY! // Must be set in Vercel Project Settings
+	)
+
+	const { error: bufferError } = await adminSupabase.from('registration_buffer').upsert({
+	  email,
+	  ...profileData,
+	})
+
 
     if (bufferError) {
       setError(bufferError.message)
