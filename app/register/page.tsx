@@ -117,16 +117,16 @@ export default function RegisterPage() {
             <input name="last_name" placeholder="Last Name" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
             <input name="phone" placeholder="Mobile Phone" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
           
-		  <div className="col-span-2 flex items-end gap-4">
-		  <div className="flex flex-col w-1/3">
-			<label htmlFor="dob" className="text-white text-sm mb-1">Date of Birth</label>
-			<input id="dob" name="dob" type="date" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900"/>
-		  </div>
-		  <div className="flex flex-col flex-1">
-			<label htmlFor="email" className="text-white text-sm mb-1">Email</label>
-			<input id="email" name="email" type="email" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900 w-full" />
-		  </div>
-		</div> //tHIS IS QUESTIONABLE
+		  <div className="col-span-2 flex gap-3 items-end">
+			  <div className="flex flex-col w-1/3">
+				<label htmlFor="dob" className="text-white text-sm mb-1">Date of Birth</label>
+				<input id="dob" name="dob" type="date" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900 w-full"/>
+			  </div>
+			  <div className="flex flex-col w-2/3">
+				<label htmlFor="email" className="text-white text-sm mb-1">Email</label>
+				<input id="email" name="email" type="email" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900 w-full"/>
+			  </div>
+			</div>
             <input name="password" placeholder="Password" type="password" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
           </div>
 		  
@@ -166,7 +166,7 @@ export default function RegisterPage() {
             <button type="button" onClick={() => router.back()} className="px-4 py-2 border border-gray-500 rounded hover:bg-gray-800">
               Back
             </button>
-            <button type="submit"  className="px-4 py-2 border border-emerald-500 text-emerald-400 rounded hover:bg-emerald-900 hover:text-white transition">
+            <button type="submit" className="px-4 py-2 border border-emerald-500 text-emerald-400 rounded hover:bg-emerald-600 hover:text-white transition">
 			  Next
 			</button>
           </div>
