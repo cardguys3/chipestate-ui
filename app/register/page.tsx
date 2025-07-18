@@ -56,39 +56,48 @@ export default function RegisterPage() {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
+  e.preventDefault()
+  setError(null)
 
-    const { email, password, ...profileData } = formData
+  const { email, password, ...profileData } = formData
 
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+  // Sign up user
+  const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+    email,
+    password,
+  })
+
+  console.log('Signup error:', signUpError)
+  console.log('Signup data:', signUpData)
+
+  if (signUpError || !signUpData.user) {
+    setError(signUpError?.message || 'Registration failed.')
+    return
+  }
+
+  // ✅ Define adminSupabase before use
+  const adminSupabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY! // Make sure this is set in Vercel → Project Settings → Environment Variables
+  )
+
+  // ✅ Now call upsert and then log
+  const { error: bufferError } = await adminSupabase
+    .from('registration_buffer')
+    .upsert({
       email,
-      password,
+      ...profileData,
     })
 
-    if (signUpError || !signUpData.user) {
-      setError(signUpError?.message || 'Registration failed.')
-      return
-    }
-	
-		// Inside handleSubmit:
-	const adminSupabase = createClient(
-	  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-	  process.env.SUPABASE_SERVICE_ROLE_KEY! // Must be set in Vercel Project Settings
-	)
+  console.log('Upsert error:', bufferError)
 
-	const { error: bufferError } = await adminSupabase.from('registration_buffer').upsert({
-	  email,
-	  ...profileData,
-	})
-
-
-    if (bufferError) {
-	  setError(bufferError.message)
-	} else {
-	router.push(`/register/license?email=${encodeURIComponent(email)}`)
-	}
+  if (bufferError) {
+    setError(bufferError.message)
+  } else {
+    router.push(`/register/license?email=${encodeURIComponent(email)}`)
   }
+}
+
 
   return (
     <main className="min-h-screen bg-blue-950 text-white p-6 flex flex-col justify-between">
