@@ -4,6 +4,13 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@supabase/supabase-js'
+
+	// Inside handleSubmit:
+	const adminSupabase = createClient(
+	  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+	  process.env.SUPABASE_SERVICE_ROLE_KEY! // Must be set in Vercel Project Settings
+	)
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -68,14 +75,6 @@ export default function RegisterPage() {
       setError(signUpError?.message || 'Registration failed.')
       return
     }
-
-    import { createClient } from '@supabase/supabase-js'
-
-	// Inside handleSubmit:
-	const adminSupabase = createClient(
-	  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-	  process.env.SUPABASE_SERVICE_ROLE_KEY! // Must be set in Vercel Project Settings
-	)
 
 	const { error: bufferError } = await adminSupabase.from('registration_buffer').upsert({
 	  email,
