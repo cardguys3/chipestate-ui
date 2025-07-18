@@ -69,14 +69,13 @@ export default function RegisterPage() {
       return
     }
 
-    const { error: profileError } = await supabase.from('users_extended').insert({
-      id: signUpData.user.id,
+    const { error: bufferError } = await supabase.from('registration_buffer').upsert({
       email,
       ...profileData,
     })
 
-    if (profileError) {
-      setError(profileError.message)
+    if (bufferError) {
+      setError(bufferError.message)
     } else {
       router.push(`/register/license?user_id=${signUpData.user.id}`)
     }
@@ -116,7 +115,7 @@ export default function RegisterPage() {
             <input name="password" placeholder="Password" type="password" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
           </div>
           <p className="text-xs text-gray-400">
-            {"Password must be 10–72 characters and include at least one uppercase letter, one lowercase letter, one number, and one special character. Must contain at least one of each: abcdefghijklmnopqrstuvwxyz, ABCDEFGHIJKLMNOPQRSTUVWXYZ, 0123456789, !@#$%^&*()_+-=[]{};':\"|<>?,./`~."}
+            {"Password must be 10–72 characters and include at least one uppercase letter, one lowercase letter, one number, and one special character. These are the special characters !@#$%^&*()_+-=[]{};':\"|<>?,./`~."}
           </p>
 
           <fieldset className="border border-blue-700 p-4 rounded">
@@ -151,10 +150,7 @@ export default function RegisterPage() {
             <button type="button" onClick={() => router.back()} className="px-4 py-2 border border-gray-500 rounded hover:bg-gray-800">
               Back
             </button>
-            <button type="button" onClick={() => router.push('/')} className="px-4 py-2 border border-red-500 text-red-400 rounded hover:bg-red-900">
-              Cancel
-            </button>
-            <button type="submit" className="bg-emerald-700 hover:bg-emerald-600 px-4 py-2 rounded shadow text-white font-semibold ml-auto">
+            <button type="submit" className="bg-emerald-700 hover:bg-emerald-600 px-4 py-2 border border-red-500 text-red-400 rounded hover:bg-red-900">
               Next
             </button>
           </div>
