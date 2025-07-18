@@ -1,3 +1,4 @@
+// File: app/register/page.tsx
 'use client'
 
 import { useState } from 'react'
@@ -94,7 +95,7 @@ export default function RegisterPage() {
             <div className="h-px w-8 bg-gray-400" />
             <div className="flex flex-col items-center">
               <div className="w-6 h-6 rounded-full bg-gray-500 text-white text-xs flex items-center justify-center">2</div>
-              <span className="mt-1">License</span>
+              <span className="mt-1">Verify</span>
             </div>
           </div>
         </div>
@@ -115,8 +116,7 @@ export default function RegisterPage() {
             <input name="password" placeholder="Password" type="password" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
           </div>
           <p className="text-xs text-gray-400">
-            Password must be 10–72 characters and include at least one uppercase letter, one lowercase letter, one number, and one special character.
-			and must contain at least one character of each: abcdefghijklmnopqrstuvwxyz, ABCDEFGHIJKLMNOPQRSTUVWXYZ, 0123456789, !@#$%^&*()_+-=[]{};':"|<>?,./`~.
+            {"Password must be 10–72 characters and include at least one uppercase letter, one lowercase letter, one number, and one special character. Must contain at least one of each: abcdefghijklmnopqrstuvwxyz, ABCDEFGHIJKLMNOPQRSTUVWXYZ, 0123456789, !@#$%^&*()_+-=[]{};':\"|<>?,./`~."}
           </p>
 
           <fieldset className="border border-blue-700 p-4 rounded">
