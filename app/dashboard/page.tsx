@@ -1,342 +1,276 @@
-// app/dashboard/page.tsx
+//app dashboard page.tsx
+
 
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabaseClient'
+import { createBrowserClient } from '@supabase/ssr'
 import { Line } from 'react-chartjs-2'
-import Slider from 'rc-slider'
 import Link from 'next/link'
+import Slider from 'rc-slider'
 import 'rc-slider/assets/index.css'
 import {
   Chart as ChartJS,
-  LineElement,
-  PointElement,
   CategoryScale,
   LinearScale,
+  PointElement,
+  LineElement,
   Tooltip,
-  Legend,
+  ChartOptions
 } from 'chart.js'
 
-ChartJS.register(LineElement, PointElement, CategoryScale, LinearScale, Tooltip, Legend)
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip)
+
+const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
+const chartOptionsWithDollarYAxis: ChartOptions<'line'> = {
+  scales: {
+    y: {
+      ticks: {
+        callback: function (value) {
+          return `$${value}`
+        },
+        color: 'white'
+      },
+      grid: {
+        color: '#334155'
+      }
+    },
+    x: {
+      ticks: {
+        color: 'white'
+      },
+      grid: {
+        color: '#334155'
+      }
+    }
+  },
+  plugins: {
+    legend: {
+      labels: {
+        color: 'white'
+      }
+    }
+  }
+}
 
 export default function DashboardPage() {
-  const [earningsData, setEarningsData] = useState<number[]>([])
-  const [monthLabels, setMonthLabels] = useState<string[]>([])
-  const [sliderRange, setSliderRange] = useState<[number, number]>([0, 11])
-  const [badges, setBadges] = useState<string[]>([])
-  const [firstName, setFirstName] = useState<string>('')
-  const [investmentActivity, setInvestmentActivity] = useState<number[]>([])
-  const [metrics, setMetrics] = useState({
-    totalEarnings: 0,
-    avgMonthly: 0,
-    chipsOwned: 0,
-    propertiesOwned: 0,
-    avgROI: 0,
-    avgChipValue: 0,
-    projectedAnnual: 0,
-    spanMonths: 0,
-  })
+  const [user, setUser] = useState<any>(null)
+  const [firstName, setFirstName] = useState<string>('User')
+  const [chips, setChips] = useState<any[]>([])
+  const [properties, setProperties] = useState<any[]>([])
+  const [earnings, setEarnings] = useState<any[]>([])
+  const [selectedProps, setSelectedProps] = useState<any[]>([])
+  const [selectedChips, setSelectedChips] = useState<any[]>([])
+  const [months, setMonths] = useState<string[]>([])
+  const [monthIndexes, setMonthIndexes] = useState<[number, number]>([0, 0])
+  const [userBadges, setUserBadges] = useState<any[]>([])
 
   useEffect(() => {
-    async function fetchData() {
-      const { data: userResult } = await supabase.auth.getUser()
-      const userId = userResult?.user?.id
-      if (!userId) return
+    const loadData = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+      if (!user) return
 
-      const { data: earningsRaw } = await supabase
-        .from('chip_earnings')
-        .select('earning_date, amount')
-        .eq('user_id', userId)
-        .order('earning_date')
+      const { data: userData } = await supabase
+        .from('users_extended')
+        .select('first_name')
+        .eq('id', user.id)
+        .single()
 
-      const { data: chips } = await supabase
-        .from('chips')
-        .select('property_id, current_value, created_at')
-        .eq('owner_id', userId)
+      if (userData?.first_name) setFirstName(userData.first_name)
 
-      const { data: badgeData } = await supabase
+      const { data: chipData } = await supabase.from('chips_view').select('*').eq('owner_id', user.id)
+      setChips(chipData || [])
+
+      const propIds = [...new Set((chipData || []).map(chip => chip.property_id))]
+      const { data: ownedProps } = await supabase.from('properties').select('*').in('id', propIds)
+      setProperties(ownedProps || [])
+
+      const { data: earningsData } = await supabase
+        .from('chip_earnings_monthly')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('month', { ascending: true })
+
+      setEarnings(earningsData || [])
+      const uniqueMonths = [...new Set((earningsData || []).map((e) => e.month))]
+      setMonths(uniqueMonths)
+      if (uniqueMonths.length >= 2) setMonthIndexes([0, uniqueMonths.length - 1])
+
+      const chipOptions = [...new Set((chipData || []).map(c => c.id))]
+      setSelectedChips(chipOptions)
+
+      const propOptions = [...new Set((chipData || []).map(c => c.property_id))]
+      setSelectedProps(propOptions)
+
+      const { data: badges } = await supabase
         .from('user_badges')
-        .select('badge_key')
-        .eq('user_id', userId)
+        .select('*, badges_catalog(*)')
+        .eq('user_id', user.id)
 
-      const earningsByMonth = groupEarningsByMonth(earningsRaw || [])
-      const months = Object.keys(earningsByMonth)
-      const allMonths = Object.values(earningsByMonth)
-      const total = allMonths.reduce((sum, val) => sum + val, 0)
-      const avg = total / (allMonths.length || 1)
-
-      const chipsOwned = chips?.length ?? 0
-      const propertiesOwned = chips ? new Set(chips.map((c) => c.property_id)).size : 0
-      const avgChipValue = chips && chipsOwned
-        ? chips.reduce((sum, c) => sum + (c.current_value || 0), 0) / chipsOwned
-        : 0
-
-      const projectedAnnual = avg * 12
-      const spanMonths = allMonths.length
-
-      setEarningsData(allMonths)
-      setMonthLabels(months)
-      setBadges(badgeData?.map((b) => b.badge_key) || [])
-      setMetrics({
-        totalEarnings: total,
-        avgMonthly: avg,
-        chipsOwned,
-        propertiesOwned,
-        avgROI: 0,
-        avgChipValue,
-        projectedAnnual,
-        spanMonths,
-      })
-
-      const investmentByMonth: Record<string, number> = {}
-      for (const chip of chips || []) {
-        const dateKey = new Date(chip.created_at).toLocaleDateString('en-US', {
-          year: '2-digit',
-          month: 'short',
-        })
-        investmentByMonth[dateKey] = (investmentByMonth[dateKey] || 0) + 1
-      }
-      setInvestmentActivity(months.map((m) => investmentByMonth[m] || 0))
+      setUserBadges(badges || [])
     }
-
-    fetchData()
+    loadData()
   }, [])
 
-  function groupEarningsByMonth(raw: { earning_date: string; amount: number }[]) {
-    const monthly: Record<string, number> = {}
-    for (const row of raw) {
-      const key = new Date(row.earning_date).toLocaleDateString('en-US', {
-        year: '2-digit',
-        month: 'short',
-      })
-      monthly[key] = (monthly[key] || 0) + Number(row.amount || 0)
-    }
-    return monthly
+  const getColor = (i: number) => {
+    const colors = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#6366F1', '#EC4899', '#14B8A6', '#F97316']
+    return colors[i % colors.length]
   }
 
-  const badgeList = [
-    { id: 'registration_complete', label: 'Registered' },
-    { id: 'verified', label: 'Verified' },
-    { id: 'early_backer', label: 'Early Backer' },
-    { id: 'badge_collector_3', label: 'Bronze Collector' },
-    { id: 'badge_collector_5', label: 'Silver Collector' },
-    { id: 'badge_collector_10', label: 'Gold Collector' },
-    { id: 'bulk_buyer_3', label: 'Bronze Bulk' },
-    { id: 'bulk_buyer_5', label: 'Silver Bulk' },
-    { id: 'bulk_buyer_10', label: 'Gold Bulk' },
-    { id: 'diversified', label: 'Diversifyer' },
-    { id: 'consistent_investor', label: 'Consistent' },
-    { id: 'early_voter', label: 'Early Voter' },
-    { id: 'feedback_champion', label: 'Feedback Champ' },
-    { id: 'renter_friendly', label: 'Renter Friendly' },
-    { id: 'reserve_guardian', label: 'Reserve Guardian' },
-    { id: 'estate_planner', label: 'Estate Planner' },
-    { id: 'market_mover', label: 'Market Mover' },
-    { id: 'voting_citizen', label: 'Voting Citizen' },
-    { id: 'alpha_tester', label: 'Alpha Tester' },
-  ]
-
-  const [start, end] = sliderRange
-  const startLabel = monthLabels[start] || ''
-  const endLabel = monthLabels[end] || ''
-  const earningsSubset = earningsData.slice(start, end + 1)
-  const chipActivitySubset = investmentActivity.slice(start, end + 1)
-
-  const makeChartData = (label: string, values: number[], color: string) => ({
-    labels: values.map((_, i) => monthLabels[i + start]),
-    datasets: [
-      {
-        label,
-        data: values,
-        fill: false,
-        borderColor: color,
-        tension: 0.3,
-      },
-    ],
+  const filteredEarnings = earnings.filter((e) => {
+    const inRange = months.indexOf(e.month) >= monthIndexes[0] && months.indexOf(e.month) <= monthIndexes[1]
+    const inProp = selectedProps.length === 0 || selectedProps.includes(e.property_id)
+    const inChip = selectedChips.length === 0 || selectedChips.includes(e.chip_id)
+    return inRange && inProp && inChip
   })
 
-  return (
-    <div className="p-6 bg-[#050F20] text-white min-h-screen space-y-10">
-      {/* Welcome + Quick Links */}
-      <section>
-        <h1 className="text-2xl font-bold mb-2">Welcome, {firstName} 👋</h1>
-        <h2 className="text-md text-white/80 mb-4">🔗 Quick Links</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <Link href="/market" className="bg-emerald-600 hover:bg-emerald-700 text-white p-4 rounded-lg shadow text-center font-semibold">Buy Chips</Link>
-          <Link href="/dashboard/holdings" className="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-lg shadow text-center font-semibold">Sell Chips</Link>
-          <Link href="/dashboard/account" className="bg-gray-600 hover:bg-gray-700 text-white p-4 rounded-lg shadow text-center font-semibold">Account</Link>
-          <Link href="/voting" className="bg-yellow-500 hover:bg-yellow-600 text-white p-4 rounded-lg shadow text-center font-semibold">Voting</Link>
-        </div>
-      </section>
+  const netWorth = filteredEarnings.reduce((sum, e) => sum + Number(e.total || 0), 0)
+  const totalPayout = filteredEarnings.reduce((sum, e) => sum + Number(e.total || 0), 0)
+  const totalEarnings = earnings.reduce((sum, e) => sum + Number(e.total || 0), 0)
 
-      {/* Badges Section */}
-      <section>
-        <h2 className="text-lg font-semibold mb-4">Your Badges</h2>
-        <div className="grid grid-cols-4 sm:grid-cols-9 md:grid-cols-12 lg:grid-cols-18 gap-3">
-          {badgeList.map(({ id, label }) => {
-            const earned = badges.includes(id)
-            return (
-              <div key={id} className="flex flex-col items-center text-center">
-                <div
-                  className={`w-10 h-10 rounded-full bg-center bg-contain bg-no-repeat border ${earned ? '' : 'grayscale opacity-30'}`}
-                  title={label}
-                  style={{ backgroundImage: `url(/badges/${id}.png)` }}
-                />
-                <span className="text-[9px] mt-1 text-gray-300">{label}</span>
-              </div>
-            )
-          })}
+  const buildChartData = (items: any[], key: 'chip_id' | 'property_id') => {
+    const grouped = items.reduce((acc, item) => {
+      const id = item[key]
+      if (!acc[id]) acc[id] = []
+      acc[id].push(item)
+      return acc
+    }, {} as Record<string, any[]>)
+
+    return {
+      labels: months.slice(monthIndexes[0], monthIndexes[1] + 1),
+      datasets: Object.entries(grouped).map(([id, data], i) => {
+        return {
+          label: key === 'chip_id'
+            ? `Chip ${chips.find(c => c.id === id)?.serial || id.slice(0, 6)}`
+            : properties.find(p => p.id === id)?.title || `Property ${id.slice(0, 6)}`,
+          data: months.slice(monthIndexes[0], monthIndexes[1] + 1).map((m) => {
+            const match = (data as any[]).find((d) => d.month === m)
+            return match ? Number(match.total || 0) : 0
+          }),
+          borderColor: getColor(i),
+          backgroundColor: getColor(i),
+          fill: false,
+          pointRadius: 0,
+          pointHoverRadius: 0
+        }
+      })
+    }
+  }
+
+  const chipChartData = buildChartData(filteredEarnings, 'chip_id')
+  const propertyChartData = buildChartData(filteredEarnings, 'property_id')
+
+  const monthlyEarningsData = {
+    labels: months.slice(monthIndexes[0], monthIndexes[1] + 1),
+    datasets: [
+      {
+        label: 'Total Monthly Earnings',
+        data: months.slice(monthIndexes[0], monthIndexes[1] + 1).map(month =>
+          filteredEarnings
+            .filter(e => e.month === month)
+            .reduce((sum, e) => sum + Number(e.total || 0), 0)
+        ),
+        borderColor: '#10B981',
+        backgroundColor: '#10B981',
+        fill: false,
+        pointRadius: 2,
+        pointHoverRadius: 4
+      }
+    ]
+  }
+
+  return (
+    <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+  <h1 className="text-3xl font-bold mb-4 md:mb-0">Welcome, {firstName}!</h1>
+  <div className="flex gap-2 items-center">
+    <span className="text-lg font-semibold">🔗 Quick Access</span>
+    {[
+      { label: 'Account', href: '/account' },
+      { label: 'Trade Chips', href: '/trade' },
+      { label: 'Sell Chips', href: '/trade/list' }
+    ].map(({ label, href }) => (
+      <Link key={label} href={href}>
+        <button className="bg-emerald-600 hover:bg-emerald-500 border border-emerald-500 px-3 py-1 rounded-xl transition-colors duration-200">
+          {label}
+        </button>
+      </Link>
+    ))}
+  </div>
+</div>
+        <div className="flex gap-2 items-center">
+          <span className="text-lg font-semibold">🔗 Quick Access</span>
+          {[{ label: 'Account', href: '/account' }, { label: 'Trade Chips', href: '/trade' }, { label: 'Sell Chips', href: '/trade/list' }].map(({ label, href }) => (
+            <Link key={label} href={href}>
+              <button className="bg-emerald-600 hover:bg-emerald-500 border border-emerald-500 px-3 py-1 rounded-xl transition-colors duration-200">
+                {label}
+              </button>
+            </Link>
+          ))}
         </div>
-      </section>
+      </div>
+
+      {/* Badges */}
+      {userBadges.length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold mb-2">🏅 Your Badges</h2>
+          <div className="flex flex-wrap gap-4">
+            {userBadges.map(b => (
+              <div key={b.id} className="bg-gray-800 rounded-xl px-4 py-2">
+                <div className="text-lg font-bold">{b.badges_catalog?.name}</div>
+                <div className="text-sm text-gray-300">{b.badges_catalog?.description}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Metrics */}
-      <section>
-        <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-4">
-          <MetricCard label="Total Earnings" value={`$${metrics.totalEarnings.toFixed(2)}`} />
-          <MetricCard label="Avg. Monthly" value={`$${metrics.avgMonthly.toFixed(2)}`} />
-          <MetricCard label="Chips Owned" value={metrics.chipsOwned} />
-          <MetricCard label="Properties" value={metrics.propertiesOwned} />
-          <MetricCard label="Avg ROI" value={`${(metrics.avgROI * 100).toFixed(1)}%`} />
-          <MetricCard label="Avg Chip Value" value={`$${metrics.avgChipValue.toFixed(2)}`} />
-          <MetricCard label="Projected Annual" value={`$${metrics.projectedAnnual.toFixed(2)}`} />
-          <MetricCard label="Investment Span" value={`${metrics.spanMonths} months`} />
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold mb-2">📊 Personal Metrics</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-gray-800 rounded-xl p-4">
+            <div className="text-sm text-gray-400">Net Worth</div>
+            <div className="text-2xl font-bold">${netWorth.toFixed(2)}</div>
+          </div>
+          <div className="bg-gray-800 rounded-xl p-4">
+            <div className="text-sm text-gray-400">Chip Earnings (selected)</div>
+            <div className="text-2xl font-bold">${totalPayout.toFixed(2)}</div>
+          </div>
+          <div className="bg-gray-800 rounded-xl p-4">
+            <div className="text-sm text-gray-400">All-Time Earnings</div>
+            <div className="text-2xl font-bold">${totalEarnings.toFixed(2)}</div>
+          </div>
         </div>
-      </section>
+      </div>
 
-      {/* Charts Row 1 */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <ChartCard title="Earnings" data={makeChartData('Earnings', earningsSubset, '#10b981')} />
-        <ChartCard
-          title="ROI Change"
-          data={makeChartData(
-            'ROI Change',
-            earningsSubset.map((v, i, arr) =>
-              i === 0 ? 0 : ((v - arr[i - 1]) / arr[i - 1]) * 100 || 0
-            ),
-            '#facc15'
-          )}
-        />
-        <ChartCard
-          title="Projected Annual"
-          data={makeChartData('Projected Annual', earningsSubset.map((v) => v * 12), '#3b82f6')}
-        />
-      </section>
-
-      {/* Charts Row 2 */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <ChartCard
-          title="Investment Activity"
-          data={makeChartData('Chips Purchased', chipActivitySubset, '#e879f9')}
-        />
-        <ChartCard
-          title="Overall Chip Value"
-          data={makeChartData(
-            'Total Value',
-            earningsSubset.map((_, i) => metrics.avgChipValue * (metrics.chipsOwned || 1)),
-            '#22d3ee'
-          )}
-        />
-        <ChartCard
-          title="Portfolio Growth Projection"
-          data={makeChartData(
-            'Growth Projection',
-            earningsSubset.map((v, i) => (i + 1) * v * 2),
-            '#8b5cf6'
-          )}
-        />
-      </section>
-
-
-      {/* Additional Charts Row 3 */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <ChartCard
-          title="Property Earnings by Month"
-          data={{
-            labels: monthLabels.slice(start, end + 1),
-            datasets: [
-              {
-                label: "Property A",
-                data: earningsSubset.map((val) => val * 0.4),
-                backgroundColor: "#34d399"
-              },
-              {
-                label: "Property B",
-                data: earningsSubset.map((val) => val * 0.35),
-                backgroundColor: "#60a5fa"
-              },
-              {
-                label: "Property C",
-                data: earningsSubset.map((val) => val * 0.25),
-                backgroundColor: "#facc15"
-              }
-            ]
-          }}
-        />
-        <ChartCard
-          title="Total Earnings by Property"
-          data={{
-            labels: monthLabels.slice(start, end + 1),
-            datasets: [
-              {
-                label: "Property A",
-                data: earningsSubset.map((val) => val * 0.4),
-                backgroundColor: "#34d399",
-                stack: "stack1"
-              },
-              {
-                label: "Property B",
-                data: earningsSubset.map((val) => val * 0.35),
-                backgroundColor: "#60a5fa",
-                stack: "stack1"
-              },
-              {
-                label: "Property C",
-                data: earningsSubset.map((val) => val * 0.25),
-                backgroundColor: "#facc15",
-                stack: "stack1"
-              }
-            ]
-          }}
-        />
-      </section>
-
-      {/* Slider */}
-      <section className="pt-6">
-        <h3 className="font-semibold mb-2">Earnings Range</h3>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-300 w-20 text-right">{startLabel}</span>
-          <Slider
-            range
-            min={0}
-            max={earningsData.length - 1}
-            value={sliderRange}
-            onChange={(val) => setSliderRange(val as [number, number])}
-            className="flex-grow max-w-2xl"
-            trackStyle={[{ backgroundColor: '#10b981' }]}
-            handleStyle={[{ borderColor: '#10b981' }, { borderColor: '#10b981' }]}
-          />
-          <span className="text-sm text-gray-300 w-20">{endLabel}</span>
+      {/* Charts */}
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold mb-2">📈 Earnings Over Time</h2>
+        <div className="mb-4">
+          <Slider range min={0} max={months.length - 1} defaultValue={monthIndexes} onChange={(value) => setMonthIndexes(value as [number, number])} />
         </div>
-      </section>
-    </div>
-  )
-}
-
-function MetricCard({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div className="bg-[#0B1D33] border border-white/10 p-3 rounded shadow">
-      <div className="text-[10px] text-gray-400">{label}</div>
-      <div className="text-lg font-bold text-white">{value}</div>
-    </div>
-  )
-}
-
-function ChartCard({ title, data }: { title: string; data: any }) {
-  return (
-    <div className="bg-[#0B1D33] p-4 rounded-lg shadow">
-      <Line data={data} />
-      <div className="text-xs text-gray-400 mt-2">{title}</div>
-    </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-gray-800 rounded-xl p-4">
+            <h3 className="text-lg font-semibold mb-2">By Chip</h3>
+            <Line data={chipChartData} options={chartOptionsWithDollarYAxis} />
+          </div>
+          <div className="bg-gray-800 rounded-xl p-4">
+            <h3 className="text-lg font-semibold mb-2">By Property</h3>
+            <Line data={propertyChartData} options={chartOptionsWithDollarYAxis} />
+          </div>
+        </div>
+        <div className="bg-gray-800 rounded-xl p-4 mt-4">
+          <h3 className="text-lg font-semibold mb-2">Total Earnings</h3>
+          <Line data={monthlyEarningsData} options={chartOptionsWithDollarYAxis} />
+        </div>
+      </div>
+    </main>
   )
 }
