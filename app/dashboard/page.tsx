@@ -1,3 +1,5 @@
+//Current working dashboard. 
+
 //app dashboard page.tsx
 
 
@@ -185,25 +187,10 @@ export default function DashboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
+     <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
   <h1 className="text-3xl font-bold mb-4 md:mb-0">Welcome, {firstName}!</h1>
-  <div className="flex gap-2 items-center">
-    <span className="text-lg font-semibold">🔗 Quick Access</span>
-    {[
-      { label: 'Account', href: '/account' },
-      { label: 'Trade Chips', href: '/trade' },
-      { label: 'Sell Chips', href: '/trade/list' }
-    ].map(({ label, href }) => (
-      <Link key={label} href={href}>
-        <button className="bg-emerald-600 hover:bg-emerald-500 border border-emerald-500 px-3 py-1 rounded-xl transition-colors duration-200">
-          {label}
-        </button>
-      </Link>
-    ))}
-  </div>
-</div>
         <div className="flex gap-2 items-center">
           <span className="text-lg font-semibold">🔗 Quick Access</span>
           {[{ label: 'Account', href: '/account' }, { label: 'Trade Chips', href: '/trade' }, { label: 'Sell Chips', href: '/trade/list' }].map(({ label, href }) => (
