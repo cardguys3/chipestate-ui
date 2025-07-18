@@ -42,24 +42,19 @@ function LicenseForm() {
           const { error: insertError } = await supabase
             .from('users_extended')
             .insert({
-              id: user.id,
-              email: user.email,
-              first_name: buffer.first_name,
-              middle_name: buffer.middle_name,
-              last_name: buffer.last_name,
-              phone: buffer.phone,
-              dob: buffer.dob,
-              res_address_line1: buffer.res_address_line1,
-              res_address_line2: buffer.res_address_line2,
-              res_city: buffer.res_city,
-              res_state: buffer.res_state,
-              res_zip: buffer.res_zip,
-              mail_address_line1: buffer.mail_address_line1,
-              mail_address_line2: buffer.mail_address_line2,
-              mail_city: buffer.mail_city,
-              mail_state: buffer.mail_state,
-              mail_zip: buffer.mail_zip,
-            })
+			  id: user.id ?? '',
+			  email: user.email ?? '',
+			  first_name: buffer.first_name ?? '',
+			  last_name: buffer.last_name ?? '',
+			  dob: buffer.dob ?? '',
+			  phone: buffer.phone ?? '',
+			  res_address_line1: buffer.res_address_line1 ?? '',
+			  res_address_line2: buffer.res_address_line2 ?? '',
+			  res_city: buffer.res_city ?? '',
+			  res_state: buffer.res_state ?? '',
+			  res_zip: buffer.res_zip ?? '',
+			})
+
 
           if (!insertError) {
             await supabase.from('registration_buffer' as any).delete().eq('email', user.email ?? '')
