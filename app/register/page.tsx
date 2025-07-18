@@ -89,13 +89,15 @@ export default function RegisterPage() {
       ...profileData,
     })
 
-  console.log('Upsert error:', bufferError)
-
   if (bufferError) {
+    console.error('Upsert failed:', bufferError)
     setError(bufferError.message)
+    return
   } else {
-    router.push(`/register/license?email=${encodeURIComponent(email)}`)
+    console.log('Upsert succeeded')
   }
+
+router.push(`/register/license?email=${encodeURIComponent(email)}`)
 }
 
 
