@@ -19,59 +19,66 @@ function LicenseForm() {
   const [loading, setLoading] = useState<boolean>(false)
 
   // 🔁 STEP 3: Migrate from registration_buffer to users_extended
-  useEffect(() => {
-    const hydrateProfile = async () => {
-      const { data: { user }, error: userError } = await supabase.auth.getUser()
-      if (userError || !user || !user.email) return
+  
+  //begin lag error
+ const [supabaseUserId, setSupabaseUserId] = useState<string | null>(null)
 
-      const { data: exists } = await supabase
-        .from('users_extended')
-        .select('id')
-        .eq('id', user.id)
+useEffect(() => {
+  const hydrateProfile = async () => {
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user || !user.email || !user.id) return
+
+    // ✅ store the Supabase auth user.id
+    setSupabaseUserId(user.id)
+
+    const { data: exists } = await supabase
+      .from('users_extended')
+      .select('id')
+      .eq('id', user.id)
+      .single()
+
+    if (!exists) {
+      const { data: buffer } = await supabase
+        .from('registration_buffer')
+        .select('*')
+        .eq('email', user.email)
         .single()
 
-      if (!exists) {
-        const { data: buffer } = await supabase
-          .from('registration_buffer')
-          .select('*')
-          .eq('email', user.email)
-          .single()
+      if (buffer) {
+        const { error: insertError } = await supabase
+          .from('users_extended')
+          .insert([{
+            id: user.id,
+            email: user.email,
+            first_name: buffer.first_name,
+            middle_name: buffer.middle_name,
+            last_name: buffer.last_name,
+            phone: buffer.phone,
+            dob: buffer.dob,
+            res_address_line1: buffer.res_address_line1,
+            res_address_line2: buffer.res_address_line2,
+            res_city: buffer.res_city,
+            res_state: buffer.res_state,
+            res_zip: buffer.res_zip,
+            mail_address_line1: buffer.mail_address_line1,
+            mail_address_line2: buffer.mail_address_line2,
+            mail_city: buffer.mail_city,
+            mail_state: buffer.mail_state,
+            mail_zip: buffer.mail_zip,
+          }])
 
-        if (buffer) {
-          const { error: insertError } = await supabase
-            .from('users_extended')
-            .insert([{
-              id: user.id,
-              email: user.email,
-              first_name: buffer.first_name,
-              middle_name: buffer.middle_name,
-              last_name: buffer.last_name,
-              phone: buffer.phone,
-              dob: buffer.dob,
-              res_address_line1: buffer.res_address_line1,
-              res_address_line2: buffer.res_address_line2,
-              res_city: buffer.res_city,
-              res_state: buffer.res_state,
-              res_zip: buffer.res_zip,
-              mail_address_line1: buffer.mail_address_line1,
-              mail_address_line2: buffer.mail_address_line2,
-              mail_city: buffer.mail_city,
-              mail_state: buffer.mail_state,
-              mail_zip: buffer.mail_zip,
-            }])
-
-          if (!insertError) {
-            await supabase.from('registration_buffer').delete().eq('email', user.email)
-          } else {
-            console.error('Hydration insert error:', insertError)
-          }
+        if (!insertError) {
+          await supabase.from('registration_buffer').delete().eq('email', user.email)
+        } else {
+          console.error('Hydration insert error:', insertError)
         }
       }
     }
+  }
 
-    hydrateProfile()
-  }, [supabase])
-
+  hydrateProfile()
+}, [supabase])
+// end lag error
   const handleUpload = async () => {
     if (!userId || !front || !back) {
       setError('Please select both front and back images to continue.')
@@ -202,22 +209,12 @@ function LicenseForm() {
             <label className="block mb-1">Back of Driver’s License or State ID Card</label>
             <label className="block w-64 cursor-pointer border border-emerald-600 px-4 py-2 text-center rounded bg-blue-900 hover:bg-blue-800">
               Choose Image
-              <input
-                type="file"
-                accept="image/*"
-                multiple={false}
-                onChange={(e) => setBack(e.target.files?.[0] || null)}
-                className="hidden"
-              />
+              <input type="file" accept="image/*" multiple={false} onChange={(e) => setBack(e.target.files?.[0] || null)} className="hidden" />
             </label>
             {back && (
               <div className="flex items-center justify-between mt-2 text-sm bg-blue-900 px-3 py-2 rounded border border-blue-700 w-64">
                 <span className="truncate">{back.name}</span>
-                <button
-                  type="button"
-                  onClick={() => setBack(null)}
-                  className="ml-2 text-red-400 hover:text-red-600 font-bold"
-                >
+                <button type="button" onClick={() => setBack(null)} className="ml-2 text-red-400 hover:text-red-600 font-bold">
                   ×
                 </button>
               </div>
@@ -226,30 +223,14 @@ function LicenseForm() {
 
           {/* Action Buttons */}
           <div className="flex flex-wrap justify-center gap-3 pt-4">
-            <button
-              onClick={() => router.back()}
-              className="px-4 py-2 border border-gray-500 rounded hover:bg-gray-800"
-            >
+            <button onClick={() => router.back()} className="px-4 py-2 border border-gray-500 rounded hover:bg-gray-800">
               Back
             </button>
-            <button
-              onClick={() => router.push('/')}
-              className="px-4 py-2 border border-red-500 text-red-400 rounded hover:bg-red-900"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={skipUpload}
-              className="border border-yellow-500 text-yellow-400 px-4 py-2 rounded hover:bg-yellow-900"
-            >
+            <button onClick={skipUpload} className="border border-yellow-500 text-yellow-400 px-4 py-2 rounded hover:bg-yellow-900">
               Skip License Step
             </button>
-            <button
-              onClick={handleUpload}
-              disabled={loading}
-              className="bg-emerald-700 hover:bg-emerald-600 px-4 py-2 rounded shadow text-white border border-emerald-500"
-            >
-              {loading ? 'Uploading...' : 'Next'}
+            <button onClick={handleUpload} disabled={loading} className="bg-emerald-700 hover:bg-emerald-600 px-4 py-2 rounded shadow text-white border border-emerald-500">
+              {loading ? 'Uploading...' : 'Submit'}
             </button>
           </div>
         </div>
