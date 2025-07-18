@@ -35,7 +35,7 @@ function LicenseForm() {
         const { data: buffer } = await supabase
           .from('registration_buffer') // I have updated this to avoid the as any sql issue
           .select('*')
-          .eq('email', user.email)
+          .eq('email', user.email ?? '')
           .single()
 
         if (buffer) {
@@ -62,7 +62,7 @@ function LicenseForm() {
             })
 
           if (!insertError) {
-            await supabase.from('registration_buffer' as any).delete().eq('email', user.email)
+            await supabase.from('registration_buffer' as any).delete().eq('email', user.email ?? '')
           } else {
             console.error('Hydration insert error:', insertError)
           }
