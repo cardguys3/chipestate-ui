@@ -122,11 +122,9 @@ export default function RegisterPage() {
 			<label htmlFor="dob" className="text-sm font-medium text-white whitespace-nowrap">
 			  Date of Birth
 			</label>
-			<input type="date" id="dob" name="dob" value={formData.dob} onChange={handleChange}
-			  className="flex-1 px-3 py-2 rounded-md border border-gray-300 bg-white text-gray-900" required/>
+			<input type="date" id="dob" name="dob" value={formData.dob} onChange={handleChange} required  className="p-2 border border-emerald-600 rounded bg-blue-900" />
 		  </div>
-		  <input type="email" id="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange}
-			className="w-full px-3 py-2 rounded-md border border-gray-300 bg-white text-gray-900" required />
+		  <input type="email" id="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
 		</div>
             <input name="password" placeholder="Password" type="password" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
           </div>
