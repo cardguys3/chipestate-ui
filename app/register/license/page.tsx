@@ -32,11 +32,13 @@ function LicenseForm() {
         .single()
 
       if (!exists) {
-        const { data: buffer } = await supabase
-          .from('registration_buffer')
-          .select('*')
-          .eq('email', user.email)
-          .single()
+        const { data: buffer } = user.email
+  ? await supabase
+      .from('registration_buffer')
+      .select('*')
+      .eq('email', user.email)
+      .single()
+  : { data: null }
 
         if (buffer) {
           const { error: insertError } = await supabase
