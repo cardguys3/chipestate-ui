@@ -3,10 +3,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-
 import { supabase } from '@/lib/supabaseClient'
 import { Line } from 'react-chartjs-2'
 import Slider from 'rc-slider'
+import Link from 'next/link'
 import 'rc-slider/assets/index.css'
 import {
   Chart as ChartJS,
@@ -25,6 +25,7 @@ export default function DashboardPage() {
   const [monthLabels, setMonthLabels] = useState<string[]>([])
   const [sliderRange, setSliderRange] = useState<[number, number]>([0, 11])
   const [badges, setBadges] = useState<string[]>([])
+  const [firstName, setFirstName] = useState<string>('')
   const [investmentActivity, setInvestmentActivity] = useState<number[]>([])
   const [metrics, setMetrics] = useState({
     totalEarnings: 0,
@@ -39,10 +40,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function fetchData() {
-      const {
-        data: userResult,
-        error: userError,
-      } = await supabase.auth.getUser()
+      const { data: userResult } = await supabase.auth.getUser()
       const userId = userResult?.user?.id
       if (!userId) return
 
@@ -70,7 +68,7 @@ export default function DashboardPage() {
 
       const chipsOwned = chips?.length ?? 0
       const propertiesOwned = chips ? new Set(chips.map((c) => c.property_id)).size : 0
-      const avgChipValue = chipsOwned
+      const avgChipValue = chips && chipsOwned
         ? chips.reduce((sum, c) => sum + (c.current_value || 0), 0) / chipsOwned
         : 0
 
@@ -160,7 +158,19 @@ export default function DashboardPage() {
 
   return (
     <div className="p-6 bg-[#050F20] text-white min-h-screen space-y-10">
-      {/* Badges */}
+      {/* Welcome + Quick Links */}
+      <section>
+        <h1 className="text-2xl font-bold mb-2">Welcome, {firstName} 👋</h1>
+        <h2 className="text-md text-white/80 mb-4">🔗 Quick Links</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <Link href="/market" className="bg-emerald-600 hover:bg-emerald-700 text-white p-4 rounded-lg shadow text-center font-semibold">Buy Chips</Link>
+          <Link href="/dashboard/holdings" className="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-lg shadow text-center font-semibold">Sell Chips</Link>
+          <Link href="/dashboard/account" className="bg-gray-600 hover:bg-gray-700 text-white p-4 rounded-lg shadow text-center font-semibold">Account</Link>
+          <Link href="/voting" className="bg-yellow-500 hover:bg-yellow-600 text-white p-4 rounded-lg shadow text-center font-semibold">Voting</Link>
+        </div>
+      </section>
+
+      {/* Badges Section */}
       <section>
         <h2 className="text-lg font-semibold mb-4">Your Badges</h2>
         <div className="grid grid-cols-4 sm:grid-cols-9 md:grid-cols-12 lg:grid-cols-18 gap-3">
@@ -169,9 +179,7 @@ export default function DashboardPage() {
             return (
               <div key={id} className="flex flex-col items-center text-center">
                 <div
-                  className={`w-10 h-10 rounded-full bg-center bg-contain bg-no-repeat border ${
-                    earned ? '' : 'grayscale opacity-30'
-                  }`}
+                  className={`w-10 h-10 rounded-full bg-center bg-contain bg-no-repeat border ${earned ? '' : 'grayscale opacity-30'}`}
                   title={label}
                   style={{ backgroundImage: `url(/badges/${id}.png)` }}
                 />
@@ -196,11 +204,11 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* First Row Charts */}
+      {/* Charts Row 1 */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <ChartCard title="Earnings" data={makeChartData('Earnings', earningsSubset, '#10b981')} />
         <ChartCard
-          title="Return on Investment (ROI)"
+          title="ROI Change"
           data={makeChartData(
             'ROI Change',
             earningsSubset.map((v, i, arr) =>
@@ -210,12 +218,12 @@ export default function DashboardPage() {
           )}
         />
         <ChartCard
-          title="Projected Annual Earnings"
-          data={makeChartData('Projected Earnings', earningsSubset.map((v) => v * 12), '#3b82f6')}
+          title="Projected Annual"
+          data={makeChartData('Projected Annual', earningsSubset.map((v) => v * 12), '#3b82f6')}
         />
       </section>
 
-      {/* Second Row Charts */}
+      {/* Charts Row 2 */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <ChartCard
           title="Investment Activity"
