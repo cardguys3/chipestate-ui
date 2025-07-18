@@ -120,14 +120,15 @@ export default function RegisterPage() {
             <input name="phone" placeholder="Mobile Phone" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
           
 		  <div className="col-span-2 flex gap-3 items-end">
-			  <div className="flex flex-col w-1/3">
-				<label htmlFor="dob" className="text-white text-sm mb-1">Date of Birth</label>
-				<input id="dob" name="dob" type="date" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900 w-full"/>
-			  </div>
-			  <div className="flex flex-col w-2/3">
-				<label htmlFor="email" className="text-white text-sm mb-1">Email</label>
-				<input id="email" name="email" type="email" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900 w-full"/>
-			  </div>
+			  <div className="flex items-center space-x-2 mb-4">
+				  <label htmlFor="dob" className="text-sm font-medium text-white whitespace-nowrap">
+					Date of Birth
+				  </label>
+				  <input type="date" id="dob" name="dob" value={dob} onChange={(e) => setDob(e.target.value)} 
+				  className="flex-1 px-3 py-2 rounded-md border border-gray-300 bg-white text-gray-900" required/>
+				</div>
+			  <input type="email" id="email" name="email" placeholder="Email" value={email}  onChange={(e) => setEmail(e.target.value)}  
+			  className="w-full px-3 py-2 rounded-md border border-gray-300 bg-white text-gray-900"  required/>
 			</div>
             <input name="password" placeholder="Password" type="password" onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
           </div>
