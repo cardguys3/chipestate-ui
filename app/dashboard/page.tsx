@@ -199,18 +199,28 @@ export default function DashboardPage() {
 
       {/* Badges */}
       {userBadges.length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold mb-2">🏅 Your Badges</h2>
-          <div className="flex flex-wrap gap-4">
-            {userBadges.map(b => (
-              <div key={b.id} className="bg-gray-800 rounded-xl px-4 py-2">
-                <div className="text-lg font-bold">{b.badges_catalog?.name}</div>
-                <div className="text-sm text-gray-300">{b.badges_catalog?.description}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+		  <div className="mb-6 w-full">
+			<h2 className="text-xl font-semibold mb-2">🏅 Your Badges</h2>
+			<div className="flex flex-wrap gap-4">
+			  {userBadges.map(badge => (
+				<div
+				  key={badge.id}
+				  className="bg-gray-800 rounded-xl px-4 py-2 shadow hover:shadow-lg transition"
+				>
+				  <div className="text-lg font-bold">{badge.badges_catalog?.name}</div>
+				  <div className="text-sm text-gray-300">{badge.badges_catalog?.description}</div>
+				</div>
+			  ))}
+			</div>
+			<div className="mt-2">
+			  <Link href="/badges">
+				<span className="text-emerald-400 hover:underline text-sm">
+				  View all available badges and how to earn them →
+				</span>
+			  </Link>
+			</div>
+		  </div>
+		)}
 
       {/* Metrics */}
       <div className="mb-6">
@@ -231,27 +241,34 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Charts */}
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">📈 Earnings Over Time</h2>
-        <div className="mb-4">
-          <Slider range min={0} max={months.length - 1} defaultValue={monthIndexes} onChange={(value) => setMonthIndexes(value as [number, number])} />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-gray-800 rounded-xl p-4">
-            <h3 className="text-lg font-semibold mb-2">By Chip</h3>
-            <Line data={chipChartData} options={chartOptionsWithDollarYAxis} />
-          </div>
-          <div className="bg-gray-800 rounded-xl p-4">
-            <h3 className="text-lg font-semibold mb-2">By Property</h3>
-            <Line data={propertyChartData} options={chartOptionsWithDollarYAxis} />
-          </div>
-        </div>
-        <div className="bg-gray-800 rounded-xl p-4 mt-4">
-          <h3 className="text-lg font-semibold mb-2">Total Earnings</h3>
-          <Line data={monthlyEarningsData} options={chartOptionsWithDollarYAxis} />
-        </div>
-      </div>
-    </main>
-  )
-}
+			{/* Charts */}
+			<div className="mb-6">
+			  <h2 className="text-xl font-semibold mb-2">📈 Earnings Over Time</h2>
+			  <div className="mb-4">
+				<Slider
+				  range
+				  min={0}
+				  max={months.length - 1}
+				  defaultValue={monthIndexes}
+				  onChange={(value) => setMonthIndexes(value as [number, number])}
+				/>
+			  </div>
+			  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+				<div className="bg-gray-800 rounded-xl p-4">
+				  <h3 className="text-lg font-semibold mb-2">By Chip</h3>
+				  <Line data={chipChartData} options={chartOptionsWithDollarYAxis} />
+				</div>
+				<div className="bg-gray-800 rounded-xl p-4">
+				  <h3 className="text-lg font-semibold mb-2">By Property</h3>
+				  <Line data={propertyChartData} options={chartOptionsWithDollarYAxis} />
+				</div>
+				<div className="bg-gray-800 rounded-xl p-4">
+				  <h3 className="text-lg font-semibold mb-2">Total Earnings</h3>
+				  <Line data={monthlyEarningsData} options={chartOptionsWithDollarYAxis} />
+				</div>
+			  </div>
+			</div>
+			</main>
+		)
+	}
+
