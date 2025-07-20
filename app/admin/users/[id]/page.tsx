@@ -1,76 +1,66 @@
-// File: app/admin/users/[id]/page.tsx
+// app/admin/users/[id]/page.tsx
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter, useParams } from 'next/navigation'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { Database } from '@/types/supabase'
+import { useParams } from 'next/navigation'
+import { createBrowserClient } from '@supabase/ssr'
 import Link from 'next/link'
 
-export default function ViewUserPage() {
-  const supabase = createClientComponentClient<Database>()
-  const router = useRouter()
+const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
+export default function AdminUserDetailPage() {
   const { id } = useParams()
   const [user, setUser] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string>('')
 
   useEffect(() => {
-    const fetchUser = async () => {
-      setLoading(true)
-      const { data, error } = await supabase
-        .from('users_extended')
-        .select('*')
-        .eq('id', id as string)
-        .single()
-
-      if (error) {
-        setError('Failed to load user details.')
-      } else {
-        setUser(data)
-      }
-      setLoading(false)
+    if (!id || typeof id !== 'string') {
+      setError('Invalid user ID.')
+      return
     }
 
-    if (id) fetchUser()
+    const fetchUser = async () => {
+      const { data, error } = await supabase.from('users_extended').select('*').eq('id', id).single()
+      if (error || !data) {
+        console.error('Error loading user:', error)
+        setError('User not found.')
+        return
+      }
+      setUser(data)
+    }
+
+    fetchUser()
   }, [id])
 
-  if (loading) return <p className="text-white p-4">Loading user details...</p>
-  if (error) return <p className="text-red-500 p-4">{error}</p>
-  if (!user) return <p className="text-white p-4">User not found.</p>
+  if (error) {
+    return <div className="min-h-screen p-10 text-red-500">{error}</div>
+  }
+
+  if (!user) {
+    return <div className="min-h-screen p-10 text-white">Loading user...</div>
+  }
 
   return (
-    <main className="min-h-screen bg-blue-950 text-white p-6">
-      <div className="max-w-3xl mx-auto border border-emerald-700 rounded p-6">
-        <h1 className="text-xl font-bold mb-4">User Details: {user.first_name} {user.last_name}</h1>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-          <p><strong>Email:</strong> {user.email}</p>
-          <p><strong>Phone:</strong> {user.phone}</p>
-          <p><strong>Date of Birth:</strong> {user.dob}</p>
-
-          <p><strong>Residential Address:</strong><br />
-            {user.res_address_line1}<br />
-            {user.res_address_line2}<br />
-            {user.res_city}, {user.res_state} {user.res_zip}
-          </p>
-
-          <p><strong>Mailing Address:</strong><br />
-            {user.mail_address_line1}<br />
-            {user.mail_address_line2}<br />
-            {user.mail_city}, {user.mail_state} {user.mail_zip}
-          </p>
-
-          <p><strong>Registration Status:</strong> {user.registration_status}</p>
-          <p><strong>Approval Status:</strong> {user.approval_status}</p>
-        </div>
-
-        <div className="mt-6 flex gap-4">
-          <Link href={`/admin/users/${id}/edit-user`} className="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded text-white text-sm">Edit User</Link>
-          <Link href={`/admin/users/${id}/approve`} className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-white text-sm">Approve</Link>
-          <Link href={`/admin/users/${id}/deny`} className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-white text-sm">Deny</Link>
-        </div>
+    <main className="min-h-screen bg-[#0B1D33] text-white p-6 space-y-6">
+      <h1 className="text-2xl font-bold">User Details</h1>
+      <div className="border border-gray-700 p-6 rounded-xl space-y-4">
+        <p><strong>Name:</strong> {user.first_name ?? ''} {user.last_name ?? ''}</p>
+        <p><strong>Email:</strong> {user.email}</p>
+        <p><strong>Phone:</strong> {user.phone ?? '—'}</p>
+        <p><strong>State:</strong> {user.res_state ?? '—'}</p>
+        <p><strong>Approved:</strong> {user.is_approved ? 'Yes' : 'No'}</p>
+        <p><strong>Active:</strong> {user.is_active ? 'Yes' : 'No'}</p>
+        <p><strong>Created:</strong> {new Date(user.created_at).toLocaleString()}</p>
       </div>
+      <Link
+        href={`/admin/users/${user.id}/edit-user`}
+        className="inline-block mt-4 px-4 py-2 bg-emerald-600 rounded hover:bg-emerald-700"
+      >
+        Edit User
+      </Link>
     </main>
   )
 }
