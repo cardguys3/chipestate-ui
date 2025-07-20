@@ -12,7 +12,10 @@ export default function PropertyDetailsPage() {
   const [showLogin, setShowLogin] = useState(false)
   const [userApproved, setUserApproved] = useState<boolean | null>(null)
 
-  const supabase = createBrowserClient() //updated this per CGPT
+  const supabase = createBrowserClient(
+		  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+		  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+			) //updated this per CGPT
   const { id } = useParams()
 
   useEffect(() => {
