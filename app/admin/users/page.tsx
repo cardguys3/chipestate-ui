@@ -62,7 +62,7 @@ export default function AdminUsersPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Users</h1>
         <Link
-          href="/admin/users/add"
+          href="/admin/users/[id]/add"
           className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl shadow"
         >
           + Add User
