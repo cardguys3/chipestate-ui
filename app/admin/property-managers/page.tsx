@@ -38,11 +38,27 @@ export default function PropertyManagersPage() {
   }
 
   const handleToggleActive = async (id: string, isActive: boolean) => {
-    const { error } = await supabase
+    // Update is_active
+    const { error: updateError } = await supabase
       .from('property_managers')
       .update({ is_active: !isActive })
       .eq('id', id)
-    if (!error) fetchManagers()
+
+    if (updateError) return
+
+    // Log the change to status_change_log
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+    const adminId = sessionData?.session?.user?.id ?? null
+
+    await supabase.from('status_change_log').insert({
+      entity_type: 'property_manager',
+      entity_id: id,
+      status: !isActive ? 'active' : 'inactive',
+      status_type: 'active',
+      changed_by: adminId
+    })
+
+    fetchManagers()
   }
 
   const filtered = managers.filter((m) => {

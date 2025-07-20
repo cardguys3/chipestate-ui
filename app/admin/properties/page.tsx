@@ -1,8 +1,10 @@
+// app/admin/properties/page.tsx
 'use client'
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createBrowserClient } from '@supabase/ssr'
+import { useRouter } from 'next/navigation'
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -15,8 +17,8 @@ export default function AdminPropertiesPage() {
     title: '',
     property_type: '',
     sub_type: '',
-    is_active: '',
-    is_hidden: '',
+    is_active: false,
+    is_hidden: false,
     property_manager: ''
   })
   const [sortBy, setSortBy] = useState('created_at')
@@ -51,8 +53,8 @@ export default function AdminPropertiesPage() {
         (filter.property_type === '' || p.property_type === filter.property_type) &&
         (filter.sub_type === '' || p.sub_type === filter.sub_type) &&
         (filter.property_manager === '' || p.property_manager === filter.property_manager) &&
-        (filter.is_active === '' || String(p.is_active) === filter.is_active) &&
-        (filter.is_hidden === '' || String(p.is_hidden) === filter.is_hidden)
+        (!filter.is_active || p.is_active) &&
+        (!filter.is_hidden || p.is_hidden)
       )
 
       setProperties(filtered)
@@ -62,7 +64,7 @@ export default function AdminPropertiesPage() {
   }, [filter, sortBy, sortDirection])
 
   const handleDelete = async (id: string) => {
-    const confirmDelete = confirm('Are you sure you want to delete this property?\n\nYES DELETE!!! / Cancel (Don\'t Delete)')
+    const confirmDelete = confirm('Are you sure you want to permanently remove this property?')
     if (!confirmDelete) return
     await supabase.from('properties').delete().eq('id', id)
     setProperties(prev => prev.filter(p => p.id !== id))
@@ -70,7 +72,9 @@ export default function AdminPropertiesPage() {
 
   const handleHideToggle = async (id: string, isHidden: boolean) => {
     await supabase.from('properties').update({ is_hidden: !isHidden }).eq('id', id)
-    setProperties(prev => prev.filter(p => p.id !== id))
+    setProperties(prev =>
+      prev.map(p => (p.id === id ? { ...p, is_hidden: !isHidden } : p))
+    )
   }
 
   const toggleSort = (field: string) => {
@@ -84,34 +88,37 @@ export default function AdminPropertiesPage() {
 
   return (
     <main className="min-h-screen bg-[#0e1a2b] text-white px-6 py-8">
-      <h1 className="text-2xl font-bold mb-4">Manage Properties</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">Manage Properties</h1>
+        <Link href="/admin/properties/new" className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl shadow">
+          + Add Property
+        </Link>
+      </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-6 gap-4 mb-6">
-        <div>
-          <input
-            type="text"
-            placeholder="Search title..."
-            value={titleSearch}
-            onChange={(e) => setTitleSearch(e.target.value)}
-            className="w-full mb-2 p-2 rounded bg-[#1e2a3c] border border-gray-600"
-          />
-          <select
-            value={filter.title}
-            onChange={(e) => setFilter({ ...filter, title: e.target.value })}
-            className="w-full p-2 rounded bg-[#1e2a3c] border border-gray-600"
-          >
-            <option value=''>Title</option>
-            {allTitles.filter(t => t.toLowerCase().includes(titleSearch.toLowerCase())).map(t => (
-              <option key={t}>{t}</option>
-            ))}
-          </select>
-        </div>
+      <div className="border border-emerald-600 p-4 rounded-xl grid grid-cols-1 sm:grid-cols-6 gap-4 mb-6">
+        <input
+          type="text"
+          placeholder="Search title..."
+          value={titleSearch}
+          onChange={(e) => setTitleSearch(e.target.value)}
+          className="w-full p-2 rounded bg-[#1e2a3c] border border-gray-600"
+        />
+        <select
+          value={filter.title}
+          onChange={(e) => setFilter({ ...filter, title: e.target.value })}
+          className="w-full p-2 rounded bg-[#1e2a3c] border border-gray-600"
+        >
+          <option value=''>Title</option>
+          {allTitles.filter(t => t.toLowerCase().includes(titleSearch.toLowerCase())).map(t => (
+            <option key={t}>{t}</option>
+          ))}
+        </select>
         <select
           value={filter.property_type}
           onChange={(e) => setFilter({ ...filter, property_type: e.target.value })}
           className="p-2 rounded bg-[#1e2a3c] border border-gray-600"
         >
-          <option value=''>Type</option>
+          <option value=''>Property Type</option>
           {allTypes.map(t => <option key={t}>{t}</option>)}
         </select>
         <select
@@ -130,37 +137,35 @@ export default function AdminPropertiesPage() {
           <option value=''>Manager</option>
           {allManagers.map(m => <option key={m}>{m}</option>)}
         </select>
-        <select
-          value={filter.is_active}
-          onChange={(e) => setFilter({ ...filter, is_active: e.target.value })}
-          className="p-2 rounded bg-[#1e2a3c] border border-gray-600"
-        >
-          <option value=''>Active Status</option>
-          <option value='true'>Active</option>
-          <option value='false'>Inactive</option>
-        </select>
-        <select
-          value={filter.is_hidden}
-          onChange={(e) => setFilter({ ...filter, is_hidden: e.target.value })}
-          className="p-2 rounded bg-[#1e2a3c] border border-gray-600"
-        >
-          <option value=''>Visibility</option>
-          <option value='true'>Hidden</option>
-          <option value='false'>Visible</option>
-        </select>
+        <label className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            checked={filter.is_active}
+            onChange={(e) => setFilter({ ...filter, is_active: e.target.checked })}
+          />
+          <span>Active Only</span>
+        </label>
+        <label className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            checked={filter.is_hidden}
+            onChange={(e) => setFilter({ ...filter, is_hidden: e.target.checked })}
+          />
+          <span>Hidden Only</span>
+        </label>
       </div>
 
       <table className="w-full text-sm border border-gray-700">
         <thead className="bg-[#1a2a3c] text-gray-300">
           <tr>
-            {['title', 'property_type', 'sub_type', 'is_active', 'is_hidden', 'created_at'].map(col => (
+            {['Title', 'Property Type', 'Subtype', 'Active', 'Hidden', 'Created At'].map((col, i) => (
               <th
                 key={col}
                 className="p-2 cursor-pointer hover:text-white"
-                onClick={() => toggleSort(col)}
+                onClick={() => toggleSort(['title', 'property_type', 'sub_type', 'is_active', 'is_hidden', 'created_at'][i])}
               >
-                {col.replace(/_/g, ' ')}
-                {sortBy === col ? (sortDirection === 'asc' ? ' ▲' : ' ▼') : ''}
+                {col}
+                {sortBy === ['title', 'property_type', 'sub_type', 'is_active', 'is_hidden', 'created_at'][i] ? (sortDirection === 'asc' ? ' ▲' : ' ▼') : ''}
               </th>
             ))}
             <th className="p-2">Actions</th>
@@ -179,7 +184,7 @@ export default function AdminPropertiesPage() {
               <td className="p-2">{new Date(p.created_at).toLocaleDateString()}</td>
               <td className="p-2 space-x-2">
                 <button onClick={() => handleHideToggle(p.id, p.is_hidden)} className="text-yellow-400 hover:text-yellow-600">
-                  {p.is_hidden ? 'Unhide' : 'Hide'}
+                  {p.is_hidden ? 'Visible' : 'Hidden'}
                 </button>
                 <button onClick={() => handleDelete(p.id)} className="text-red-400 hover:text-red-600">
                   Delete
