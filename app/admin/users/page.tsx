@@ -1,4 +1,3 @@
-// File: app/admin/users/page.tsx
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -25,7 +24,7 @@ export default function AdminUsersPage() {
     const { data } = await supabase
       .from('users_extended')
       .select('*')
-      .order('created_at', { ascending: false })
+      .order('first_name', { ascending: false })
 
     if (data) setUsers(data)
   }
@@ -62,56 +61,56 @@ export default function AdminUsersPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Users</h1>
         <Link
-          href="/admin/users/[id]/add"
+          href="/admin/users/add"
           className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl shadow"
         >
           + Add User
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-6 gap-4">
-        <input
-          type="text"
-          placeholder="Filter by name"
-          value={filters.name}
-          onChange={(e) => setFilters({ ...filters, name: e.target.value })}
-          className="p-2 rounded bg-[#0B1D33] border border-gray-600 text-white"
-        />
-        <input
-          type="text"
-          placeholder="Filter by email"
-          value={filters.email}
-          onChange={(e) => setFilters({ ...filters, email: e.target.value })}
-          className="p-2 rounded bg-[#0B1D33] border border-gray-600 text-white"
-        />
-        <input
-          type="text"
-          placeholder="Filter by state"
-          value={filters.state}
-          onChange={(e) => setFilters({ ...filters, state: e.target.value })}
-          className="p-2 rounded bg-[#0B1D33] border border-gray-600 text-white"
-        />
-        <select
-          value={filters.approved}
-          onChange={(e) => setFilters({ ...filters, approved: e.target.value })}
-          className="p-2 rounded bg-[#0B1D33] border border-gray-600 text-white"
-        >
-          <option value="">Approved?</option>
-          <option value="true">Approved</option>
-          <option value="false">Not Approved</option>
-        </select>
-        <select
-          value={filters.active}
-          onChange={(e) => setFilters({ ...filters, active: e.target.value })}
-          className="p-2 rounded bg-[#0B1D33] border border-gray-600 text-white"
-        >
-          <option value="">Active?</option>
-          <option value="true">Active</option>
-          <option value="false">Inactive</option>
-        </select>
-        <button onClick={fetchUsers} className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-white">
-          Refresh
-        </button>
+      <div className="border border-emerald-600 p-4 rounded-xl space-y-4">
+        <h2 className="text-xl font-semibold text-emerald-400">Filter Users</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-6 gap-4">
+          <input
+            type="text"
+            placeholder="Name"
+            value={filters.name}
+            onChange={(e) => setFilters({ ...filters, name: e.target.value })}
+            className="p-2 rounded bg-[#0B1D33] border border-gray-600 text-white"
+          />
+          <input
+            type="text"
+            placeholder="Email"
+            value={filters.email}
+            onChange={(e) => setFilters({ ...filters, email: e.target.value })}
+            className="p-2 rounded bg-[#0B1D33] border border-gray-600 text-white"
+          />
+          <input
+            type="text"
+            placeholder="State"
+            value={filters.state}
+            onChange={(e) => setFilters({ ...filters, state: e.target.value })}
+            className="p-2 rounded bg-[#0B1D33] border border-gray-600 text-white"
+          />
+          <select
+            value={filters.approved}
+            onChange={(e) => setFilters({ ...filters, approved: e.target.value })}
+            className="p-2 rounded bg-[#0B1D33] border border-gray-600 text-white"
+          >
+            <option value="">Approved?</option>
+            <option value="true">Approved</option>
+            <option value="false">Not Approved</option>
+          </select>
+          <select
+            value={filters.active}
+            onChange={(e) => setFilters({ ...filters, active: e.target.value })}
+            className="p-2 rounded bg-[#0B1D33] border border-gray-600 text-white"
+          >
+            <option value="">Active?</option>
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
+          </select>
+        </div>
       </div>
 
       {filteredUsers.length === 0 ? (
