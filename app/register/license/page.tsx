@@ -10,8 +10,7 @@ import { toast } from 'react-hot-toast'
 function LicenseForm() {
   const supabase = createClientComponentClient<Database>()
   const router = useRouter()
-  const [supabaseUserId, setSupabaseUserId] = useState<string | null>(null)
-  const userId = supabaseUserId // now safe to use after declaration
+  const [userId, setUserId] = useState<string | null>(null)
   const [front, setFront] = useState<File | null>(null)
   const [back, setBack] = useState<File | null>(null)
   const [error, setError] = useState<string>('')
@@ -24,7 +23,7 @@ useEffect(() => {
     if (userError || !user || !user.email || !user.id) return
 
     // ✅ store the Supabase auth user.id
-    setSupabaseUserId(user.id)
+    setUserId(user.id)
 
     const { data: exists } = await supabase
       .from('users_extended')
