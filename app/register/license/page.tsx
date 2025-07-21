@@ -207,10 +207,7 @@ useEffect(() => {
 
         {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
 
-		{!userId ? (
-		  <p className="text-yellow-300 text-center">Loading user session...</p>
-		) : (
-		  <div className="max-w-lg mx-auto space-y-6">
+
 			{/* Front Upload */}
           <div>
             <label className="block mb-1">Front of Driver’s License or State ID Card</label>
@@ -235,7 +232,6 @@ useEffect(() => {
                   ×
                 </button>
                 </div> // closes .space-y-6
-			)} // closes the conditional render
           </div>
 
           {/* Back Upload */}
