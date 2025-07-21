@@ -20,11 +20,13 @@ function LicenseForm() {
   useEffect(() => {
     const hydrateProfile = async () => {
       const { data: { user }, error: userError } = await supabase.auth.getUser()
+
       if (userError || !user || !user.email || !user.id) {
-  console.error('Auth error or missing user:', userError)
-  setHydrated(true)
-  return
-}
+        console.error('Auth error or missing user:', userError)
+        toast.error('Session expired. Please log in again.')
+        router.push('/login')
+        return
+      }
 
       setUserId(user.id)
 
@@ -64,36 +66,37 @@ function LicenseForm() {
               mail_zip: buffer.mail_zip,
             }])
 
-          if (!insertError) {
-			  await supabase.from('registration_buffer').delete().eq('email', user.email)
-			} else {
-			  console.error('Hydration insert error:', insertError)
-			  setHydrated(true)
-			  return
-			}
+          if (insertError) {
+            console.error('Hydration insert error:', insertError)
+            toast.error('Failed to hydrate user profile.')
+            router.push('/')
+            return
+          }
 
+          await supabase.from('registration_buffer').delete().eq('email', user.email)
         } else {
-		  console.warn('No buffer found for user')
-		  setHydrated(true)
-		  return
-		}
+          console.warn('No buffer found for user')
+          router.push('/')
+          return
+        }
       }
 
       setHydrated(true)
     }
 
     hydrateProfile()
-  }, [supabase])
+  }, [supabase, router])
 
   const handleUpload = async () => {
     if (!userId) {
-	  setError('Session expired. Please log in again.')
-	  return
-	}
-	if (!front || !back) {
-	  setError('Please upload both front and back images or skip this step.')
-	  return
-	}
+      toast.error('Session expired. Please log in again.')
+      router.push('/login')
+      return
+    }
+    if (!front || !back) {
+      setError('Please upload both front and back images or skip this step.')
+      return
+    }
 
     setError('')
     setLoading(true)
@@ -112,8 +115,7 @@ function LicenseForm() {
         .upload(filePathFront, front, { upsert: true })
 
       if (frontError) {
-        console.error('Front upload error:', frontError)
-        setError('Upload failed for front image. Please try again or contact support.')
+        setError('Upload failed for front image. Please try again.')
         setLoading(false)
         return
       }
@@ -123,8 +125,7 @@ function LicenseForm() {
         .upload(filePathBack, back, { upsert: true })
 
       if (backError) {
-        console.error('Back upload error:', backError)
-        setError('Upload failed for back image. Please try again or contact support.')
+        setError('Upload failed for back image. Please try again.')
         setLoading(false)
         return
       }
@@ -142,161 +143,146 @@ function LicenseForm() {
         .eq('id', userId)
 
       if (updateError) {
-        console.error('DB update error:', updateError)
-        setError('Could not save license info to your profile. Please try again.')
+        setError('Failed to save license info. Try again later.')
         setLoading(false)
         return
       }
 
-      toast.success('Welcome to ChipEstate! Please confirm your email to activate your account.')
+      toast.success('Verification submitted! Redirecting...')
       router.push('/dashboard')
-    } catch (err: any) {
-      console.error('Unexpected upload error:', err)
-      setError('Something went wrong. Please check your internet connection or contact support.')
+    } catch (err) {
+      console.error(err)
+      setError('Unexpected error. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
   const skipUpload = async () => {
-  if (!userId) {
-    toast.error('Session error: please log in again.')
-    router.push('/')
-    return
+    if (!userId) {
+      toast.error('Session expired. Please log in again.')
+      router.push('/login')
+      return
+    }
+
+    const { error } = await supabase
+      .from('users_extended')
+      .update({ registration_status: 'pending' })
+      .eq('id', userId)
+
+    if (error) {
+      toast.error('Failed to complete registration. Try again.')
+      return
+    }
+
+    toast.success('Registration complete. Skipping verification.')
+    router.push('/dashboard')
   }
 
-  await supabase
-    .from('users_extended')
-    .update({ registration_status: 'pending' })
-    .eq('id', userId)
-
-  toast.success('Registration complete. License upload skipped.')
-  setTimeout(() => router.push('/dashboard'), 200)
-}
-
-
- return (
-  <main className="min-h-screen bg-blue-950 text-white p-6 flex flex-col justify-between">
-    {!hydrated ? (
-	  <div className="flex flex-col items-center justify-center flex-1">
-		<p className="text-yellow-300 text-center">Loading user session...</p>
-	  </div>
-	) : (
-	  <>
-		<div className="max-w-xl mx-auto border border-emerald-800 rounded-lg p-6 bg-blue-900 shadow-lg">
-		  {/* Progress Graphic */}
-		  <div className="mb-6 text-sm font-medium text-center text-gray-300 border border-emerald-700 px-4 py-2 rounded w-fit mx-auto">
-			<div className="flex justify-center items-center gap-4">
-              <div className="flex flex-col items-center">
-                <div className="w-6 h-6 rounded-full bg-gray-500 text-white text-xs flex items-center justify-center">1</div>
-                <span className="mt-1">Info</span>
-              </div>
-              <div className="h-px w-8 bg-gray-400" />
-              <div className="flex flex-col items-center">
-                <div className="w-6 h-6 rounded-full bg-emerald-500 text-white text-xs flex items-center justify-center">2</div>
-                <span className="mt-1">Verify</span>
+  return (
+    <main className="min-h-screen bg-blue-950 text-white p-6 flex flex-col justify-between">
+      {!hydrated ? (
+        <div className="flex flex-col items-center justify-center flex-1">
+          <p className="text-yellow-300 text-center">Loading user session...</p>
+        </div>
+      ) : (
+        <>
+          <div className="max-w-xl mx-auto border border-emerald-800 rounded-lg p-6 bg-blue-900 shadow-lg">
+            <div className="mb-6 text-sm font-medium text-center text-gray-300 border border-emerald-700 px-4 py-2 rounded w-fit mx-auto">
+              <div className="flex justify-center items-center gap-4">
+                <div className="flex flex-col items-center">
+                  <div className="w-6 h-6 rounded-full bg-gray-500 text-white text-xs flex items-center justify-center">1</div>
+                  <span className="mt-1">Info</span>
+                </div>
+                <div className="h-px w-8 bg-gray-400" />
+                <div className="flex flex-col items-center">
+                  <div className="w-6 h-6 rounded-full bg-emerald-500 text-white text-xs flex items-center justify-center">2</div>
+                  <span className="mt-1">Verify</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <h1 className="text-2xl font-bold mb-4 text-center">Identity Verification</h1>
+            <h1 className="text-2xl font-bold mb-4 text-center">Identity Verification</h1>
 
-          <p className="mb-4 text-sm text-emerald-300 max-w-2xl mx-auto border border-emerald-700 p-4 rounded text-center">
-            To comply with U.S. regulations which require identity verification, fractional real estate owners are required to supply proof of US citizenship.
-            You may skip this step for now, but you will not be able to purchase chips until verification is complete.
-          </p>
+            <p className="mb-4 text-sm text-emerald-300 max-w-2xl mx-auto border border-emerald-700 p-4 rounded text-center">
+              To comply with U.S. regulations requiring identity verification, fractional real estate owners must provide proof of U.S. citizenship.
+              You may skip this step now, but cannot purchase chips until verified.
+            </p>
 
-          {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
+            {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
 
-          {/* Front Upload */}
-          <div>
-            <label className="block mb-1">Front of Driver’s License or State ID Card</label>
-            <label className="block w-64 cursor-pointer border border-emerald-600 px-4 py-2 text-center rounded bg-blue-900 hover:bg-blue-800">
-              Choose Image
-              <input
-                type="file"
-                accept="image/*"
-                multiple={false}
-                onChange={(e) => setFront(e.target.files?.[0] || null)}
-                className="hidden"
-              />
-            </label>
-            {front && (
-              <div className="flex items-center justify-between mt-2 text-sm bg-blue-900 px-3 py-2 rounded border border-blue-700 w-64">
-                <span className="truncate">{front.name}</span>
-                <button
-                  type="button"
-                  onClick={() => setFront(null)}
-                  className="ml-2 text-red-400 hover:text-red-600 font-bold"
-                >
-                  ×
-                </button>
+            {/* Front Upload */}
+            <div className="flex justify-center">
+              <div>
+                <label className="block mb-1">Front of Driver’s License or State ID</label>
+                <label className="block w-64 cursor-pointer border border-emerald-600 px-4 py-2 text-center rounded bg-blue-900 hover:bg-blue-800">
+                  Choose Image
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setFront(e.target.files?.[0] || null)}
+                    className="hidden"
+                  />
+                </label>
+                {front && (
+                  <div className="flex items-center justify-between mt-2 text-sm bg-blue-900 px-3 py-2 rounded border border-blue-700 w-64">
+                    <span className="truncate">{front.name}</span>
+                    <button type="button" onClick={() => setFront(null)} className="ml-2 text-red-400 hover:text-red-600 font-bold">×</button>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </div>
 
-          {/* Back Upload */}
-          <div className="mt-4">
-            <label className="block mb-1">Back of Driver’s License or State ID Card</label>
-            <label className="block w-64 cursor-pointer border border-emerald-600 px-4 py-2 text-center rounded bg-blue-900 hover:bg-blue-800">
-              Choose Image
-              <input
-                type="file"
-                accept="image/*"
-                multiple={false}
-                onChange={(e) => setBack(e.target.files?.[0] || null)}
-                className="hidden"
-              />
-            </label>
-            {back && (
-              <div className="flex items-center justify-between mt-2 text-sm bg-blue-900 px-3 py-2 rounded border border-blue-700 w-64">
-                <span className="truncate">{back.name}</span>
-                <button
-                  type="button"
-                  onClick={() => setBack(null)}
-                  className="ml-2 text-red-400 hover:text-red-600 font-bold"
-                >
-                  ×
-                </button>
+            {/* Back Upload */}
+            <div className="mt-4 flex justify-center">
+              <div>
+                <label className="block mb-1">Back of Driver’s License or State ID</label>
+                <label className="block w-64 cursor-pointer border border-emerald-600 px-4 py-2 text-center rounded bg-blue-900 hover:bg-blue-800">
+                  Choose Image
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setBack(e.target.files?.[0] || null)}
+                    className="hidden"
+                  />
+                </label>
+                {back && (
+                  <div className="flex items-center justify-between mt-2 text-sm bg-blue-900 px-3 py-2 rounded border border-blue-700 w-64">
+                    <span className="truncate">{back.name}</span>
+                    <button type="button" onClick={() => setBack(null)} className="ml-2 text-red-400 hover:text-red-600 font-bold">×</button>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
+
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault()
+                await handleUpload()
+              }}
+              className="flex flex-wrap justify-center gap-3 pt-4"
+            >
+              <button type="button" onClick={() => router.back()} className="px-4 py-2 border border-gray-500 rounded hover:bg-gray-800">
+                Back
+              </button>
+
+              <button type="button" onClick={skipUpload} className="border border-yellow-500 text-yellow-400 px-4 py-2 rounded hover:bg-yellow-900">
+                Skip License Step
+              </button>
+
+              <button type="submit" disabled={loading} className="bg-emerald-700 hover:bg-emerald-600 px-4 py-2 rounded shadow text-white border border-emerald-500">
+                {loading ? 'Uploading...' : 'Submit'}
+              </button>
+            </form>
           </div>
 
-          {/* Buttons */}
-          <form
-            onSubmit={async (e) => {
-              e.preventDefault()
-              if (!userId) {
-				  setError('Session expired. Please log in again.')
-				  return
-				}
-				if (!front || !back) {
-				  setError('Please upload both front and back images or skip this step.')
-				  return
-				}
-              await handleUpload()
-            }}
-            className="flex flex-wrap justify-center gap-3 pt-4"
-          >
-            <button type="button" onClick={() => router.back()} className="px-4 py-2 border border-gray-500 rounded hover:bg-gray-800">
-              Back
-            </button>
+          <div className="text-center text-xs text-gray-400 mt-10">Step 2 of 2</div>
+        </>
+      )}
+    </main>
+  )
+}
 
-            <button type="button" onClick={skipUpload} className="border border-yellow-500 text-yellow-400 px-4 py-2 rounded hover:bg-yellow-900">
-              Skip License Step
-            </button>
-
-            <button type="submit" disabled={loading} className="bg-emerald-700 hover:bg-emerald-600 px-4 py-2 rounded shadow text-white border border-emerald-500">
-              {loading ? 'Uploading...' : 'Submit'}
-            </button>
-          </form>
-        </div>
-
-        <div className="text-center text-xs text-gray-400 mt-10">Step 2 of 2</div>
-      </>
-    )}
-  </main>
-)}
 export default function LicenseUploadPage() {
   return (
     <Suspense fallback={<p className="text-white p-4">Loading license form...</p>}>
