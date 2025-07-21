@@ -48,28 +48,38 @@ export default function Header() {
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex space-x-1 items-center text-base font-medium text-white">
-            <Link href="/market" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">Market</Link>
-            {userEmail && (
-              <Link href="/dashboard" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">Dashboard</Link>
-            )}
-            <Link href="/glossary" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">Glossary</Link>
-            <Link href="/about" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">About</Link>
+          {!userLoading && (
+			  <nav className="hidden md:flex space-x-1 items-center text-base font-medium text-white">
+				<Link href="/market" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">Market</Link>
+				{userEmail && (
+				  <Link href="/dashboard" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">Dashboard</Link>
+				)}
+				<Link href="/glossary" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">Glossary</Link>
+				<Link href="/about" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">About</Link>
 
-            {!userLoading && (
-			  userEmail ? (
-				<>
-				  {isAdmin && <Link href="/admin">Admin</Link>}
-				  <button onClick={handleLogout}>Log Out</button>
-				</>
-			  ) : (
-				<>
-				  <button onClick={() => setShowLogin(true)}>Login</button>
-				  <Link href="/register">Sign Up</Link>
-				</>
-			  )
+				{userEmail ? (
+				  <>
+					{isAdmin && (
+					  <Link href="/admin" className="px-3 py-1 rounded-md transition hover:bg-yellow-300 text-amber-200 hover:text-blue-900">Admin</Link>
+					)}
+					<button onClick={handleLogout} className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">
+					  Log Out
+					</button>
+				  </>
+				) : (
+				  <>
+					<button
+					  onClick={() => setShowLogin(true)}
+					  className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900"
+					>
+					  Login
+					</button>
+					<Link href="/register" className="ml-4 bg-emerald-600 text-white px-6 py-1.5 rounded-md hover:bg-emerald-700">Sign Up</Link>
+				  </>
+				)}
+			  </nav>
 			)}
-          </nav>
+
 
           {/* Mobile Hamburger */}
           <div className="md:hidden">
