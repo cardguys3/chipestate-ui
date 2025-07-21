@@ -89,9 +89,8 @@ function LicenseForm() {
     setLoading(true)
 
     try {
-      const { data: sessionData } = await supabase.auth.getSession()
-      const currentUser = sessionData.session?.user
-      if (!currentUser) {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user || !user.id) {
         setError('Session expired. Please log in again.')
         setLoading(false)
         return
@@ -104,11 +103,11 @@ function LicenseForm() {
       }
 
       const fileExtFront = front.name.split('.').pop()
-      const fileNameFront = `${currentUser.id}_front.${fileExtFront}`
+      const fileNameFront = `${user.id}_front.${fileExtFront}`
       const filePathFront = `${fileNameFront}`
 
       const fileExtBack = back.name.split('.').pop()
-      const fileNameBack = `${currentUser.id}_back.${fileExtBack}`
+      const fileNameBack = `${user.id}_back.${fileExtBack}`
       const filePathBack = `${fileNameBack}`
 
       const { error: frontError } = await supabase.storage
@@ -143,7 +142,7 @@ function LicenseForm() {
           license_back_url: backUrl,
           registration_status: 'pending'
         })
-        .eq('id', currentUser.id)
+        .eq('id', user.id)
 
       if (updateError) {
         console.error('DB update error:', updateError)
@@ -163,9 +162,8 @@ function LicenseForm() {
   }
 
   const skipUpload = async () => {
-    const { data: sessionData } = await supabase.auth.getSession()
-    const currentUser = sessionData.session?.user
-    if (!currentUser) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user || !user.id) {
       toast.error('Session error: please log in again.')
       router.push('/')
       return
@@ -174,10 +172,10 @@ function LicenseForm() {
     await supabase
       .from('users_extended')
       .update({ registration_status: 'pending' })
-      .eq('id', currentUser.id)
+      .eq('id', user.id)
 
     toast.success('Registration complete. License upload skipped.')
-    setTimeout(() => router.push('/dashboard'), 200)
+    router.push('/dashboard')
   }
 
   return (
