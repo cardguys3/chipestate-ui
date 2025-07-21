@@ -21,10 +21,9 @@ useEffect(() => {
   const hydrateProfile = async () => {
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     if (userError || !user || !user.email || !user.id) {
-      console.error('Auth error or missing user:', userError)
-      setHydrated(true)
-      return
-    }
+	  console.error('Auth error or missing user:', userError)
+	  return // 🚫 REMOVE setHydrated here
+	}
 
     setUserId(user.id)
 
@@ -65,19 +64,16 @@ useEffect(() => {
           }])
 
         if (!insertError) {
-          await supabase.from('registration_buffer').delete().eq('email', user.email)
-        } else {
-          console.error('Hydration insert error:', insertError)
-          setHydrated(true)
-          return
-        }
+		  await supabase.from('registration_buffer').delete().eq('email', user.email)
+		} else {
+		  console.error('Hydration insert error:', insertError)
+		  return // 🚫 REMOVE setHydrated here
+		}
       } else {
-        console.warn('No buffer found for user')
-        setHydrated(true)
-        return
-      }
+		  console.warn('No buffer found for user')
+		  return // 🚫 REMOVE setHydrated here
+		}
     }
-
     setHydrated(true)
   }
 
