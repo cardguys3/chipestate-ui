@@ -182,16 +182,18 @@ useEffect(() => {
 		  }, 200); // short delay to allow session hydration
 		}
 
-		  if (!hydrated) {
 		  return (
-			<main className="min-h-screen bg-blue-950 text-white p-6 flex flex-col justify-center items-center">
-			  <p className="text-yellow-300 text-center">Loading user session...</p>
-			</main>
-		  )
-		}
+  <main className="min-h-screen bg-blue-950 text-white p-6 flex flex-col justify-between">
+    {!hydrated ? (
+      <div className="flex flex-col items-center justify-center flex-1">
+        <p className="text-yellow-300 text-center">Loading user session...</p>
+      </div>
+    ) : (
+      <>
+        <div>
+          {/* Progress Graphic */}
+          <div className="mb-6 text-sm font-medium text-center text-gray-300 border border-emerald-700 px-4 py-2 rounded w-fit mx-auto">
 
-		        return (
-          <main className="min-h-screen bg-blue-950 text-white p-6 flex flex-col justify-between">
 
 			<div>
 			  {/* Progress Graphic */}
