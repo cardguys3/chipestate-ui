@@ -106,12 +106,12 @@ useEffect(() => {
 
     try {
       const fileExtFront = front.name.split('.').pop()
-      const fileNameFront = `${userId}_front.${fileExtFront}`
-      const filePathFront = `${fileNameFront}`
+      const fileNameFront = ${userId}_front.${fileExtFront}
+      const filePathFront = ${fileNameFront}
 
       const fileExtBack = back.name.split('.').pop()
-      const fileNameBack = `${userId}_back.${fileExtBack}`
-      const filePathBack = `${fileNameBack}`
+      const fileNameBack = ${userId}_back.${fileExtBack}
+      const filePathBack = ${fileNameBack}
 
       const { error: frontError } = await supabase.storage
         .from('licenses')
@@ -135,8 +135,8 @@ useEffect(() => {
         return
       }
 
-      const frontUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/licenses/${filePathFront}`
-      const backUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/licenses/${filePathBack}`
+      const frontUrl = ${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/licenses/${filePathFront}
+      const backUrl = ${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/licenses/${filePathBack}
 //fix here for submit button issue to dashboard
       const { error: updateError } = await supabase
         .from('users_extended')
@@ -182,8 +182,10 @@ useEffect(() => {
 		  }, 200); // short delay to allow session hydration
 		}
 
-		  return (
-  <main className="min-h-screen bg-blue-950 text-white p-6 flex flex-col justify-between">
+		  // ✅ This is the missing component wrapper
+export default function LicenseForm() {
+  return (
+    <main className="min-h-screen bg-blue-950 text-white p-6 flex flex-col justify-between">
     {!hydrated ? (
       <div className="flex flex-col items-center justify-center flex-1">
         <p className="text-yellow-300 text-center">Loading user session...</p>
