@@ -69,13 +69,12 @@ useEffect(() => {
         }
       }
     }
-  }
-
-  setHydrated(true)
+    setHydrated(true)
   }
 
   hydrateProfile()
 }, [supabase])
+
 // end lag error
   const handleUpload = async () => {
     console.log('User ID:', userId)
