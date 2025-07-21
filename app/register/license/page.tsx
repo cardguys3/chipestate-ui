@@ -277,4 +277,11 @@ function LicenseForm() {
       </>
     )}
   </main>
-)
+)}
+export default function LicenseUploadPage() {
+  return (
+    <Suspense fallback={<p className="text-white p-4">Loading license form...</p>}>
+      <LicenseForm />
+    </Suspense>
+  )
+}
