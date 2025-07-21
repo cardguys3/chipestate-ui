@@ -168,14 +168,15 @@ function LicenseForm() {
  return (
   <main className="min-h-screen bg-blue-950 text-white p-6 flex flex-col justify-between">
     {!hydrated ? (
-      <div className="flex flex-col items-center justify-center flex-1">
-        <p className="text-yellow-300 text-center">Loading user session...</p>
-      </div>
-    ) : (
-      <>
-        <div>
-          <div className="mb-6 text-sm font-medium text-center text-gray-300 border border-emerald-700 px-4 py-2 rounded w-fit mx-auto">
-            <div className="flex justify-center items-center gap-4">
+	  <div className="flex flex-col items-center justify-center flex-1">
+		<p className="text-yellow-300 text-center">Loading user session...</p>
+	  </div>
+	) : (
+	  <>
+		<div className="max-w-xl mx-auto border border-emerald-800 rounded-lg p-6 bg-blue-900 shadow-lg">
+		  {/* Progress Graphic */}
+		  <div className="mb-6 text-sm font-medium text-center text-gray-300 border border-emerald-700 px-4 py-2 rounded w-fit mx-auto">
+			<div className="flex justify-center items-center gap-4">
               <div className="flex flex-col items-center">
                 <div className="w-6 h-6 rounded-full bg-gray-500 text-white text-xs flex items-center justify-center">1</div>
                 <span className="mt-1">Info</span>
@@ -255,10 +256,14 @@ function LicenseForm() {
           <form
             onSubmit={async (e) => {
               e.preventDefault()
-              if (!userId || !front || !back) {
-                setError('All fields required before submission.')
-                return
-              }
+              if (!userId) {
+				  setError('Session expired. Please log in again.')
+				  return
+				}
+				if (!front || !back) {
+				  setError('Please upload both front and back images or skip this step.')
+				  return
+				}
               await handleUpload()
             }}
             className="flex flex-wrap justify-center gap-3 pt-4"
