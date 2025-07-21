@@ -235,8 +235,13 @@ useEffect(() => {
           </div>
 
           {/* Action Buttons */}
-			  <form onSubmit={(e) => { e.preventDefault() handleUpload() }}
-			  className="flex flex-wrap justify-center gap-3 pt-4">
+			  <form
+				  onSubmit={(e) => {
+					e.preventDefault();
+					handleUpload();
+				  }}
+				  className="flex flex-wrap justify-center gap-3 pt-4"
+				>
 			  <button type="button" onClick={() => router.back()} className="px-4 py-2 border border-gray-500 rounded hover:bg-gray-800">
 				Back
 			  </button>
