@@ -75,10 +75,22 @@ useEffect(() => {
 }, [supabase])
 // end lag error
   const handleUpload = async () => {
-    if (!userId || !front || !back) {
-      setError('Please select both front and back images to continue.')
-      return
-    }
+    console.log('User ID:', userId)
+	console.log('Front image:', front)
+	console.log('Back image:', back)
+
+	if (!userId) {
+	  setError('User session not found. Please log in again.')
+	  return
+	}
+	if (!front) {
+	  setError('Please select the front image.')
+	  return
+	}
+	if (!back) {
+	  setError('Please select the back image.')
+	  return
+	}
 
     setError('')
     setLoading(true)
@@ -146,21 +158,17 @@ useEffect(() => {
       setLoading(false)
     }
   }
+		//forces user login for skip button
+		const skipUpload = () => {
+		  if (!userId) {
+			toast.error('Session error: please log in again.')
+			router.push('/')
+			return
+		  }
 
-  const skipUpload = async () => {
-  // Optional: mark license skipped in DB (future feature)
-  toast.success('Registration complete. License upload skipped.')
-
-  // Ensure Supabase recognizes and hydrates session before redirect
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (user) {
-    router.push('/dashboard')
-  } else {
-    toast.error('Session error: please log in again.')
-    router.push('/')
-  }
-}
+		  toast.success('Registration complete. License upload skipped.')
+		  router.push('/dashboard')
+		}
 
   return (
     <main className="min-h-screen bg-blue-950 text-white p-6 flex flex-col justify-between">
@@ -236,10 +244,24 @@ useEffect(() => {
 
           {/* Action Buttons */}
 			  <form
-				  onSubmit={(e) => {
-					  e.preventDefault();
-					  setTimeout(handleUpload, 0); // Ensures React state settles before checking
-					}}
+				  onSubmit={async (e) => {
+				  e.preventDefault();
+
+				  if (!userId) {
+					setError('User session not found. Please log in again.');
+					return;
+				  }
+				  if (!front) {
+					setError('Please select the front image.');
+					return;
+				  }
+				  if (!back) {
+					setError('Please select the back image.');
+					return;
+				  }
+
+				  await handleUpload(); // now guaranteed all 3 are defined
+				}}
 				  className="flex flex-wrap justify-center gap-3 pt-4"
 				>
 			  <button type="button" onClick={() => router.back()} className="px-4 py-2 border border-gray-500 rounded hover:bg-gray-800">
