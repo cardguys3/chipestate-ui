@@ -21,9 +21,10 @@ function LicenseForm() {
     const hydrateProfile = async () => {
       const { data: { user }, error: userError } = await supabase.auth.getUser()
       if (userError || !user || !user.email || !user.id) {
-        console.error('Auth error or missing user:', userError)
-        return
-      }
+  console.error('Auth error or missing user:', userError)
+  setHydrated(true)
+  return
+}
 
       setUserId(user.id)
 
@@ -64,15 +65,18 @@ function LicenseForm() {
             }])
 
           if (!insertError) {
-            await supabase.from('registration_buffer').delete().eq('email', user.email)
-          } else {
-            console.error('Hydration insert error:', insertError)
-            return
-          }
+			  await supabase.from('registration_buffer').delete().eq('email', user.email)
+			} else {
+			  console.error('Hydration insert error:', insertError)
+			  setHydrated(true)
+			  return
+			}
+
         } else {
-          console.warn('No buffer found for user')
-          return
-        }
+		  console.warn('No buffer found for user')
+		  setHydrated(true)
+		  return
+		}
       }
 
       setHydrated(true)
