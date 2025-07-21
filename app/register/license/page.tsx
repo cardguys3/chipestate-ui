@@ -19,19 +19,10 @@ function LicenseForm() {
 
   useEffect(() => {
     const hydrateProfile = async () => {
-      const sessionResult = await supabase.auth.getSession()
-      const session = sessionResult?.data?.session
+      const { data: { user }, error } = await supabase.auth.getUser()
 
-      if (!session) {
+      if (error || !user || !user.email || !user.id) {
         toast.error('Session expired. Please log in again.')
-        router.push('/login')
-        return
-      }
-
-      const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-      if (userError || !user || !user.email || !user.id) {
-        toast.error('User not found.')
         router.push('/login')
         return
       }
@@ -75,14 +66,13 @@ function LicenseForm() {
             }])
 
           if (insertError) {
-            toast.error('Failed to hydrate profile.')
-            router.push('/')
+            toast.error('Failed to save user.')
             return
           }
 
           await supabase.from('registration_buffer').delete().eq('email', user.email)
         } else {
-          router.push('/')
+          toast.error('No registration buffer found.')
           return
         }
       }
@@ -122,7 +112,7 @@ function LicenseForm() {
         .upload(filePathFront, front, { upsert: true })
 
       if (frontError) {
-        setError('Upload failed for front image.')
+        setError('Front upload failed.')
         setLoading(false)
         return
       }
@@ -132,7 +122,7 @@ function LicenseForm() {
         .upload(filePathBack, back, { upsert: true })
 
       if (backError) {
-        setError('Upload failed for back image.')
+        setError('Back upload failed.')
         setLoading(false)
         return
       }
@@ -150,7 +140,7 @@ function LicenseForm() {
         .eq('id', userId)
 
       if (updateError) {
-        setError('Failed to save license info.')
+        setError('Could not save license info.')
         setLoading(false)
         return
       }
@@ -159,7 +149,7 @@ function LicenseForm() {
       router.push('/dashboard')
     } catch (err) {
       console.error(err)
-      setError('Unexpected error. Please try again.')
+      setError('Unexpected error occurred.')
     } finally {
       setLoading(false)
     }
@@ -178,7 +168,7 @@ function LicenseForm() {
       .eq('id', userId)
 
     if (error) {
-      toast.error('Failed to update registration.')
+      toast.error('Could not skip registration.')
       return
     }
 
@@ -213,12 +203,11 @@ function LicenseForm() {
 
             <p className="mb-4 text-sm text-emerald-300 max-w-2xl mx-auto border border-emerald-700 p-4 rounded text-center">
               To comply with U.S. regulations requiring identity verification, fractional real estate owners must provide proof of U.S. citizenship.
-              You may skip this step now, but cannot purchase chips until verified.
+              You may skip this step now, but you cannot purchase chips until verified.
             </p>
 
             {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
 
-            {/* Front Upload */}
             <div className="flex justify-center">
               <div>
                 <label className="block mb-1">Front of Driver’s License or State ID</label>
@@ -240,7 +229,6 @@ function LicenseForm() {
               </div>
             </div>
 
-            {/* Back Upload */}
             <div className="mt-4 flex justify-center">
               <div>
                 <label className="block mb-1">Back of Driver’s License or State ID</label>
