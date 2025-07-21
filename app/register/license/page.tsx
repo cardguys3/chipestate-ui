@@ -19,11 +19,19 @@ function LicenseForm() {
 
   useEffect(() => {
     const hydrateProfile = async () => {
+      const sessionResult = await supabase.auth.getSession()
+      const session = sessionResult?.data?.session
+
+      if (!session) {
+        toast.error('Session expired. Please log in again.')
+        router.push('/login')
+        return
+      }
+
       const { data: { user }, error: userError } = await supabase.auth.getUser()
 
       if (userError || !user || !user.email || !user.id) {
-        console.error('Auth error or missing user:', userError)
-        toast.error('Session expired. Please log in again.')
+        toast.error('User not found.')
         router.push('/login')
         return
       }
@@ -67,15 +75,13 @@ function LicenseForm() {
             }])
 
           if (insertError) {
-            console.error('Hydration insert error:', insertError)
-            toast.error('Failed to hydrate user profile.')
+            toast.error('Failed to hydrate profile.')
             router.push('/')
             return
           }
 
           await supabase.from('registration_buffer').delete().eq('email', user.email)
         } else {
-          console.warn('No buffer found for user')
           router.push('/')
           return
         }
@@ -93,6 +99,7 @@ function LicenseForm() {
       router.push('/login')
       return
     }
+
     if (!front || !back) {
       setError('Please upload both front and back images or skip this step.')
       return
@@ -115,7 +122,7 @@ function LicenseForm() {
         .upload(filePathFront, front, { upsert: true })
 
       if (frontError) {
-        setError('Upload failed for front image. Please try again.')
+        setError('Upload failed for front image.')
         setLoading(false)
         return
       }
@@ -125,7 +132,7 @@ function LicenseForm() {
         .upload(filePathBack, back, { upsert: true })
 
       if (backError) {
-        setError('Upload failed for back image. Please try again.')
+        setError('Upload failed for back image.')
         setLoading(false)
         return
       }
@@ -143,12 +150,12 @@ function LicenseForm() {
         .eq('id', userId)
 
       if (updateError) {
-        setError('Failed to save license info. Try again later.')
+        setError('Failed to save license info.')
         setLoading(false)
         return
       }
 
-      toast.success('Verification submitted! Redirecting...')
+      toast.success('Verification submitted!')
       router.push('/dashboard')
     } catch (err) {
       console.error(err)
@@ -171,11 +178,11 @@ function LicenseForm() {
       .eq('id', userId)
 
     if (error) {
-      toast.error('Failed to complete registration. Try again.')
+      toast.error('Failed to update registration.')
       return
     }
 
-    toast.success('Registration complete. Skipping verification.')
+    toast.success('Skipped verification. Welcome!')
     router.push('/dashboard')
   }
 
