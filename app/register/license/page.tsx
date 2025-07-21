@@ -21,9 +21,9 @@ useEffect(() => {
   const hydrateProfile = async () => {
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     if (userError || !user || !user.email || !user.id) {
-	  console.error('Auth error or missing user:', userError)
-	  return // 🚫 REMOVE setHydrated here
-	}
+      console.error('Auth error or missing user:', userError)
+      return
+    }
 
     setUserId(user.id)
 
@@ -64,22 +64,23 @@ useEffect(() => {
           }])
 
         if (!insertError) {
-		  await supabase.from('registration_buffer').delete().eq('email', user.email)
-		} else {
-		  console.error('Hydration insert error:', insertError)
-		  return // 🚫 REMOVE setHydrated here
-		}
+          await supabase.from('registration_buffer').delete().eq('email', user.email)
+        } else {
+          console.error('Hydration insert error:', insertError)
+          return
+        }
       } else {
-		  console.warn('No buffer found for user')
-		  return // 🚫 REMOVE setHydrated here
-		}
+        console.warn('No buffer found for user')
+        return
+      }
     }
+
+    // ✅ Only here at the end, if all above passes
     setHydrated(true)
   }
 
   hydrateProfile()
 }, [supabase])
-
 
 // end lag error
   const handleUpload = async () => {
