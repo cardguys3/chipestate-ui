@@ -11,7 +11,8 @@ function LicenseForm() {
   const supabase = createClientComponentClient<Database>()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const userId = searchParams.get('user_id')
+//  const userId = searchParams.get('user_id')
+  const userId = supabaseUserId
 
   const [front, setFront] = useState<File | null>(null)
   const [back, setBack] = useState<File | null>(null)
