@@ -152,10 +152,20 @@ useEffect(() => {
     }
   }
 
-  const skipUpload = () => {
-    toast.success('Registration complete. License upload skipped.')
+  const skipUpload = async () => {
+  // Optional: mark license skipped in DB (future feature)
+  toast.success('Registration complete. License upload skipped.')
+
+  // Ensure Supabase recognizes and hydrates session before redirect
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (user) {
     router.push('/dashboard')
+  } else {
+    toast.error('Session error: please log in again.')
+    router.push('/')
   }
+}
 
   return (
     <main className="min-h-screen bg-blue-950 text-white p-6 flex flex-col justify-between">
