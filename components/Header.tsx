@@ -14,16 +14,17 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [showLogin, setShowLogin] = useState(false)
   const [userEmail, setUserEmail] = useState<string | null>(null)
-
+  const [userLoading, setUserLoading] = useState(true)
   const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail)
 
-  useEffect(() => {
-    const getUser = async () => {
-      const { data } = await supabase.auth.getUser()
-      setUserEmail(data.user?.email ?? null)
-    }
-    getUser()
-  }, [])
+	useEffect(() => {
+	  const getUser = async () => {
+		const { data } = await supabase.auth.getUser()
+		setUserEmail(data.user?.email ?? null)
+		setUserLoading(false)
+	  }
+	  getUser()
+	}, [])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -55,26 +56,19 @@ export default function Header() {
             <Link href="/glossary" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">Glossary</Link>
             <Link href="/about" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">About</Link>
 
-            {userEmail ? (
-              <>
-                {isAdmin && (
-                  <Link href="/admin" className="px-3 py-1 rounded-md transition hover:bg-yellow-300 text-amber-200 hover:text-blue-900">Admin</Link>
-                )}
-                <button onClick={handleLogout} className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">
-                  Log Out
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={() => setShowLogin(true)}
-                  className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900"
-                >
-                  Login
-                </button>
-                <Link href="/register" className="ml-4 bg-emerald-600 text-white px-6 py-1.5 rounded-md hover:bg-emerald-700">Sign Up</Link>
-              </>
-            )}
+            {!userLoading && (
+			  userEmail ? (
+				<>
+				  {isAdmin && <Link href="/admin">Admin</Link>}
+				  <button onClick={handleLogout}>Log Out</button>
+				</>
+			  ) : (
+				<>
+				  <button onClick={() => setShowLogin(true)}>Login</button>
+				  <Link href="/register">Sign Up</Link>
+				</>
+			  )
+			)}
           </nav>
 
           {/* Mobile Hamburger */}
@@ -93,17 +87,19 @@ export default function Header() {
             <Link href="/glossary" className="block hover:text-amber-600">Glossary</Link>
             <Link href="/about" className="block hover:text-amber-600">About</Link>
 
-            {userEmail ? (
-              <>
-                {isAdmin && <Link href="/admin" className="block hover:text-yellow-400">Admin</Link>}
-                <button onClick={handleLogout} className="block text-left w-full hover:text-amber-600">Log Out</button>
-              </>
-            ) : (
-              <>
-                <button onClick={() => setShowLogin(true)} className="block text-left w-full hover:text-amber-600">Login</button>
-                <Link href="/register" className="block bg-emerald-600 text-white px-3 py-1 rounded hover:bg-emerald-700">Sign Up</Link>
-              </>
-            )}
+            {!userLoading && (
+			  userEmail ? (
+				<>
+				  {isAdmin && <Link href="/admin">Admin</Link>}
+				  <button onClick={handleLogout}>Log Out</button>
+				</>
+			  ) : (
+				<>
+				  <button onClick={() => setShowLogin(true)}>Login</button>
+				  <Link href="/register">Sign Up</Link>
+				</>
+			  )
+			)}
           </div>
         )}
       </header>
