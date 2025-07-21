@@ -222,17 +222,18 @@ useEffect(() => {
               />
             </label>
             {front && (
-              <div className="flex items-center justify-between mt-2 text-sm bg-blue-900 px-3 py-2 rounded border border-blue-700 w-64">
-                <span className="truncate">{front.name}</span>
-                <button
-                  type="button"
-                  onClick={() => setFront(null)}
-                  className="ml-2 text-red-400 hover:text-red-600 font-bold"
-                >
-                  ×
-                </button>
-                </div> // closes .space-y-6
-          </div>
+			  <div className="flex items-center justify-between mt-2 text-sm bg-blue-900 px-3 py-2 rounded border border-blue-700 w-64">
+				<span className="truncate">{front.name}</span>
+				<button
+				  type="button"
+				  onClick={() => setFront(null)}
+				  className="ml-2 text-red-400 hover:text-red-600 font-bold"
+				>
+				  ×
+				</button>
+			  </div> // ✅ just move this to align with JSX start/end
+			)}
+
 
           {/* Back Upload */}
           <div>
