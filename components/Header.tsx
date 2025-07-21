@@ -62,7 +62,7 @@ export default function Header() {
 					{isAdmin && (
 					  <Link href="/admin" className="px-3 py-1 rounded-md transition hover:bg-yellow-300 text-amber-200 hover:text-blue-900">Admin</Link>
 					)}
-					<button onClick={handleLogout} className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">
+					<button onClick={handleLogout} className="bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded-md transition">
 					  Log Out
 					</button>
 				  </>
@@ -101,7 +101,9 @@ export default function Header() {
 			  userEmail ? (
 				<>
 				  {isAdmin && <Link href="/admin">Admin</Link>}
-				  <button onClick={handleLogout}>Log Out</button>
+				  <button onClick={handleLogout} className="bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded-md transition">
+					  Log Out
+					</button>
 				</>
 			  ) : (
 				<>
