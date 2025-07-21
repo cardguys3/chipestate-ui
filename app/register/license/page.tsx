@@ -21,7 +21,10 @@ function LicenseForm() {
 useEffect(() => {
   const hydrateProfile = async () => {
     const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user || !user.email || !user.id) return
+    if (userError || !user || !user.email || !user.id) {
+		  setHydrated(true)
+		  return
+		}
 
     // ✅ store the Supabase auth user.id
     setUserId(user.id)
