@@ -235,17 +235,20 @@ useEffect(() => {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-wrap justify-center gap-3 pt-4">
-            <button onClick={() => router.back()} className="px-4 py-2 border border-gray-500 rounded hover:bg-gray-800">
-              Back
-            </button>
-            <button onClick={skipUpload} className="border border-yellow-500 text-yellow-400 px-4 py-2 rounded hover:bg-yellow-900">
-              Skip License Step
-            </button>
-            <button onClick={handleUpload} disabled={loading} className="bg-emerald-700 hover:bg-emerald-600 px-4 py-2 rounded shadow text-white border border-emerald-500">
-              {loading ? 'Uploading...' : 'Submit'}
-            </button>
-          </div>
+			  <form onSubmit={(e) => { e.preventDefault() handleUpload() }}
+			  className="flex flex-wrap justify-center gap-3 pt-4">
+			  <button type="button" onClick={() => router.back()} className="px-4 py-2 border border-gray-500 rounded hover:bg-gray-800">
+				Back
+			  </button>
+
+			  <button type="button" onClick={skipUpload} className="border border-yellow-500 text-yellow-400 px-4 py-2 rounded hover:bg-yellow-900">
+				Skip License Step
+			  </button>
+
+			  <button type="submit" disabled={loading} className="bg-emerald-700 hover:bg-emerald-600 px-4 py-2 rounded shadow text-white border border-emerald-500">
+				{loading ? 'Uploading...' : 'Submit'}
+			  </button>
+			</form>
         </div>
       </div>
 
