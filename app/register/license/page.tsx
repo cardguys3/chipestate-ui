@@ -89,8 +89,7 @@ function LicenseForm() {
     setLoading(true)
 
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user || !user.id) {
+      if (!userId) {
         setError('Session expired. Please log in again.')
         setLoading(false)
         return
@@ -103,11 +102,11 @@ function LicenseForm() {
       }
 
       const fileExtFront = front.name.split('.').pop()
-      const fileNameFront = `${user.id}_front.${fileExtFront}`
+      const fileNameFront = `${userId}_front.${fileExtFront}`
       const filePathFront = `${fileNameFront}`
 
       const fileExtBack = back.name.split('.').pop()
-      const fileNameBack = `${user.id}_back.${fileExtBack}`
+      const fileNameBack = `${userId}_back.${fileExtBack}`
       const filePathBack = `${fileNameBack}`
 
       const { error: frontError } = await supabase.storage
@@ -142,7 +141,7 @@ function LicenseForm() {
           license_back_url: backUrl,
           registration_status: 'pending'
         })
-        .eq('id', user.id)
+        .eq('id', userId)
 
       if (updateError) {
         console.error('DB update error:', updateError)
@@ -162,8 +161,7 @@ function LicenseForm() {
   }
 
   const skipUpload = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user || !user.id) {
+    if (!userId) {
       toast.error('Session error: please log in again.')
       router.push('/')
       return
@@ -172,7 +170,7 @@ function LicenseForm() {
     await supabase
       .from('users_extended')
       .update({ registration_status: 'pending' })
-      .eq('id', user.id)
+      .eq('id', userId)
 
     toast.success('Registration complete. License upload skipped.')
     router.push('/dashboard')
@@ -210,7 +208,6 @@ function LicenseForm() {
 
             {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
 
-            {/* Front Upload */}
             <div className="flex flex-col items-center">
               <label className="block mb-1">Front of Driver’s License or State ID Card</label>
               <label className="block w-64 cursor-pointer border border-emerald-600 px-4 py-2 text-center rounded bg-blue-900 hover:bg-blue-800">
@@ -237,7 +234,6 @@ function LicenseForm() {
               )}
             </div>
 
-            {/* Back Upload */}
             <div className="mt-4 flex flex-col items-center">
               <label className="block mb-1">Back of Driver’s License or State ID Card</label>
               <label className="block w-64 cursor-pointer border border-emerald-600 px-4 py-2 text-center rounded bg-blue-900 hover:bg-blue-800">
@@ -264,7 +260,6 @@ function LicenseForm() {
               )}
             </div>
 
-            {/* Buttons */}
             <form
               onSubmit={async (e) => {
                 e.preventDefault()
