@@ -236,7 +236,7 @@ useEffect(() => {
 				</button>
 			  </div> // ✅ just move this to align with JSX start/end
 			)}
-
+           </div> // ✅ ADD this line to close front upload section
 
           {/* Back Upload */}
           <div>
