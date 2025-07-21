@@ -167,7 +167,10 @@ useEffect(() => {
 		  }
 
 		  toast.success('Registration complete. License upload skipped.')
-		  router.push('/dashboard')
+
+		  setTimeout(() => {
+			router.push('/dashboard')
+		  }, 200); // short delay to allow session hydration
 		}
 
   return (
