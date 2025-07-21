@@ -86,10 +86,14 @@ function LicenseForm() {
   }, [supabase])
 
   const handleUpload = async () => {
-    if (!userId || !front || !back) {
-      setError('Missing information. Please ensure all fields are filled.')
-      return
-    }
+    if (!userId) {
+	  setError('Session expired. Please log in again.')
+	  return
+	}
+	if (!front || !back) {
+	  setError('Please upload both front and back images or skip this step.')
+	  return
+	}
 
     setError('')
     setLoading(true)
@@ -154,16 +158,22 @@ function LicenseForm() {
     }
   }
 
-  const skipUpload = () => {
-    if (!userId) {
-      toast.error('Session error: please log in again.')
-      router.push('/')
-      return
-    }
-
-    toast.success('Registration complete. License upload skipped.')
-    setTimeout(() => router.push('/dashboard'), 200)
+  const skipUpload = async () => {
+  if (!userId) {
+    toast.error('Session error: please log in again.')
+    router.push('/')
+    return
   }
+
+  await supabase
+    .from('users_extended')
+    .update({ registration_status: 'pending' })
+    .eq('id', userId)
+
+  toast.success('Registration complete. License upload skipped.')
+  setTimeout(() => router.push('/dashboard'), 200)
+}
+
 
  return (
   <main className="min-h-screen bg-blue-950 text-white p-6 flex flex-col justify-between">
