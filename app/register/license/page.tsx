@@ -10,19 +10,13 @@ import { toast } from 'react-hot-toast'
 function LicenseForm() {
   const supabase = createClientComponentClient<Database>()
   const router = useRouter()
-  const searchParams = useSearchParams()
-//  const userId = searchParams.get('user_id')
-  const userId = supabaseUserId
-
+  const [supabaseUserId, setSupabaseUserId] = useState<string | null>(null)
+  const userId = supabaseUserId // now safe to use after declaration
   const [front, setFront] = useState<File | null>(null)
   const [back, setBack] = useState<File | null>(null)
   const [error, setError] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(false)
 
-  // 🔁 STEP 3: Migrate from registration_buffer to users_extended
-  
-  //begin lag error
- const [supabaseUserId, setSupabaseUserId] = useState<string | null>(null)
 
 useEffect(() => {
   const hydrateProfile = async () => {
