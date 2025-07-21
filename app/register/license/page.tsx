@@ -11,6 +11,7 @@ function LicenseForm() {
   const supabase = createClientComponentClient<Database>()
   const router = useRouter()
   const [userId, setUserId] = useState<string | null>(null)
+  const [hydrated, setHydrated] = useState<boolean>(false)
   const [front, setFront] = useState<File | null>(null)
   const [back, setBack] = useState<File | null>(null)
   const [error, setError] = useState<string>('')
@@ -68,6 +69,9 @@ useEffect(() => {
         }
       }
     }
+  }
+
+  setHydrated(true)
   }
 
   hydrateProfile()
@@ -172,7 +176,7 @@ useEffect(() => {
 		  }, 200); // short delay to allow session hydration
 		}
 
-		  if (!userId) {
+		  if (!hydrated) {
 		  return (
 			<main className="min-h-screen bg-blue-950 text-white p-6 flex flex-col justify-center items-center">
 			  <p className="text-yellow-300 text-center">Loading user session...</p>
