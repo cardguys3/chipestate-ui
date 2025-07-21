@@ -22,13 +22,16 @@ export default function PropertyDetailsPage() {
     const fetchData = async () => {
       const { data: { session } } = await supabase.auth.getSession()
 
-      if (!session) {
-        setShowLogin(true)
-        setSessionChecked(true)
-        return
-      }
+      const { data: { user } } = await supabase.auth.getUser()
 
-      const userId = session.user.id
+		if (!user) {
+		  setShowLogin(true)
+		  setSessionChecked(true)
+		  return
+		}
+
+		const userId = user.id
+
 
       // Fetch user approval status
       const { data: userRecord } = await supabase
