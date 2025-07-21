@@ -30,6 +30,7 @@ export default function MarketPage() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [userLoading, setUserLoading] = useState(true);
   const router = useRouter();
 
   const supabase = createBrowserClient<Database>(
@@ -37,15 +38,16 @@ export default function MarketPage() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setUser(user);
-    };
-    fetchUser();
-  }, []);
+	useEffect(() => {
+	  const fetchUser = async () => {
+		const {
+		  data: { user },
+		} = await supabase.auth.getUser();
+		setUser(user);
+		setUserLoading(false);
+	  };
+	  fetchUser();
+	}, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -132,14 +134,15 @@ export default function MarketPage() {
   const sortArrow = (field: keyof Property) =>
     sortField === field ? (sortDirection === 'asc' ? '↑' : '↓') : '';
 
-  const handlePropertyClick = (id: string, e: React.MouseEvent) => {
-    e.preventDefault();
-    if (user) {
-      router.push(`/property/${id}`);
-    } else {
-      setShowLoginModal(true);
-    }
-  };
+	const handlePropertyClick = (id: string, e: React.MouseEvent) => {
+	  e.preventDefault();
+	  if (userLoading) return; // avoid showing modal prematurely
+	  if (user) {
+		router.push(`/property/${id}`);
+	  } else {
+		setShowLoginModal(true);
+	  }
+	};
 
   return (
     <main className="min-h-screen bg-[#0B1D33] text-white p-6 relative">
