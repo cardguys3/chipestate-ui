@@ -142,22 +142,6 @@ const handleDelete = async (id: string) => {
           <input type="date" value={filters.start} onChange={(e) => setFilters({ ...filters, start: e.target.value })} className="p-2 rounded bg-[#0B1D33] border border-gray-600" />
           <input type="date" value={filters.end} onChange={(e) => setFilters({ ...filters, end: e.target.value })} className="p-2 rounded bg-[#0B1D33] border border-gray-600" />
         </div>
-        {/* Form UI (unchanged) */}
-        <form onSubmit={handleSubmit} className="bg-white/5 border border-white/20 p-4 rounded-xl mb-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          <select name="property_id" value={form.property_id} onChange={handleChange} className="p-2 rounded bg-[#0B1D33] border border-gray-600">
-            <option value="">Select Property</option>
-            {properties.map((p) => (
-              <option key={p.id} value={p.id}>{p.title}</option>
-            ))}
-          </select>
-          <input name="tenant_name" value={form.tenant_name} onChange={handleChange} placeholder="Tenant Name" className="p-2 rounded bg-[#0B1D33] border border-gray-600" />
-          <input name="occupancy_start" type="date" value={form.occupancy_start} onChange={handleChange} className="p-2 rounded bg-[#0B1D33] border border-gray-600" />
-          <input name="occupancy_end" type="date" value={form.occupancy_end} onChange={handleChange} className="p-2 rounded bg-[#0B1D33] border border-gray-600" />
-          <input name="lease_type" value={form.lease_type} onChange={handleChange} placeholder="Lease Type" className="p-2 rounded bg-[#0B1D33] border border-gray-600" />
-          <input name="monthly_rent" type="number" value={form.monthly_rent} onChange={handleChange} placeholder="Monthly Rent" className="p-2 rounded bg-[#0B1D33] border border-gray-600" />
-          <input name="notes" value={form.notes} onChange={handleChange} placeholder="Notes" className="col-span-full p-2 rounded bg-[#0B1D33] border border-gray-600" />
-          <button type="submit" className="col-span-full bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded">Add Occupancy Period</button>
-        </form>
 
         {/* Table UI */}
         {filtered.length === 0 ? (

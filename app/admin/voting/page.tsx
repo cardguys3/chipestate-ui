@@ -1,4 +1,4 @@
-// app/admin/voting
+// app/admin/voting/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -91,65 +91,66 @@ export default function AdminVotingPage() {
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Manage Votes</h1>
+    <main className="p-6">
+      <h1 className="text-3xl font-bold mb-4 text-white">Manage Votes</h1>
 
-      <div className="space-y-4 border border-gray-300 rounded-xl p-4 mb-8 bg-[#0B1D33] text-white">
-        <h2 className="text-xl font-semibold">Create New Vote</h2>
+      {/* New Vote Form */}
+      <section className="bg-[#0B1D33] p-4 rounded-xl border border-gray-600 mb-6 text-white">
+        <h2 className="text-xl font-semibold mb-4">Create New Vote</h2>
 
-        <div>
-          <Label>Title</Label>
-          <Input
-            value={newVote.title}
-            onChange={e => setNewVote({ ...newVote, title: e.target.value })}
-          />
-        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label>Title</Label>
+            <Input
+              value={newVote.title}
+              onChange={e => setNewVote({ ...newVote, title: e.target.value })}
+            />
+          </div>
 
-        <div>
-          <Label>Description</Label>
-          <Textarea
-            value={newVote.description}
-            onChange={e => setNewVote({ ...newVote, description: e.target.value })}
-          />
-        </div>
+          <div>
+            <Label>Category</Label>
+            <Input
+              value={newVote.category}
+              onChange={e => setNewVote({ ...newVote, category: e.target.value })}
+            />
+          </div>
 
-        <div>
-          <Label>Category</Label>
-          <Input
-            value={newVote.category}
-            onChange={e => setNewVote({ ...newVote, category: e.target.value })}
-          />
-        </div>
+          <div className="md:col-span-2">
+            <Label>Description</Label>
+            <Textarea
+              value={newVote.description}
+              onChange={e => setNewVote({ ...newVote, description: e.target.value })}
+            />
+          </div>
 
-        <div>
-          <Label>Threshold Type</Label>
-          <select
-            className="w-full border rounded-md p-2"
-            value={newVote.threshold_type}
-            onChange={e => setNewVote({ ...newVote, threshold_type: e.target.value })}
-          >
-            <option value="simple">Simple Majority</option>
-            <option value="super_60">Supermajority 60%</option>
-            <option value="super_67">Supermajority 66.7%</option>
-            <option value="minority_veto">Minority Veto</option>
-          </select>
-        </div>
+          <div>
+            <Label>Threshold Type</Label>
+            <select
+              className="w-full border rounded-md p-2 bg-white text-black"
+              value={newVote.threshold_type}
+              onChange={e => setNewVote({ ...newVote, threshold_type: e.target.value })}
+            >
+              <option value="simple">Simple Majority</option>
+              <option value="super_60">Supermajority 60%</option>
+              <option value="super_67">Supermajority 66.7%</option>
+              <option value="minority_veto">Minority Veto</option>
+            </select>
+          </div>
 
-        <div>
-          <Label>Property</Label>
-          <select
-            className="w-full border rounded-md p-2"
-            value={newVote.property_id}
-            onChange={e => setNewVote({ ...newVote, property_id: e.target.value })}
-          >
-            <option value="">-- Select Property --</option>
-            {properties.map(p => (
-              <option key={p.id} value={p.id}>{p.title}</option>
-            ))}
-          </select>
-        </div>
+          <div>
+            <Label>Property</Label>
+            <select
+              className="w-full border rounded-md p-2 bg-white text-black"
+              value={newVote.property_id}
+              onChange={e => setNewVote({ ...newVote, property_id: e.target.value })}
+            >
+              <option value="">-- Select Property --</option>
+              {properties.map(p => (
+                <option key={p.id} value={p.id}>{p.title}</option>
+              ))}
+            </select>
+          </div>
 
-        <div className="grid grid-cols-2 gap-4">
           <div>
             <Label>Start Date</Label>
             <Input
@@ -158,6 +159,7 @@ export default function AdminVotingPage() {
               onChange={e => setNewVote({ ...newVote, start_date: e.target.value })}
             />
           </div>
+
           <div>
             <Label>End Date</Label>
             <Input
@@ -168,27 +170,54 @@ export default function AdminVotingPage() {
           </div>
         </div>
 
-        <Button className="mt-4" onClick={createVote}>
-          Create Vote
-        </Button>
-      </div>
+        <div className="mt-4">
+          <Button onClick={createVote}>Create Vote</Button>
+        </div>
+      </section>
 
-      <h2 className="text-2xl font-semibold mb-4">All Votes</h2>
-      <ul className="space-y-3">
-        {votes.map(vote => (
-          <li key={vote.id} className="border p-4 rounded-lg bg-white">
-            <Link
-              href={`/admin/voting/${vote.id}`}
-              className="text-blue-600 hover:underline font-semibold"
-            >
-              {vote.title}
-            </Link>
-            <p className="text-sm text-gray-500">
-              {vote.category} – {vote.is_open ? "Open" : "Closed"}
-            </p>
-          </li>
-        ))}
-      </ul>
-    </div>
+      {/* Vote List */}
+      <section className="bg-white p-4 rounded-xl border border-gray-300">
+        <h2 className="text-2xl font-semibold mb-4 text-black">All Votes</h2>
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead className="bg-gray-100 text-gray-700">
+              <tr>
+                <th className="text-left px-3 py-2">Title</th>
+                <th className="text-left px-3 py-2">Category</th>
+                <th className="text-left px-3 py-2">Start</th>
+                <th className="text-left px-3 py-2">End</th>
+                <th className="text-left px-3 py-2">Status</th>
+                <th className="text-left px-3 py-2">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {votes.map(vote => (
+                <tr key={vote.id} className="border-t border-gray-200 hover:bg-gray-50">
+                  <td className="px-3 py-2">{vote.title}</td>
+                  <td className="px-3 py-2">{vote.category}</td>
+                  <td className="px-3 py-2">{new Date(vote.start_date).toLocaleString()}</td>
+                  <td className="px-3 py-2">{new Date(vote.end_date).toLocaleString()}</td>
+                  <td className="px-3 py-2">
+                    {vote.is_open ? (
+                      <span className="text-green-600 font-medium">Open</span>
+                    ) : (
+                      <span className="text-gray-500">Closed</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2">
+                    <Link
+                      href={`/admin/voting/${vote.id}`}
+                      className="text-blue-600 hover:underline"
+                    >
+                      View
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
   );
 }
