@@ -74,15 +74,20 @@ export default function DashboardPage() {
       if (!user) return
 
       const { data: userData } = await supabase
-        .from('users_extended')
-        .select('first_name, registration_status')
-        .eq('id', user.id)
-        .single()
+		  .from('users_extended')
+		  .select('first_name, is_approved, is_active, email_verified, email_confirmed_at')
+		  .eq('id', user.id)
+		  .single()
 
-      if (userData?.first_name) setFirstName(userData.first_name)
-      if (userData?.registration_status) setRegistrationStatus(userData.registration_status)
+		if (userData?.first_name) setFirstName(userData.first_name)
 
-      if (userData?.registration_status !== 'approved') return
+		// Check approval logic using full conditions
+		const isApproved = userData?.is_approved === true
+		const isActive = userData?.is_active === true
+		const isEmailVerified = userData?.email_verified === true || !!userData?.email_confirmed_at
+
+		if (!isApproved || !isActive || !isEmailVerified) return
+
 
       const { data: chipData } = await supabase.from('chips_view').select('*').eq('owner_id', user.id)
       setChips(chipData || [])
