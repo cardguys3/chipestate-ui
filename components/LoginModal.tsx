@@ -1,8 +1,10 @@
+// File: /app/components/LoginModal.tsx
+
 'use client'
 
 import { useState } from 'react'
-import { supabase } from '@/lib/supabaseClient'
 import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabaseClient'
 import { toast } from 'react-hot-toast'
 
 const ADMIN_EMAILS = ['mark@chipestate.com', 'cardguys3@gmail.com']
@@ -13,9 +15,8 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [mode, setMode] = useState<'magic' | 'admin'>('magic')
 
-  const handleAdminLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     setLoading(true)
@@ -44,25 +45,9 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
     setLoading(false)
   }
 
-  const handleMagicLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setLoading(true)
-
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        shouldCreateUser: true,
-      },
-    })
-
-    if (error) {
-      setError('Failed to send magic link')
-    } else {
-      toast.success('Magic link sent to your email')
-    }
-
-    setLoading(false)
+  const handleOAuthLogin = async (provider: 'google' | 'facebook') => {
+    const { error } = await supabase.auth.signInWithOAuth({ provider })
+    if (error) toast.error(`Failed to login with ${provider}`)
   }
 
   return (
@@ -76,13 +61,11 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
           &times;
         </button>
 
-        <h2 className="text-xl font-semibold mb-4 text-center">
-          {mode === 'admin' ? 'Admin Login' : 'Login with Magic Link'}
-        </h2>
+        <h2 className="text-xl font-semibold mb-4 text-center">Login to ChipEstate</h2>
 
         {error && <p className="text-red-400 mb-3 text-center">{error}</p>}
 
-        <form onSubmit={mode === 'admin' ? handleAdminLogin : handleMagicLogin}>
+        <form onSubmit={handleLogin}>
           <label className="block mb-3">
             <span className="text-sm">Email</span>
             <input
@@ -95,45 +78,40 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
             />
           </label>
 
-          {mode === 'admin' && (
-            <label className="block mb-4">
-              <span className="text-sm">Password</span>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full border border-white/20 bg-white/10 text-white px-3 py-2 rounded mt-1"
-                required
-                autoComplete="current-password"
-              />
-            </label>
-          )}
+          <label className="block mb-4">
+            <span className="text-sm">Password</span>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full border border-white/20 bg-white/10 text-white px-3 py-2 rounded mt-1"
+              required
+              autoComplete="current-password"
+            />
+          </label>
 
           <button
             type="submit"
             disabled={loading}
             className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded border border-white/20 shadow-md transition"
           >
-            {loading
-              ? 'Processing...'
-              : mode === 'admin'
-              ? 'Login as Admin'
-              : 'Send Magic Link'}
+            {loading ? 'Processing...' : 'Login'}
           </button>
         </form>
 
+        <div className="my-4 text-center text-sm text-gray-400">or</div>
+
         <button
-          type="button"
-          onClick={() => {
-            setMode(mode === 'admin' ? 'magic' : 'admin')
-            setError(null)
-            setPassword('')
-          }}
-          className="mt-4 w-full text-sm text-blue-400 hover:underline text-center"
+          onClick={() => handleOAuthLogin('google')}
+          className="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded mb-2"
         >
-          {mode === 'admin'
-            ? 'Use Magic Link instead'
-            : 'Admin? Use Email + Password'}
+          Login with Google
+        </button>
+        <button
+          onClick={() => handleOAuthLogin('facebook')}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded"
+        >
+          Login with Facebook
         </button>
 
         <p className="mt-4 text-center text-sm">
