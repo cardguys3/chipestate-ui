@@ -4,8 +4,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { createClient } from '@supabase/supabase-js'
-
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -54,8 +52,6 @@ export default function RegisterPage() {
       }))
     }
   }
-  
-//begin handle submit function
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -64,35 +60,32 @@ export default function RegisterPage() {
     const { email, password, ...profileData } = formData
     console.log('Submitted')
 
-    // Step 1: Sign up (without forcing email confirmation)
+    // Step 1: Sign up without requiring confirmation
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: `${location.origin}/register/license?email=${email}` }
     })
 
     console.log('Signup error:', signUpError)
     console.log('Signup data:', signUpData)
 
     if (signUpError || !signUpData?.user) {
-      console.error('Registration failed:', signUpError)
       setError(signUpError?.message || 'Registration failed.')
       return
     }
 
-    // ✅ Step 2: Immediately sign in
+    // Step 2: Sign in right after signup
     const { error: loginError } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
 
     if (loginError) {
-      console.error('Login after signup failed:', loginError)
       setError(loginError.message || 'Login failed after signup.')
       return
     }
 
-    // Step 3: Continue as usual
+    // Step 3: Call backend to upsert profile into users_extended
     const response = await fetch('/api/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -100,22 +93,16 @@ export default function RegisterPage() {
     })
 
     const result = await response.json()
-    console.log('API response:', result)
 
     if (!response.ok) {
       setError(result.message || 'Upsert failed.')
       return
     }
 
-    console.log('Redirecting to license step...')
     router.push(`/register/license?email=${encodeURIComponent(email)}`)
   }
 
-
-  //end handle submit function
-
   return (
-
     <main className="min-h-screen bg-blue-950 text-white p-6 flex flex-col justify-between">
       <div>
         {/* Step Graphic */}
@@ -144,33 +131,12 @@ export default function RegisterPage() {
 
             <div className="col-span-2 grid grid-cols-2 gap-3">
               <div className="flex flex-col">
-                <label htmlFor="dob" className="text-sm font-medium text-white mb-1">
-                  Date of Birth
-                </label>
-                <input
-                  type="date"
-                  id="dob"
-                  name="dob"
-                  value={formData.dob}
-                  onChange={handleChange}
-                  required
-                  className="p-2 border border-emerald-600 rounded bg-blue-900"
-                />
+                <label htmlFor="dob" className="text-sm font-medium text-white mb-1">Date of Birth</label>
+                <input type="date" id="dob" name="dob" value={formData.dob} onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
               </div>
               <div className="flex flex-col">
-                <label htmlFor="email" className="text-sm font-medium text-white mb-1">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  placeholder="Email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  className="p-2 border border-emerald-600 rounded bg-blue-900"
-                />
+                <label htmlFor="email" className="text-sm font-medium text-white mb-1">Email</label>
+                <input type="email" id="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} required className="p-2 border border-emerald-600 rounded bg-blue-900" />
               </div>
             </div>
 
@@ -178,7 +144,7 @@ export default function RegisterPage() {
           </div>
 
           <p className="text-xs text-gray-400">
-            {"Password must be 10–72 characters and include at least one uppercase letter, one lowercase letter, one number, and one special character. These are the special characters !@#$%^&*()_+-=[]{};':\"|<>?,./`~."}
+            Password must be 10–72 characters and include at least one uppercase letter, one lowercase letter, one number, and one special character.
           </p>
 
           <fieldset className="border border-blue-700 p-4 rounded">
@@ -214,8 +180,8 @@ export default function RegisterPage() {
               Back
             </button>
             <button type="submit" className="px-4 py-2 border border-emerald-500 text-emerald-400 rounded hover:bg-emerald-600 hover:text-white transition">
-			  Next
-			</button>
+              Next
+            </button>
           </div>
         </form>
       </div>
