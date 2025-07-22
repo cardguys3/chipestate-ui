@@ -233,7 +233,7 @@ function LicenseForm() {
             </form>
           </div>
 
-          <div className="text-center text-xs text-gray-400 mt-10">Step 2 of 3</div>
+          <div className="text-center text-xs text-gray-400 mt-10">Step 2 of 2</div>
         </>
       )}
     </main>
