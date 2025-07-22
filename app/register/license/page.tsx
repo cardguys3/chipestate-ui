@@ -63,10 +63,9 @@ function LicenseForm() {
     setLoading(true)
 
     try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-      const user = session?.user
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
 
-      if (sessionError || !user?.id) {
+      if (userError || !user?.id) {
         setError('Session expired. Please log in again.')
         setLoading(false)
         return
@@ -132,9 +131,8 @@ function LicenseForm() {
   }
 
   const skipUpload = async () => {
-    const { data: { session } } = await supabase.auth.getSession()
-    const user = session?.user
-    if (!user?.id) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user?.id) {
       toast.error('Session error: please log in again.')
       router.push('/')
       return
