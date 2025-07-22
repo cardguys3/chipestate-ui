@@ -1,13 +1,12 @@
-// app/admin/voting/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import { Button } from "@/components/button";
-import { Input } from "@/components/input";
-import { Textarea } from "@/components/textarea";
-import { Label } from "@/components/label";
+import { Button } from "@components/button";
+import { Input } from "@components/input";
+import { Textarea } from "@components/textarea";
+import { Label } from "@components/label";
 
 export default function AdminVotingPage() {
   const [votes, setVotes] = useState<any[]>([]);
@@ -109,10 +108,21 @@ export default function AdminVotingPage() {
 
           <div>
             <Label>Category</Label>
-            <Input
+            <select
+              className="w-full border rounded-md p-2 bg-white text-black"
               value={newVote.category}
               onChange={e => setNewVote({ ...newVote, category: e.target.value })}
-            />
+            >
+              <option value="">-- Select Category --</option>
+              <option value="lease_renewal">Lease Renewal</option>
+              <option value="manager_change">Property Manager Change</option>
+              <option value="reserve_policy">Reserve Policy</option>
+              <option value="capital_improvements">Capital Improvements</option>
+              <option value="distribution_policy">Distribution Policy</option>
+              <option value="property_sale">Property Sale</option>
+              <option value="governance_change">Governance Changes</option>
+              <option value="general_feedback">General Feedback</option>
+            </select>
           </div>
 
           <div className="md:col-span-2">
