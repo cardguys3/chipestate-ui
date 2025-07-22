@@ -1,4 +1,5 @@
 // File: app/admin/users/add/page.tsx
+
 'use client'
 
 import { useState } from 'react'
@@ -29,7 +30,8 @@ export default function AddUserPage() {
     mail_zip: '',
     is_approved: false,
     is_active: true,
-    registration_status: '',
+    email_confirmed_at: '',
+    registration_status: ''
   })
 
   const handleChange = (e: any) => {
@@ -40,10 +42,13 @@ export default function AddUserPage() {
   const handleSubmit = async (e: any) => {
     e.preventDefault()
 
-    const { error } = await supabase.from('users_extended').insert({
+    const payload = {
       id: uuidv4(),
       ...form,
-    })
+      email_confirmed_at: form.email_confirmed_at ? new Date().toISOString() : null
+    }
+
+    const { error } = await supabase.from('users_extended').insert(payload)
 
     if (!error) {
       router.push('/admin/users')
@@ -98,6 +103,10 @@ export default function AddUserPage() {
             <label className="flex items-center gap-2">
               <input type="checkbox" name="is_active" checked={form.is_active} onChange={handleChange} />
               <span>Active</span>
+            </label>
+            <label className="flex items-center gap-2">
+              <input type="checkbox" name="email_confirmed_at" checked={!!form.email_confirmed_at} onChange={(e) => setForm({ ...form, email_confirmed_at: e.target.checked ? new Date().toISOString() : '' })} />
+              <span>Email Verified</span>
             </label>
           </div>
 

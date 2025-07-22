@@ -307,7 +307,6 @@ export default function AdminUsersPage() {
                     <td className="p-3">{formatDate(u.created_at)}</td>
                     <td className="p-3">{u.is_approved ? 'Yes' : 'No'}</td>
                     <td className="p-3">{u.is_active ? 'Yes' : 'No'}</td>
-                    //begin edit here 
 					<td className="p-3">
 					  {u.email_confirmed_at
 						? 'Yes'
