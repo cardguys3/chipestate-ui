@@ -1,6 +1,6 @@
 // app/admin/voting/page.tsx
 
-"use client";
+'use client'
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -92,18 +92,17 @@ export default function AdminVotingPage() {
   }
 
   return (
-    <main className="p-6 space-y-6">
-      <h1 className="text-3xl font-bold text-white">Manage Votes</h1>
+    <main className="px-8 py-6 text-white space-y-6">
+      <h1 className="text-3xl font-bold">Manage Votes</h1>
 
       {/* Create Vote Section */}
-      <section className="bg-[#0B1D33] p-6 rounded-xl border border-gray-600 text-white">
+      <section className="bg-[#0B1D33] rounded-xl border border-gray-700 p-6 shadow-md">
         <h2 className="text-2xl font-semibold mb-4">Create New Vote</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label>Title</Label>
             <Input value={newVote.title} onChange={e => setNewVote({ ...newVote, title: e.target.value })} />
           </div>
-
           <div>
             <Label>Category</Label>
             <select
@@ -141,7 +140,6 @@ export default function AdminVotingPage() {
               <option value="minority_veto">Minority Veto</option>
             </select>
           </div>
-
           <div>
             <Label>Property</Label>
             <select
@@ -155,7 +153,6 @@ export default function AdminVotingPage() {
               ))}
             </select>
           </div>
-
           <div>
             <Label>Start Date</Label>
             <Input
@@ -164,7 +161,6 @@ export default function AdminVotingPage() {
               onChange={e => setNewVote({ ...newVote, start_date: e.target.value })}
             />
           </div>
-
           <div>
             <Label>End Date</Label>
             <Input
@@ -179,11 +175,11 @@ export default function AdminVotingPage() {
         </div>
       </section>
 
-      {/* Votes List Section */}
-      <section className="bg-white p-6 rounded-xl border border-gray-300">
+      {/* Vote List Section */}
+      <section className="bg-white rounded-xl border border-gray-300 p-6 shadow-md">
         <h2 className="text-2xl font-semibold mb-4 text-black">All Votes</h2>
         <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
+          <table className="min-w-full text-sm text-black">
             <thead className="bg-gray-100 text-gray-700">
               <tr>
                 <th className="text-left px-3 py-2">Title</th>
@@ -196,7 +192,7 @@ export default function AdminVotingPage() {
             </thead>
             <tbody>
               {votes.map(vote => (
-                <tr key={vote.id} className="border-t border-gray-200 hover:bg-gray-50">
+                <tr key={vote.id} className="border-t border-gray-200 hover:bg-gray-100">
                   <td className="px-3 py-2">{vote.title}</td>
                   <td className="px-3 py-2">{vote.category}</td>
                   <td className="px-3 py-2">{new Date(vote.start_date).toLocaleString()}</td>
