@@ -1,24 +1,16 @@
+// /app/register/license/page.tsx
+
 'use client'
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'react-hot-toast'
 import { Suspense } from 'react'
-import { createBrowserClient } from '@supabase/ssr'
+import { useSupabaseClient } from '@supabase/auth-helpers-react'
 import { Database } from '@/types/supabase'
 
-const supabase = createBrowserClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true
-    }
-  }
-)
-
 function LicenseForm() {
+  const supabase = useSupabaseClient<Database>()
   const router = useRouter()
   const [hydrated, setHydrated] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
@@ -29,24 +21,16 @@ function LicenseForm() {
 
   const getCurrentUser = async () => {
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-
     if (sessionError || !sessionData.session?.user) {
       console.warn('⚠️ Supabase session missing or invalid.', sessionError)
       return null
     }
-
-    await supabase.auth.setSession({
-      access_token: sessionData.session.access_token,
-      refresh_token: sessionData.session.refresh_token
-    })
-
     return sessionData.session.user
   }
 
   useEffect(() => {
     const hydrate = async () => {
       const user = await getCurrentUser()
-
       if (!user) {
         setHydrated(true)
         return
@@ -90,7 +74,6 @@ function LicenseForm() {
     setLoading(true)
 
     const user = await getCurrentUser()
-
     if (!user || !user.id) {
       setError('Session expired. Please log in again.')
       setLoading(false)
@@ -111,7 +94,6 @@ function LicenseForm() {
     const { error: frontError } = await supabase.storage
       .from('licenses')
       .upload(filePathFront, front, { upsert: true })
-
     if (frontError) {
       setError('Upload failed for front image.')
       setLoading(false)
@@ -121,7 +103,6 @@ function LicenseForm() {
     const { error: backError } = await supabase.storage
       .from('licenses')
       .upload(filePathBack, back, { upsert: true })
-
     if (backError) {
       setError('Upload failed for back image.')
       setLoading(false)
@@ -152,7 +133,6 @@ function LicenseForm() {
 
   const skipUpload = async () => {
     const user = await getCurrentUser()
-
     if (!user || !user.id) {
       toast.error('Session error: please log in again.')
       router.push('/')
@@ -192,7 +172,6 @@ function LicenseForm() {
             </div>
 
             <h1 className="text-2xl font-bold mb-4 text-center">Identity Verification</h1>
-
             <p className="mb-4 text-sm text-emerald-300 border border-emerald-700 p-4 rounded text-center">
               To comply with U.S. regulations, fractional real estate owners must verify their identity.
               You may skip this step for now, but you won’t be able to purchase chips until verification is complete.
