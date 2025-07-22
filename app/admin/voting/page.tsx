@@ -1,3 +1,4 @@
+// app/admin/voting
 "use client";
 
 import { useEffect, useState } from "react";
@@ -10,17 +11,21 @@ import { Label } from "@/components/label";
 
 export default function AdminVotingPage() {
   const [votes, setVotes] = useState<any[]>([]);
+  const [properties, setProperties] = useState<any[]>([]);
   const [newVote, setNewVote] = useState({
     title: "",
     description: "",
     category: "",
     threshold_type: "simple",
     start_date: "",
-    end_date: ""
+    end_date: "",
+    property_id: ""
   });
 
   useEffect(() => {
     fetchVotes();
+    fetchProperties();
+    setDefaultDates();
   }, []);
 
   async function fetchVotes() {
@@ -31,6 +36,25 @@ export default function AdminVotingPage() {
     if (!error) setVotes(data);
   }
 
+  async function fetchProperties() {
+    const { data, error } = await supabase
+      .from("properties")
+      .select("id, title")
+      .order("title");
+    if (!error) setProperties(data);
+  }
+
+  function setDefaultDates() {
+    const now = new Date();
+    const in7Days = new Date();
+    in7Days.setDate(now.getDate() + 7);
+    setNewVote(v => ({
+      ...v,
+      start_date: now.toISOString().slice(0, 16),
+      end_date: in7Days.toISOString().slice(0, 16)
+    }));
+  }
+
   async function createVote() {
     const { data, error: sessionError } = await supabase.auth.getSession();
     if (sessionError || !data?.session?.user) {
@@ -39,6 +63,12 @@ export default function AdminVotingPage() {
     }
 
     const userId = data.session.user.id;
+    const { title, threshold_type, start_date, end_date, property_id } = newVote;
+
+    if (!title || !threshold_type || !start_date || !end_date || !property_id) {
+      alert("Please fill in all required fields including property.");
+      return;
+    }
 
     const { error } = await supabase.from("votes").insert({
       ...newVote,
@@ -52,17 +82,19 @@ export default function AdminVotingPage() {
         category: "",
         threshold_type: "simple",
         start_date: "",
-        end_date: ""
+        end_date: "",
+        property_id: ""
       });
       fetchVotes();
+      setDefaultDates();
     }
   }
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Manage Votes</h1>
+    <div className="p-6 max-w-4xl mx-auto">
+      <h1 className="text-3xl font-bold mb-6">Manage Votes</h1>
 
-      <div className="space-y-4 border border-gray-300 rounded-xl p-4 mb-8">
+      <div className="space-y-4 border border-gray-300 rounded-xl p-4 mb-8 bg-[#0B1D33] text-white">
         <h2 className="text-xl font-semibold">Create New Vote</h2>
 
         <div>
@@ -103,6 +135,20 @@ export default function AdminVotingPage() {
           </select>
         </div>
 
+        <div>
+          <Label>Property</Label>
+          <select
+            className="w-full border rounded-md p-2"
+            value={newVote.property_id}
+            onChange={e => setNewVote({ ...newVote, property_id: e.target.value })}
+          >
+            <option value="">-- Select Property --</option>
+            {properties.map(p => (
+              <option key={p.id} value={p.id}>{p.title}</option>
+            ))}
+          </select>
+        </div>
+
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Label>Start Date</Label>
@@ -127,13 +173,13 @@ export default function AdminVotingPage() {
         </Button>
       </div>
 
-      <h2 className="text-xl font-semibold mb-2">All Votes</h2>
+      <h2 className="text-2xl font-semibold mb-4">All Votes</h2>
       <ul className="space-y-3">
         {votes.map(vote => (
-          <li key={vote.id} className="border p-4 rounded-lg">
+          <li key={vote.id} className="border p-4 rounded-lg bg-white">
             <Link
               href={`/admin/voting/${vote.id}`}
-              className="text-blue-500 hover:underline font-semibold"
+              className="text-blue-600 hover:underline font-semibold"
             >
               {vote.title}
             </Link>
