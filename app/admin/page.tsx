@@ -1,4 +1,4 @@
-//App admin dashboard
+// File: app/admin/page.tsx
 
 'use server'
 
@@ -50,7 +50,7 @@ export default async function AdminPage() {
           <AdminCard title="Chips" href="/admin/chips" />
           <AdminCard title="Property Managers" href="/admin/property-managers" />
           <AdminCard title="Financials" href="/admin/financials" />
-          <AdminCard title="Approvals" href="/admin/approvals" />
+          <AdminCard title="Voting" href="/admin/voting" />
           <AdminCard title="Analytics" href="/admin/analytics" />
           <AdminCard title="Occupancy Periods" href="/admin/occupancy-periods" />
           <AdminCard title="Badges" href="/admin/badges" />
