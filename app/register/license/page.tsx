@@ -11,18 +11,10 @@ const supabase = createBrowserClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   {
-    cookies: {
-      name: 'sb:token',
-      lifetime: 60 * 60 * 24 * 7,
-      domain: '.chipestate.com',
-      path: '/',
-      sameSite: 'Lax',
-      secure: true,
-    },
     auth: {
       persistSession: true,
-      autoRefreshToken: true,
-    },
+      autoRefreshToken: true
+    }
   }
 )
 
@@ -45,7 +37,7 @@ function LicenseForm() {
 
     await supabase.auth.setSession({
       access_token: sessionData.session.access_token,
-      refresh_token: sessionData.session.refresh_token,
+      refresh_token: sessionData.session.refresh_token
     })
 
     return sessionData.session.user
@@ -144,7 +136,7 @@ function LicenseForm() {
       .update({
         license_front_url: frontUrl,
         license_back_url: backUrl,
-        registration_status: 'pending',
+        registration_status: 'pending'
       })
       .eq('id', user.id)
 
