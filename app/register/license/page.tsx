@@ -1,19 +1,14 @@
-// File: app/register/license/page.tsx
 'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createBrowserClient } from '@supabase/ssr'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Database } from '@/types/supabase'
 import { Suspense } from 'react'
 import { toast } from 'react-hot-toast'
 
 function LicenseForm() {
-  const supabase = createBrowserClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-
+  const supabase = createClientComponentClient<Database>()
   const router = useRouter()
   const [hydrated, setHydrated] = useState(false)
   const [front, setFront] = useState<File | null>(null)
@@ -39,24 +34,23 @@ function LicenseForm() {
         .single()
 
       if (!exists && user.email) {
-  const { data: buffer } = await supabase
-    .from('registration_buffer')
-    .select('*')
-    .eq('email', user.email)
-    .single()
+        const { data: buffer } = await supabase
+          .from('registration_buffer')
+          .select('*')
+          .eq('email', user.email)
+          .single()
 
-  if (buffer) {
-    const { id: _discarded, email: _discardedEmail, ...safeBuffer } = buffer
-    const { error: insertError } = await supabase
-      .from('users_extended')
-      .insert([{ id: user.id, email: user.email, ...safeBuffer }])
+        if (buffer) {
+          const { id: _discarded, email: _discardedEmail, ...safeBuffer } = buffer
+          const { error: insertError } = await supabase
+            .from('users_extended')
+            .insert([{ id: user.id, email: user.email, ...safeBuffer }])
 
-    if (!insertError) {
-      await supabase.from('registration_buffer').delete().eq('email', user.email)
-    }
-  }
-}
-
+          if (!insertError) {
+            await supabase.from('registration_buffer').delete().eq('email', user.email)
+          }
+        }
+      }
 
       setHydrated(true)
     }
