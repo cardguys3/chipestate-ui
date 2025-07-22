@@ -1,16 +1,14 @@
-// /app/register/license/page.tsx
-
 'use client'
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'react-hot-toast'
 import { Suspense } from 'react'
-import { useSupabaseClient } from '@supabase/auth-helpers-react'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Database } from '@/types/supabase'
 
 function LicenseForm() {
-  const supabase = useSupabaseClient<Database>()
+  const supabase = createClientComponentClient<Database>()
   const router = useRouter()
   const [hydrated, setHydrated] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)

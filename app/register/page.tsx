@@ -57,46 +57,59 @@ export default function RegisterPage() {
   
 //begin handle submit function
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault()
-  setError(null)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
 
-  const { email, password, ...profileData } = formData
+    const { email, password, ...profileData } = formData
+    console.log('Submitted')
 
-  console.log('Submitted')
+    // Step 1: Sign up
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+    })
 
-  const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-    email,
-    password,
-  })
+    console.log('Signup error:', signUpError)
+    console.log('Signup data:', signUpData)
 
-  console.log('Signup error:', signUpError)
-  console.log('Signup data:', signUpData)
+    if (signUpError || !signUpData?.user) {
+      console.error('Registration failed:', signUpError)
+      setError(signUpError?.message || 'Registration failed.')
+      return
+    }
 
-  if (signUpError || !signUpData?.user) {
-    console.error('Registration failed:', signUpError)
-    setError(signUpError?.message || 'Registration failed.')
-    return
+    // ✅ Step 2: Immediately sign in
+    const { error: loginError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (loginError) {
+      console.error('Login after signup failed:', loginError)
+      setError(loginError.message || 'Login failed after signup.')
+      return
+    }
+
+    // Step 3: Continue as usual
+    const response = await fetch('/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, ...profileData }),
+    })
+
+    const result = await response.json()
+    console.log('API response:', result)
+
+    if (!response.ok) {
+      setError(result.message || 'Upsert failed.')
+      return
+    }
+
+    console.log('Redirecting to license step...')
+    router.push(`/register/license?email=${encodeURIComponent(email)}`)
   }
 
-  // 🚨 Use secure server route for the upsert
-  const response = await fetch('/api/register', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, ...profileData }),
-  })
-
-  const result = await response.json()
-  console.log('API response:', result)
-
-  if (!response.ok) {
-    setError(result.message || 'Upsert failed.')
-    return
-  }
-
-  console.log('Redirecting to license step...')
-  router.push(`/register/license?email=${encodeURIComponent(email)}`)
-}
 
   //end handle submit function
 
