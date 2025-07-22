@@ -22,29 +22,13 @@ function LicenseForm() {
   const [loading, setLoading] = useState(false)
 
   const getCurrentUser = async () => {
-    const { data: { user }, error } = await supabase.auth.getUser()
-
-    if (!user || error) {
-      console.warn('⚠️ Supabase user not found, checking localStorage...')
-
-      const sessionStr = localStorage.getItem('sb-session')
-      if (sessionStr) {
-        const parsed = JSON.parse(sessionStr)
-        await supabase.auth.setSession(parsed)
-        const { data: restored } = await supabase.auth.getUser()
-        return restored.user
-      }
-
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+    if (sessionError || !sessionData.session?.user) {
+      console.warn('⚠️ Supabase session missing or invalid.', sessionError)
       return null
     }
 
-    // Save to localStorage for future retrieval
-    const { data: sessionData } = await supabase.auth.getSession()
-    if (sessionData.session) {
-      localStorage.setItem('sb-session', JSON.stringify(sessionData.session))
-    }
-
-    return user
+    return sessionData.session.user
   }
 
   useEffect(() => {
