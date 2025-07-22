@@ -21,12 +21,37 @@ function LicenseForm() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
+  const getCurrentUser = async () => {
+    const { data: { user }, error } = await supabase.auth.getUser()
+
+    if (!user || error) {
+      console.warn('⚠️ Supabase user not found, checking localStorage...')
+
+      const sessionStr = localStorage.getItem('sb-session')
+      if (sessionStr) {
+        const parsed = JSON.parse(sessionStr)
+        await supabase.auth.setSession(parsed)
+        const { data: restored } = await supabase.auth.getUser()
+        return restored.user
+      }
+
+      return null
+    }
+
+    // Save to localStorage for future retrieval
+    const { data: sessionData } = await supabase.auth.getSession()
+    if (sessionData.session) {
+      localStorage.setItem('sb-session', JSON.stringify(sessionData.session))
+    }
+
+    return user
+  }
+
   useEffect(() => {
     const hydrate = async () => {
-      const { data: { user }, error } = await supabase.auth.getUser()
+      const user = await getCurrentUser()
 
-      if (!user || error) {
-        console.warn('❌ No user during hydration:', error)
+      if (!user) {
         setHydrated(true)
         return
       }
@@ -68,77 +93,71 @@ function LicenseForm() {
     setError('')
     setLoading(true)
 
-    try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const user = await getCurrentUser()
 
-      if (userError || !user?.id) {
-        setError('Session expired. Please log in again.')
-        setLoading(false)
-        return
-      }
-
-      if (!front || !back) {
-        setError('Please upload both front and back images or skip this step.')
-        setLoading(false)
-        return
-      }
-
-      const fileExtFront = front.name.split('.').pop()
-      const fileExtBack = back.name.split('.').pop()
-      const filePathFront = `${user.id}_front.${fileExtFront}`
-      const filePathBack = `${user.id}_back.${fileExtBack}`
-
-      const { error: frontError } = await supabase.storage
-        .from('licenses')
-        .upload(filePathFront, front, { upsert: true })
-
-      if (frontError) {
-        setError('Upload failed for front image.')
-        setLoading(false)
-        return
-      }
-
-      const { error: backError } = await supabase.storage
-        .from('licenses')
-        .upload(filePathBack, back, { upsert: true })
-
-      if (backError) {
-        setError('Upload failed for back image.')
-        setLoading(false)
-        return
-      }
-
-      const frontUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/licenses/${filePathFront}`
-      const backUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/licenses/${filePathBack}`
-
-      const { error: updateError } = await supabase
-        .from('users_extended')
-        .update({
-          license_front_url: frontUrl,
-          license_back_url: backUrl,
-          registration_status: 'pending',
-        })
-        .eq('id', user.id)
-
-      if (updateError) {
-        setError('Could not save license info. Please try again.')
-        setLoading(false)
-        return
-      }
-
-      toast.success('Welcome to ChipEstate! Please confirm your email to activate your account.')
-      router.push('/dashboard')
-    } catch (err: any) {
-      console.error('Upload exception:', err)
-      setError('Something went wrong. Please try again.')
-    } finally {
+    if (!user || !user.id) {
+      setError('Session expired. Please log in again.')
       setLoading(false)
+      return
     }
+
+    if (!front || !back) {
+      setError('Please upload both front and back images or skip this step.')
+      setLoading(false)
+      return
+    }
+
+    const fileExtFront = front.name.split('.').pop()
+    const fileExtBack = back.name.split('.').pop()
+    const filePathFront = `${user.id}_front.${fileExtFront}`
+    const filePathBack = `${user.id}_back.${fileExtBack}`
+
+    const { error: frontError } = await supabase.storage
+      .from('licenses')
+      .upload(filePathFront, front, { upsert: true })
+
+    if (frontError) {
+      setError('Upload failed for front image.')
+      setLoading(false)
+      return
+    }
+
+    const { error: backError } = await supabase.storage
+      .from('licenses')
+      .upload(filePathBack, back, { upsert: true })
+
+    if (backError) {
+      setError('Upload failed for back image.')
+      setLoading(false)
+      return
+    }
+
+    const frontUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/licenses/${filePathFront}`
+    const backUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/licenses/${filePathBack}`
+
+    const { error: updateError } = await supabase
+      .from('users_extended')
+      .update({
+        license_front_url: frontUrl,
+        license_back_url: backUrl,
+        registration_status: 'pending',
+      })
+      .eq('id', user.id)
+
+    if (updateError) {
+      setError('Could not save license info. Please try again.')
+      setLoading(false)
+      return
+    }
+
+    toast.success('Welcome to ChipEstate! Please confirm your email to activate your account.')
+    router.push('/dashboard')
   }
 
   const skipUpload = async () => {
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user?.id) {
+    const user = await getCurrentUser()
+
+    if (!user || !user.id) {
       toast.error('Session error: please log in again.')
       router.push('/')
       return
