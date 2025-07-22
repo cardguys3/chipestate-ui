@@ -64,10 +64,11 @@ export default function RegisterPage() {
     const { email, password, ...profileData } = formData
     console.log('Submitted')
 
-    // Step 1: Sign up
+    // Step 1: Sign up (without forcing email confirmation)
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
+      options: { emailRedirectTo: `${location.origin}/register/license?email=${email}` }
     })
 
     console.log('Signup error:', signUpError)
