@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import { Button } from "@components/button";
-import { Input } from "@components/input";
-import { Textarea } from "@components/textarea";
-import { Label } from "@components/label";
+import Button from "@/components/button";
+import Input from "@/components/input";
+import Textarea from "@/components/textarea";
+import Label from "@/components/label";
 
 export default function AdminVotingPage() {
   const [votes, setVotes] = useState<any[]>([]);
