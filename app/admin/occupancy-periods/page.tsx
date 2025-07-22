@@ -84,6 +84,19 @@ export default function OccupancyPeriodsAdminPage() {
       fetchData();
     }
   };
+  
+// 🟩 Added Delete Handler
+const handleDelete = async (id: string) => {
+  const confirmed = confirm("Are you sure you want to delete this occupancy period?");
+  if (!confirmed) return;
+
+  const { error } = await supabase.from('property_occupancy_periods').delete().eq('id', id);
+  if (!error) {
+    fetchData();
+  } else {
+    console.error('Delete error:', error);
+  }
+};
 
   const filtered = periods.filter(p => {
     const prop = properties.find(pr => pr.id === p.property_id);
@@ -99,7 +112,24 @@ export default function OccupancyPeriodsAdminPage() {
       <div className="max-w-6xl mx-auto">
         <h1 className="text-3xl font-bold mb-6">Manage Occupancy Periods</h1>
 
-        {/* Filter UI */}
+        {/* Form UI */}
+        <form onSubmit={handleSubmit} className="bg-white/5 border border-white/20 p-4 rounded-xl mb-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <select name="property_id" value={form.property_id} onChange={handleChange} className="p-2 rounded bg-[#0B1D33] border border-gray-600">
+            <option value="">Select Property</option>
+            {properties.map((p) => (
+              <option key={p.id} value={p.id}>{p.title}</option>
+            ))}
+          </select>
+          <input name="tenant_name" value={form.tenant_name} onChange={handleChange} placeholder="Tenant Name" className="p-2 rounded bg-[#0B1D33] border border-gray-600" />
+          <input name="occupancy_start" type="date" value={form.occupancy_start} onChange={handleChange} className="p-2 rounded bg-[#0B1D33] border border-gray-600" />
+          <input name="occupancy_end" type="date" value={form.occupancy_end} onChange={handleChange} className="p-2 rounded bg-[#0B1D33] border border-gray-600" />
+          <input name="lease_type" value={form.lease_type} onChange={handleChange} placeholder="Lease Type" className="p-2 rounded bg-[#0B1D33] border border-gray-600" />
+          <input name="monthly_rent" type="number" value={form.monthly_rent} onChange={handleChange} placeholder="Monthly Rent" className="p-2 rounded bg-[#0B1D33] border border-gray-600" />
+          <input name="notes" value={form.notes} onChange={handleChange} placeholder="Notes" className="col-span-full p-2 rounded bg-[#0B1D33] border border-gray-600" />
+          <button type="submit" className="col-span-full bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded">Add Occupancy Period</button>
+        </form>
+
+        {/* Filters moved below form */}
         <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
           <select value={filters.property} onChange={(e) => setFilters({ ...filters, property: e.target.value })} className="p-2 rounded bg-[#0B1D33] border border-gray-600">
             <option value="">All Properties</option>
@@ -112,7 +142,6 @@ export default function OccupancyPeriodsAdminPage() {
           <input type="date" value={filters.start} onChange={(e) => setFilters({ ...filters, start: e.target.value })} className="p-2 rounded bg-[#0B1D33] border border-gray-600" />
           <input type="date" value={filters.end} onChange={(e) => setFilters({ ...filters, end: e.target.value })} className="p-2 rounded bg-[#0B1D33] border border-gray-600" />
         </div>
-
         {/* Form UI (unchanged) */}
         <form onSubmit={handleSubmit} className="bg-white/5 border border-white/20 p-4 rounded-xl mb-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           <select name="property_id" value={form.property_id} onChange={handleChange} className="p-2 rounded bg-[#0B1D33] border border-gray-600">
@@ -135,7 +164,7 @@ export default function OccupancyPeriodsAdminPage() {
           <p className="text-gray-400">No occupancy periods found.</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full border border-white/10 text-sm">
+            <table className="min-w-full border border-white/10 text-sm rounded-xl overflow-hidden">
               <thead className="bg-[#112244]">
                 <tr>
                   <th className="p-2 text-left">Property</th>
@@ -187,9 +216,11 @@ export default function OccupancyPeriodsAdminPage() {
                           <input defaultValue={p.notes} onBlur={(e) => handleUpdate(p.id, { notes: e.target.value })} className="bg-[#0B1D33] border border-gray-600 p-1 rounded w-full" />
                         ) : (p.notes || '—')}
                       </td>
-                      <td className="p-2">
-                        <button onClick={() => handleEdit(p.id)} className="text-blue-400 hover:underline">Edit</button>
-                      </td>
+                      <td className="p-2 space-x-2">
+					    <button onClick={() => handleEdit(p.id)} className="text-blue-400 hover:underline">Edit</button>
+					    <button onClick={() => handleDelete(p.id)} className="text-red-400 hover:underline">Delete</button>
+					  </td>
+
                     </tr>
                   );
                 })}
