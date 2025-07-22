@@ -1,3 +1,5 @@
+// File: app/admin/users/page.tsx
+
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -8,12 +10,14 @@ import { supabase } from '@/lib/supabaseClient'
 export default function AdminUsersPage() {
   const router = useRouter()
   const [users, setUsers] = useState<any[]>([])
+  const [verifications, setVerifications] = useState<Record<string, string | null>>({})
   const [filters, setFilters] = useState({
     name: '',
     email: '',
     state: '',
     activeOnly: false,
-    approvedOnly: false
+    approvedOnly: false,
+    unverifiedOnly: false
   })
   const [sortField, setSortField] = useState<string>('created_at')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
@@ -23,12 +27,30 @@ export default function AdminUsersPage() {
   }, [])
 
   async function fetchUsers() {
-    const { data } = await supabase
+    const { data: usersData } = await supabase
       .from('users_extended')
       .select('*')
       .order('created_at', { ascending: false })
 
-    if (data) setUsers(data)
+    const { data: logsData } = await supabase
+      .from('status_change_log')
+      .select('entity_id, created_at')
+      .eq('status_type', 'email_verification')
+      .eq('status', 'resent')
+
+    const recentVerifications: Record<string, string | null> = {}
+    if (logsData) {
+      for (const log of logsData) {
+        if (!recentVerifications[log.entity_id] || new Date(log.created_at) > new Date(recentVerifications[log.entity_id]!)) {
+          recentVerifications[log.entity_id] = log.created_at
+        }
+      }
+    }
+
+    if (usersData) {
+      setUsers(usersData)
+      setVerifications(recentVerifications)
+    }
   }
 
   async function toggleApproval(id: string, current: boolean) {
@@ -64,10 +86,18 @@ export default function AdminUsersPage() {
 
     fetchUsers()
   }
-
+//add new manually verifty fxn here:
   async function resendVerification(email: string, id: string) {
     const { data: { session } } = await supabase.auth.getSession()
     const adminId = session?.user?.id ?? null
+
+    const today = new Date().toISOString().split('T')[0]
+    const lastSentDate = verifications[id]?.split('T')[0]
+
+    if (lastSentDate === today) {
+      alert('Verification email already sent today.')
+      return
+    }
 
     const { error } = await supabase.auth.resend({
       type: 'signup',
@@ -89,7 +119,36 @@ export default function AdminUsersPage() {
         status_type: 'email_verification',
         changed_by: adminId
       })
+      fetchUsers()
     }
+  }
+// end add manual verify fxn here
+// 🟩 ADDED THIS FUNCTION: allows admin to override and mark email as verified directly
+  async function manuallyVerifyEmail(id: string) {
+    const { data: { session } } = await supabase.auth.getSession()
+    const adminId = session?.user?.id ?? null
+
+    const { error } = await supabase
+      .from('users_extended')
+      .update({ email_confirmed_at: new Date().toISOString() })
+      .eq('id', id)
+
+    if (error) {
+      console.error(error)
+      alert('Failed to manually verify email.')
+      return
+    }
+
+    await supabase.from('status_change_log').insert({
+      entity_type: 'user',
+      entity_id: id,
+      status_type: 'email_verification',
+      status: 'manual_override',
+      changed_by: adminId
+    })
+
+    alert('Email manually marked as verified.')
+    fetchUsers()
   }
 
   const handleSort = (field: string) => {
@@ -109,7 +168,8 @@ export default function AdminUsersPage() {
         (!filters.email || u.email?.toLowerCase().includes(filters.email.toLowerCase())) &&
         (!filters.state || u.res_state?.toLowerCase().includes(filters.state.toLowerCase())) &&
         (!filters.activeOnly || u.is_active) &&
-        (!filters.approvedOnly || u.is_approved)
+        (!filters.approvedOnly || u.is_approved) &&
+        (!filters.unverifiedOnly || !u.email_confirmed_at)
       )
     })
     .sort((a, b) => {
@@ -129,6 +189,11 @@ export default function AdminUsersPage() {
     if (!dateStr) return '—'
     const d = new Date(dateStr)
     return isNaN(d.getTime()) ? '—' : d.toLocaleDateString()
+  }
+
+  const daysAgo = (dateStr: string) => {
+    const diff = (new Date().getTime() - new Date(dateStr).getTime()) / (1000 * 60 * 60 * 24)
+    return Math.floor(diff)
   }
 
   const sortArrow = (field: string) =>
@@ -186,6 +251,23 @@ export default function AdminUsersPage() {
             />
             <span>Approved Only</span>
           </label>
+		  <label className="flex items-center space-x-2">
+		  <input
+			type="checkbox"
+			checked={filters.unverifiedOnly}
+			onChange={(e) => setFilters({ ...filters, unverifiedOnly: e.target.checked })}
+		  />
+		  <span>Unverified Only</span>
+		</label>
+		// ✅ Lets admin filter to see only those who haven’t verified
+          <label className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={filters.unverifiedOnly}
+              onChange={(e) => setFilters({ ...filters, unverifiedOnly: e.target.checked })}
+            />
+            <span>Unverified Only</span>
+          </label>
         </div>
       </div>
 
@@ -209,6 +291,8 @@ export default function AdminUsersPage() {
             <tbody>
               {filtered.map((u) => {
                 const name = `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim() || '—'
+                const lastSent = verifications[u.id]
+
                 return (
                   <tr key={u.id} className="border-t border-gray-700 hover:bg-white/5">
                     <td className="p-3">
@@ -224,19 +308,33 @@ export default function AdminUsersPage() {
                     <td className="p-3">{formatDate(u.created_at)}</td>
                     <td className="p-3">{u.is_approved ? 'Yes' : 'No'}</td>
                     <td className="p-3">{u.is_active ? 'Yes' : 'No'}</td>
-                    <td className="p-3">
-                      {u.email_confirmed_at
-                        ? 'Yes'
-                        : (
-                          <button
-                            className="text-blue-400 hover:underline"
-                            onClick={() => resendVerification(u.email, u.id)}
-                          >
-                            Send
-                          </button>
-                        )
-                      }
-                    </td>
+                    //begin edit here 
+					<td className="p-3">
+					  {u.email_confirmed_at
+						? 'Yes'
+						: lastSent
+						  ? `Sent ${daysAgo(lastSent)} day(s) ago`
+						  : (
+							<>
+							  <button
+								onClick={() => resendVerification(u.email, u.id)}
+								className="text-blue-400 hover:underline"
+							  >
+								Send
+							  </button>
+							  <span className="mx-2">|</span>
+							  <button
+								onClick={() => manuallyVerifyEmail(u.id)}
+								className="text-green-400 hover:underline"
+							  >
+								Verify
+							  </button>
+							</>
+						  )
+					  }
+					</td>
+					// 🟡 Added manual override option if email is unverified
+					//end edit here
                     <td className="p-3 space-x-3">
                       <Link
                         href={`/admin/users/${u.id}/edit-user`}
