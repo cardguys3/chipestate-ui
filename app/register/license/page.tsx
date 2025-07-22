@@ -9,7 +9,21 @@ import { Database } from '@/types/supabase'
 
 const supabase = createBrowserClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  {
+    cookies: {
+      name: 'sb:token',
+      lifetime: 60 * 60 * 24 * 7,
+      domain: '.chipestate.com',
+      path: '/',
+      sameSite: 'Lax',
+      secure: true,
+    },
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+    },
+  }
 )
 
 function LicenseForm() {
@@ -29,10 +43,9 @@ function LicenseForm() {
       return null
     }
 
-    // ✅ Manually restore session — this is the fix
     await supabase.auth.setSession({
       access_token: sessionData.session.access_token,
-      refresh_token: sessionData.session.refresh_token
+      refresh_token: sessionData.session.refresh_token,
     })
 
     return sessionData.session.user
