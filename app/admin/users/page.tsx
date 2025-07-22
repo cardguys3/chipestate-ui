@@ -259,7 +259,6 @@ export default function AdminUsersPage() {
 		  />
 		  <span>Unverified Only</span>
 		</label>
-		// ✅ Lets admin filter to see only those who haven’t verified
           <label className="flex items-center space-x-2">
             <input
               type="checkbox"
@@ -333,8 +332,6 @@ export default function AdminUsersPage() {
 						  )
 					  }
 					</td>
-					// 🟡 Added manual override option if email is unverified
-					//end edit here
                     <td className="p-3 space-x-3">
                       <Link
                         href={`/admin/users/${u.id}/edit-user`}
