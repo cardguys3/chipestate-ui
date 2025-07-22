@@ -6,9 +6,13 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Database } from '@/types/supabase'
 import { Suspense } from 'react'
 import { toast } from 'react-hot-toast'
+import { createBrowserClient } from '@supabase/ssr'
 
 function LicenseForm() {
-  const supabase = createClientComponentClient<Database>()
+  const supabase = createBrowserClient<Database>(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
   const router = useRouter()
   const [userId, setUserId] = useState<string | null>(null)
   const [hydrated, setHydrated] = useState<boolean>(false)
@@ -19,12 +23,13 @@ function LicenseForm() {
 
   useEffect(() => {
     const hydrateProfile = async () => {
-      const { data: { user }, error: userError } = await supabase.auth.getUser()
-      if (userError || !user || !user.email || !user.id) {
-        console.error('Auth error or missing user:', userError)
-        setHydrated(true)
-        return
-      }
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+    const user = session?.user
+     if (sessionError || !user || !user.email || !user.id) {
+     console.error('Auth error or missing user:', sessionError)
+     setHydrated(true)
+     return
+   }
 
       setUserId(user.id)
 
