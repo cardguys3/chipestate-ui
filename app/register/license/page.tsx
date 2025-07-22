@@ -27,7 +27,6 @@ export default function LicenseUploadPage() {
 
       setUserId(data.user.id)
 
-      // Create users_extended row if needed
       const { data: exists } = await supabase
         .from('users_extended')
         .select('id')
@@ -102,7 +101,8 @@ export default function LicenseUploadPage() {
       .update({
         license_front_url: frontUrl,
         license_back_url: backUrl,
-        registration_status: 'pending'
+        registration_status: 'complete',
+        is_approved: true
       })
       .eq('id', userId)
 
@@ -124,7 +124,10 @@ export default function LicenseUploadPage() {
 
     await supabase
       .from('users_extended')
-      .update({ registration_status: 'pending' })
+      .update({
+        registration_status: 'complete',
+        is_approved: true
+      })
       .eq('id', userId)
 
     toast.success('You skipped license upload. You can complete it later.')

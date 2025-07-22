@@ -65,6 +65,7 @@ export default function DashboardPage() {
   const [months, setMonths] = useState<string[]>([])
   const [monthIndexes, setMonthIndexes] = useState<[number, number]>([0, 0])
   const [userBadges, setUserBadges] = useState<any[]>([])
+  const [registrationStatus, setRegistrationStatus] = useState<string | null>(null)
 
   useEffect(() => {
     const loadData = async () => {
@@ -74,11 +75,14 @@ export default function DashboardPage() {
 
       const { data: userData } = await supabase
         .from('users_extended')
-        .select('first_name')
+        .select('first_name, registration_status')
         .eq('id', user.id)
         .single()
 
       if (userData?.first_name) setFirstName(userData.first_name)
+      if (userData?.registration_status) setRegistrationStatus(userData.registration_status)
+
+      if (userData?.registration_status !== 'approved') return
 
       const { data: chipData } = await supabase.from('chips_view').select('*').eq('owner_id', user.id)
       setChips(chipData || [])
@@ -94,7 +98,7 @@ export default function DashboardPage() {
         .order('month', { ascending: true })
 
       setEarnings(earningsData || [])
-      const uniqueMonths = [...new Set((earningsData || []).map((e) => e.month))];
+      const uniqueMonths = [...new Set((earningsData || []).map((e) => e.month))]
       setMonths(uniqueMonths)
       if (uniqueMonths.length >= 2) setMonthIndexes([0, uniqueMonths.length - 1])
 
@@ -111,6 +115,7 @@ export default function DashboardPage() {
 
       setUserBadges(badges || [])
     }
+
     loadData()
   }, [])
 
@@ -181,6 +186,17 @@ export default function DashboardPage() {
     ]
   }
 
+  if (registrationStatus && registrationStatus !== 'approved') {
+    return (
+      <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
+        <div className="text-center mt-20">
+          <h1 className="text-3xl font-bold mb-4">Your registration is still pending approval.</h1>
+          <p className="text-lg">You’ll be notified once your account is reviewed by the ChipEstate team.</p>
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
@@ -199,28 +215,28 @@ export default function DashboardPage() {
 
       {/* Badges */}
       {userBadges.length > 0 && (
-		  <div className="mb-6 w-full">
-			<h2 className="text-xl font-semibold mb-2">🏅 Your Badges</h2>
-			<div className="flex flex-wrap gap-4">
-			  {userBadges.map(badge => (
-				<div
-				  key={badge.id}
-				  className="bg-gray-800 rounded-xl px-4 py-2 shadow hover:shadow-lg transition"
-				>
-				  <div className="text-lg font-bold">{badge.badges_catalog?.name}</div>
-				  <div className="text-sm text-gray-300">{badge.badges_catalog?.description}</div>
-				</div>
-			  ))}
-			</div>
-			<div className="mt-2">
-			  <Link href="/badges">
-				<span className="text-emerald-400 hover:underline text-sm">
-				  View all available badges and how to earn them →
-				</span>
-			  </Link>
-			</div>
-		  </div>
-		)}
+        <div className="mb-6 w-full">
+          <h2 className="text-xl font-semibold mb-2">🏅 Your Badges</h2>
+          <div className="flex flex-wrap gap-4">
+            {userBadges.map(badge => (
+              <div
+                key={badge.id}
+                className="bg-gray-800 rounded-xl px-4 py-2 shadow hover:shadow-lg transition"
+              >
+                <div className="text-lg font-bold">{badge.badges_catalog?.name}</div>
+                <div className="text-sm text-gray-300">{badge.badges_catalog?.description}</div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-2">
+            <Link href="/badges">
+              <span className="text-emerald-400 hover:underline text-sm">
+                View all available badges and how to earn them →
+              </span>
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Metrics */}
       <div className="mb-6">
@@ -241,34 +257,33 @@ export default function DashboardPage() {
         </div>
       </div>
 
-			{/* Charts */}
-			<div className="mb-6">
-			  <h2 className="text-xl font-semibold mb-2">📈 Earnings Over Time</h2>
-			  <div className="mb-4">
-				<Slider
-				  range
-				  min={0}
-				  max={months.length - 1}
-				  defaultValue={monthIndexes}
-				  onChange={(value) => setMonthIndexes(value as [number, number])}
-				/>
-			  </div>
-			  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-				<div className="bg-gray-800 rounded-xl p-4">
-				  <h3 className="text-lg font-semibold mb-2">By Chip</h3>
-				  <Line data={chipChartData} options={chartOptionsWithDollarYAxis} />
-				</div>
-				<div className="bg-gray-800 rounded-xl p-4">
-				  <h3 className="text-lg font-semibold mb-2">By Property</h3>
-				  <Line data={propertyChartData} options={chartOptionsWithDollarYAxis} />
-				</div>
-				<div className="bg-gray-800 rounded-xl p-4">
-				  <h3 className="text-lg font-semibold mb-2">Total Earnings</h3>
-				  <Line data={monthlyEarningsData} options={chartOptionsWithDollarYAxis} />
-				</div>
-			  </div>
-			</div>
-			</main>
-		)
-	}
-
+      {/* Charts */}
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold mb-2">📈 Earnings Over Time</h2>
+        <div className="mb-4">
+          <Slider
+            range
+            min={0}
+            max={months.length - 1}
+            defaultValue={monthIndexes}
+            onChange={(value) => setMonthIndexes(value as [number, number])}
+          />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-gray-800 rounded-xl p-4">
+            <h3 className="text-lg font-semibold mb-2">By Chip</h3>
+            <Line data={chipChartData} options={chartOptionsWithDollarYAxis} />
+          </div>
+          <div className="bg-gray-800 rounded-xl p-4">
+            <h3 className="text-lg font-semibold mb-2">By Property</h3>
+            <Line data={propertyChartData} options={chartOptionsWithDollarYAxis} />
+          </div>
+          <div className="bg-gray-800 rounded-xl p-4">
+            <h3 className="text-lg font-semibold mb-2">Total Earnings</h3>
+            <Line data={monthlyEarningsData} options={chartOptionsWithDollarYAxis} />
+          </div>
+        </div>
+      </div>
+    </main>
+  )
+}

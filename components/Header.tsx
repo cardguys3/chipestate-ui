@@ -17,18 +17,18 @@ export default function Header() {
   const [userLoading, setUserLoading] = useState(true)
   const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail)
 
-	useEffect(() => {
-	  const getUser = async () => {
-		const { data } = await supabase.auth.getUser()
-		setUserEmail(data.user?.email ?? null)
-		setUserLoading(false)
-	  }
-	  getUser()
-	}, [])
+  useEffect(() => {
+    const getUser = async () => {
+      const { data } = await supabase.auth.getUser()
+      setUserEmail(data.user?.email ?? null)
+      setUserLoading(false)
+    }
+    getUser()
+  }, [])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
-    window.location.href = '/' // Refresh to homepage after logout
+    window.location.href = '/' // Redirect to homepage after logout
   }
 
   return (
@@ -49,37 +49,36 @@ export default function Header() {
 
           {/* Desktop Nav */}
           {!userLoading && (
-			  <nav className="hidden md:flex space-x-1 items-center text-base font-medium text-white">
-				<Link href="/market" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">Market</Link>
-				{userEmail && (
-				  <Link href="/dashboard" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">Dashboard</Link>
-				)}
-				<Link href="/glossary" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">Glossary</Link>
-				<Link href="/about" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">About</Link>
+            <nav className="hidden md:flex space-x-1 items-center text-base font-medium text-white">
+              <Link href="/market" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">Market</Link>
+              {userEmail && (
+                <Link href="/dashboard" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">Dashboard</Link>
+              )}
+              <Link href="/glossary" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">Glossary</Link>
+              <Link href="/about" className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900">About</Link>
 
-				{userEmail ? (
-				  <>
-					{isAdmin && (
-					  <Link href="/admin" className="px-3 py-1 rounded-md transition hover:bg-yellow-300 text-amber-200 hover:text-blue-900">Admin</Link>
-					)}
-					<button onClick={handleLogout} className="bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded-md transition">
-					  Log Out
-					</button>
-				  </>
-				) : (
-				  <>
-					<button
-					  onClick={() => setShowLogin(true)}
-					  className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900"
-					>
-					  Login
-					</button>
-					<Link href="/register" className="ml-4 bg-emerald-600 text-white px-6 py-1.5 rounded-md hover:bg-emerald-700">Sign Up</Link>
-				  </>
-				)}
-			  </nav>
-			)}
-
+              {userEmail ? (
+                <>
+                  {isAdmin && (
+                    <Link href="/admin" className="px-3 py-1 rounded-md transition hover:bg-yellow-300 text-amber-200 hover:text-blue-900">Admin</Link>
+                  )}
+                  <button onClick={handleLogout} className="bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded-md transition">
+                    Log Out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setShowLogin(true)}
+                    className="px-3 py-1 rounded-md transition hover:bg-amber-100 hover:text-blue-900"
+                  >
+                    Login
+                  </button>
+                  <Link href="/register" className="ml-4 bg-emerald-600 text-white px-6 py-1.5 rounded-md hover:bg-emerald-700">Sign Up</Link>
+                </>
+              )}
+            </nav>
+          )}
 
           {/* Mobile Hamburger */}
           <div className="md:hidden">
@@ -98,20 +97,20 @@ export default function Header() {
             <Link href="/about" className="block hover:text-amber-600">About</Link>
 
             {!userLoading && (
-			  userEmail ? (
-				<>
-				  {isAdmin && <Link href="/admin">Admin</Link>}
-				  <button onClick={handleLogout} className="bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded-md transition">
-					  Log Out
-					</button>
-				</>
-			  ) : (
-				<>
-				  <button onClick={() => setShowLogin(true)}>Login</button>
-				  <Link href="/register">Sign Up</Link>
-				</>
-			  )
-			)}
+              userEmail ? (
+                <>
+                  {isAdmin && <Link href="/admin" className="block hover:text-yellow-400">Admin</Link>}
+                  <button onClick={handleLogout} className="bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded-md transition">
+                    Log Out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button onClick={() => setShowLogin(true)} className="block">Login</button>
+                  <Link href="/register" className="block">Sign Up</Link>
+                </>
+              )
+            )}
           </div>
         )}
       </header>
