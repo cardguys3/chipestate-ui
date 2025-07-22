@@ -23,10 +23,17 @@ function LicenseForm() {
 
   const getCurrentUser = async () => {
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+
     if (sessionError || !sessionData.session?.user) {
       console.warn('⚠️ Supabase session missing or invalid.', sessionError)
       return null
     }
+
+    // ✅ Manually restore session — this is the fix
+    await supabase.auth.setSession({
+      access_token: sessionData.session.access_token,
+      refresh_token: sessionData.session.refresh_token
+    })
 
     return sessionData.session.user
   }
