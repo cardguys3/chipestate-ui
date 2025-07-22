@@ -1,5 +1,3 @@
-// app/login/page.tsx
-
 'use client'
 
 import { useRouter } from 'next/navigation'
@@ -64,6 +62,16 @@ export default function LoginPage() {
     setLoading(false)
   }
 
+  const handleGoogleLogin = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+    })
+
+    if (error) {
+      toast.error('Google login failed')
+    }
+  }
+
   return (
     <main className="min-h-screen bg-gray-100 flex items-center justify-center">
       <form
@@ -126,6 +134,16 @@ export default function LoginPage() {
           {mode === 'admin'
             ? 'Use Magic Link instead'
             : 'Admin? Use Email + Password'}
+        </button>
+
+        <div className="my-4 border-t border-gray-300" />
+
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          className="w-full bg-red-600 text-white py-2 rounded hover:bg-red-700 transition"
+        >
+          Sign in with Google
         </button>
       </form>
     </main>
