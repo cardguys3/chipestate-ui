@@ -39,23 +39,24 @@ function LicenseForm() {
         .single()
 
       if (!exists && user.email) {
-        const { data: buffer } = await supabase
-          .from('registration_buffer')
-          .select('*')
-          .eq('email', user.email)
-          .single()
+  const { data: buffer } = await supabase
+    .from('registration_buffer')
+    .select('*')
+    .eq('email', user.email)
+    .single()
 
-        if (buffer) {
-          const { id: _discarded, ...safeBuffer } = buffer
-          const { error: insertError } = await supabase
-            .from('users_extended')
-            .insert([{ id: user.id, email: user.email, ...safeBuffer }])
+  if (buffer) {
+    const { id: _discarded, email: _discardedEmail, ...safeBuffer } = buffer
+    const { error: insertError } = await supabase
+      .from('users_extended')
+      .insert([{ id: user.id, email: user.email, ...safeBuffer }])
 
-          if (!insertError) {
-            await supabase.from('registration_buffer').delete().eq('email', user.email)
-          }
-        }
-      }
+    if (!insertError) {
+      await supabase.from('registration_buffer').delete().eq('email', user.email)
+    }
+  }
+}
+
 
       setHydrated(true)
     }
