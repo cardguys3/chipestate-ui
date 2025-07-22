@@ -1,4 +1,3 @@
-// app/admin/users/page.tsx
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -33,9 +32,7 @@ export default function AdminUsersPage() {
   }
 
   async function toggleApproval(id: string, current: boolean) {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
+    const { data: { session } } = await supabase.auth.getSession()
     const adminId = session?.user?.id ?? null
 
     await supabase.from('users_extended').update({ is_approved: !current }).eq('id', id)
@@ -52,9 +49,7 @@ export default function AdminUsersPage() {
   }
 
   async function toggleActive(id: string, current: boolean) {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
+    const { data: { session } } = await supabase.auth.getSession()
     const adminId = session?.user?.id ?? null
 
     await supabase.from('users_extended').update({ is_active: !current }).eq('id', id)
@@ -68,6 +63,33 @@ export default function AdminUsersPage() {
     })
 
     fetchUsers()
+  }
+
+  async function resendVerification(email: string, id: string) {
+    const { data: { session } } = await supabase.auth.getSession()
+    const adminId = session?.user?.id ?? null
+
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: {
+        emailRedirectTo: 'https://chipestate.com/dashboard',
+      }
+    })
+
+    if (error) {
+      console.error(error)
+      alert('Failed to send verification email.')
+    } else {
+      alert('Verification email sent.')
+      await supabase.from('status_change_log').insert({
+        entity_type: 'user',
+        entity_id: id,
+        status: 'resent',
+        status_type: 'email_verification',
+        changed_by: adminId
+      })
+    }
   }
 
   const handleSort = (field: string) => {
@@ -93,7 +115,6 @@ export default function AdminUsersPage() {
     .sort((a, b) => {
       const aValue = a[sortField]
       const bValue = b[sortField]
-
       if (typeof aValue === 'string' && typeof bValue === 'string') {
         return sortDirection === 'asc'
           ? aValue.localeCompare(bValue)
@@ -181,6 +202,7 @@ export default function AdminUsersPage() {
                 <th className="p-3 font-semibold cursor-pointer" onClick={() => handleSort('created_at')}>Created {sortArrow('created_at')}</th>
                 <th className="p-3 font-semibold cursor-pointer" onClick={() => handleSort('is_approved')}>Approved {sortArrow('is_approved')}</th>
                 <th className="p-3 font-semibold cursor-pointer" onClick={() => handleSort('is_active')}>Active {sortArrow('is_active')}</th>
+                <th className="p-3 font-semibold">Email Verified</th>
                 <th className="p-3 font-semibold">Actions</th>
               </tr>
             </thead>
@@ -202,6 +224,19 @@ export default function AdminUsersPage() {
                     <td className="p-3">{formatDate(u.created_at)}</td>
                     <td className="p-3">{u.is_approved ? 'Yes' : 'No'}</td>
                     <td className="p-3">{u.is_active ? 'Yes' : 'No'}</td>
+                    <td className="p-3">
+                      {u.email_confirmed_at
+                        ? 'Yes'
+                        : (
+                          <button
+                            className="text-blue-400 hover:underline"
+                            onClick={() => resendVerification(u.email, u.id)}
+                          >
+                            Send
+                          </button>
+                        )
+                      }
+                    </td>
                     <td className="p-3 space-x-3">
                       <Link
                         href={`/admin/users/${u.id}/edit-user`}

@@ -45,9 +45,9 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
     setLoading(false)
   }
 
-  const handleOAuthLogin = async (provider: 'google' | 'facebook') => {
-    const { error } = await supabase.auth.signInWithOAuth({ provider })
-    if (error) toast.error(`Failed to login with ${provider}`)
+  const handleOAuthLogin = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' })
+    if (error) toast.error('Failed to login with Google')
   }
 
   return (
@@ -102,16 +102,10 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
         <div className="my-4 text-center text-sm text-gray-400">or</div>
 
         <button
-          onClick={() => handleOAuthLogin('google')}
-          className="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded mb-2"
+          onClick={handleOAuthLogin}
+          className="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded"
         >
           Login with Google
-        </button>
-        <button
-          onClick={() => handleOAuthLogin('facebook')}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded"
-        >
-          Login with Facebook
         </button>
 
         <p className="mt-4 text-center text-sm">
