@@ -25,6 +25,7 @@ function LicenseForm() {
     const hydrate = async () => {
       const { data: { session }, error } = await supabase.auth.getSession()
       const user = session?.user
+
       if (!user || error) {
         console.warn('Hydration failed or no session:', error)
         setHydrated(true)
@@ -37,7 +38,7 @@ function LicenseForm() {
         .eq('id', user.id)
         .single()
 
-      if (!exists) {
+      if (!exists && user.email) {
         const { data: buffer } = await supabase
           .from('registration_buffer')
           .select('*')
