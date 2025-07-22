@@ -3,61 +3,50 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'react-hot-toast'
-import { Suspense } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Database } from '@/types/supabase'
 
-function LicenseForm() {
+export default function LicenseUploadPage() {
   const supabase = createClientComponentClient<Database>()
   const router = useRouter()
-  const [hydrated, setHydrated] = useState(false)
+
   const [userId, setUserId] = useState<string | null>(null)
+  const [hydrated, setHydrated] = useState<boolean>(false)
   const [front, setFront] = useState<File | null>(null)
   const [back, setBack] = useState<File | null>(null)
-  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-
-  const getCurrentUser = async () => {
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-    if (sessionError || !sessionData.session?.user) {
-      console.warn('⚠️ Supabase session missing or invalid.', sessionError)
-      return null
-    }
-    return sessionData.session.user
-  }
+  const [error, setError] = useState<string>('')
 
   useEffect(() => {
     const hydrate = async () => {
-      const user = await getCurrentUser()
-      if (!user) {
-        setHydrated(true)
+      const { data, error } = await supabase.auth.getUser()
+      if (error || !data?.user) {
+        setError('Session expired. Please log in again.')
         return
       }
 
-      setUserId(user.id)
+      setUserId(data.user.id)
 
+      // Create users_extended row if needed
       const { data: exists } = await supabase
         .from('users_extended')
         .select('id')
-        .eq('id', user.id)
+        .eq('id', data.user.id)
         .single()
 
-      if (!exists && user.email) {
+      if (!exists && data.user.email) {
         const { data: buffer } = await supabase
           .from('registration_buffer')
           .select('*')
-          .eq('email', user.email)
+          .eq('email', data.user.email)
           .single()
 
         if (buffer) {
-          const { id: _discarded, email: _discardedEmail, ...safeBuffer } = buffer
-          const { error: insertError } = await supabase
-            .from('users_extended')
-            .insert([{ id: user.id, email: user.email, ...safeBuffer }])
-
-          if (!insertError) {
-            await supabase.from('registration_buffer').delete().eq('email', user.email)
-          }
+          const { id: _bID, email: _bEmail, ...safeFields } = buffer
+          await supabase.from('users_extended').insert([
+            { id: data.user.id, email: data.user.email, ...safeFields }
+          ])
+          await supabase.from('registration_buffer').delete().eq('email', data.user.email)
         }
       }
 
@@ -67,82 +56,78 @@ function LicenseForm() {
     hydrate()
   }, [])
 
-  const handleUpload = async () => {
-    setError('')
-    setLoading(true)
-
-    const user = await getCurrentUser()
-    if (!user || !user.id) {
+  const handleSubmit = async () => {
+    if (!userId) {
       setError('Session expired. Please log in again.')
-      setLoading(false)
       return
     }
 
     if (!front || !back) {
-      setError('Please upload both front and back images or skip this step.')
+      setError('Please upload both front and back images.')
+      return
+    }
+
+    setLoading(true)
+    setError('')
+
+    const frontExt = front.name.split('.').pop()
+    const backExt = back.name.split('.').pop()
+
+    const frontPath = `${userId}_front.${frontExt}`
+    const backPath = `${userId}_back.${backExt}`
+
+    const { error: fErr } = await supabase.storage.from('licenses').upload(frontPath, front, {
+      upsert: true
+    })
+    if (fErr) {
+      setError('Failed to upload front image.')
       setLoading(false)
       return
     }
 
-    const fileExtFront = front.name.split('.').pop()
-    const fileExtBack = back.name.split('.').pop()
-    const filePathFront = `${user.id}_front.${fileExtFront}`
-    const filePathBack = `${user.id}_back.${fileExtBack}`
-
-    const { error: frontError } = await supabase.storage
-      .from('licenses')
-      .upload(filePathFront, front, { upsert: true })
-    if (frontError) {
-      setError('Upload failed for front image.')
+    const { error: bErr } = await supabase.storage.from('licenses').upload(backPath, back, {
+      upsert: true
+    })
+    if (bErr) {
+      setError('Failed to upload back image.')
       setLoading(false)
       return
     }
 
-    const { error: backError } = await supabase.storage
-      .from('licenses')
-      .upload(filePathBack, back, { upsert: true })
-    if (backError) {
-      setError('Upload failed for back image.')
-      setLoading(false)
-      return
-    }
+    const frontUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/licenses/${frontPath}`
+    const backUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/licenses/${backPath}`
 
-    const frontUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/licenses/${filePathFront}`
-    const backUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/licenses/${filePathBack}`
-
-    const { error: updateError } = await supabase
+    const { error: updateErr } = await supabase
       .from('users_extended')
       .update({
         license_front_url: frontUrl,
         license_back_url: backUrl,
         registration_status: 'pending'
       })
-      .eq('id', user.id)
+      .eq('id', userId)
 
-    if (updateError) {
-      setError('Could not save license info. Please try again.')
+    if (updateErr) {
+      setError('Failed to save license data.')
       setLoading(false)
       return
     }
 
-    toast.success('Welcome to ChipEstate! Please confirm your email to activate your account.')
+    toast.success('License submitted. Registration complete!')
     router.push('/dashboard')
   }
 
-  const skipUpload = async () => {
-    const user = await getCurrentUser()
-    if (!user || !user.id) {
-      toast.error('Session error: please log in again.')
-      router.push('/')
+  const handleSkip = async () => {
+    if (!userId) {
+      setError('Session expired. Please log in again.')
       return
     }
 
     await supabase
       .from('users_extended')
       .update({ registration_status: 'pending' })
-      .eq('id', user.id)
+      .eq('id', userId)
 
-    toast.success('Registration complete. License upload skipped.')
+    toast.success('You skipped license upload. You can complete it later.')
     router.push('/dashboard')
   }
 
@@ -150,7 +135,7 @@ function LicenseForm() {
     <main className="min-h-screen bg-blue-950 text-white p-6 flex flex-col justify-between">
       {!hydrated ? (
         <div className="flex flex-col items-center justify-center flex-1">
-          <p className="text-yellow-300 text-center">Loading user session...</p>
+          <p className="text-yellow-300 text-center">Loading session...</p>
         </div>
       ) : (
         <>
@@ -172,69 +157,55 @@ function LicenseForm() {
             <h1 className="text-2xl font-bold mb-4 text-center">Identity Verification</h1>
             <p className="mb-4 text-sm text-emerald-300 border border-emerald-700 p-4 rounded text-center">
               To comply with U.S. regulations, fractional real estate owners must verify their identity.
-              You may skip this step for now, but you won’t be able to purchase chips until verification is complete.
+              You may skip this step, but cannot buy chips until verification is complete.
             </p>
 
             {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
 
             <div className="flex flex-col items-center mb-4">
-              <label className="mb-1">Front of Driver’s License or State ID</label>
+              <label className="mb-1">Front of Driver’s License</label>
               <label className="block w-64 cursor-pointer border border-emerald-600 px-4 py-2 text-center rounded bg-blue-900 hover:bg-blue-800">
-                Choose Image
+                Choose Front Image
                 <input type="file" accept="image/*" onChange={(e) => setFront(e.target.files?.[0] || null)} className="hidden" />
               </label>
               {front && (
-                <div className="flex items-center justify-between mt-2 text-sm bg-blue-900 px-3 py-2 rounded border border-blue-700 w-64">
+                <div className="mt-2 w-64 text-sm flex items-center justify-between bg-blue-900 border border-blue-700 rounded px-3 py-2">
                   <span className="truncate">{front.name}</span>
-                  <button onClick={() => setFront(null)} className="ml-2 text-red-400 hover:text-red-600 font-bold">×</button>
+                  <button onClick={() => setFront(null)} className="text-red-400 hover:text-red-600 font-bold">×</button>
                 </div>
               )}
             </div>
 
             <div className="flex flex-col items-center mb-4">
-              <label className="mb-1">Back of Driver’s License or State ID</label>
+              <label className="mb-1">Back of Driver’s License</label>
               <label className="block w-64 cursor-pointer border border-emerald-600 px-4 py-2 text-center rounded bg-blue-900 hover:bg-blue-800">
-                Choose Image
+                Choose Back Image
                 <input type="file" accept="image/*" onChange={(e) => setBack(e.target.files?.[0] || null)} className="hidden" />
               </label>
               {back && (
-                <div className="flex items-center justify-between mt-2 text-sm bg-blue-900 px-3 py-2 rounded border border-blue-700 w-64">
+                <div className="mt-2 w-64 text-sm flex items-center justify-between bg-blue-900 border border-blue-700 rounded px-3 py-2">
                   <span className="truncate">{back.name}</span>
-                  <button onClick={() => setBack(null)} className="ml-2 text-red-400 hover:text-red-600 font-bold">×</button>
+                  <button onClick={() => setBack(null)} className="text-red-400 hover:text-red-600 font-bold">×</button>
                 </div>
               )}
             </div>
 
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault()
-                await handleUpload()
-              }}
-              className="flex justify-center gap-3 pt-4"
-            >
+            <div className="flex justify-center gap-3 pt-4">
               <button type="button" onClick={() => router.back()} className="px-4 py-2 border border-gray-500 rounded hover:bg-gray-800">
                 Back
               </button>
-              <button type="button" onClick={skipUpload} className="border border-yellow-500 text-yellow-400 px-4 py-2 rounded hover:bg-yellow-900">
+              <button type="button" onClick={handleSkip} className="border border-yellow-500 text-yellow-400 px-4 py-2 rounded hover:bg-yellow-900">
                 Skip License
               </button>
-              <button type="submit" disabled={loading} className="bg-emerald-700 hover:bg-emerald-600 px-4 py-2 rounded shadow text-white border border-emerald-500">
+              <button onClick={handleSubmit} disabled={loading} className="bg-emerald-700 hover:bg-emerald-600 px-4 py-2 rounded shadow text-white border border-emerald-500">
                 {loading ? 'Uploading...' : 'Submit'}
               </button>
-            </form>
+            </div>
           </div>
 
           <div className="text-center text-xs text-gray-400 mt-10">Step 2 of 2</div>
         </>
       )}
     </main>
-  )
-}
-
-export default function LicenseUploadPage() {
-  return (
-    <Suspense fallback={<p className="text-white p-4">Loading license form...</p>}>
-      <LicenseForm />
-    </Suspense>
   )
 }
