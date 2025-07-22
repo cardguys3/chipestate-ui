@@ -1,20 +1,17 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createBrowserClient } from '@supabase/ssr'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Database } from '@/types/supabase'
-import { Suspense } from 'react'
 import { toast } from 'react-hot-toast'
-
-const supabase = createBrowserClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+import { Suspense } from 'react'
 
 function LicenseForm() {
+  const supabase = createClientComponentClient<Database>()
   const router = useRouter()
   const [hydrated, setHydrated] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
   const [front, setFront] = useState<File | null>(null)
   const [back, setBack] = useState<File | null>(null)
   const [error, setError] = useState('')
@@ -25,10 +22,12 @@ function LicenseForm() {
       const { data: { user }, error } = await supabase.auth.getUser()
 
       if (!user || error) {
-        console.warn('Hydration failed or no user:', error)
+        console.warn('⚠️ No active user session', error)
         setHydrated(true)
         return
       }
+
+      setUserId(user.id)
 
       const { data: exists } = await supabase
         .from('users_extended')
@@ -221,7 +220,7 @@ function LicenseForm() {
                 Back
               </button>
               <button type="button" onClick={skipUpload} className="border border-yellow-500 text-yellow-400 px-4 py-2 rounded hover:bg-yellow-900">
-                Skip License Step
+                Skip License
               </button>
               <button type="submit" disabled={loading} className="bg-emerald-700 hover:bg-emerald-600 px-4 py-2 rounded shadow text-white border border-emerald-500">
                 {loading ? 'Uploading...' : 'Submit'}
