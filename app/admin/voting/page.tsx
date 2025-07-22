@@ -1,3 +1,5 @@
+// app/admin/voting/page.tsx
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -90,20 +92,16 @@ export default function AdminVotingPage() {
   }
 
   return (
-    <main className="p-6">
-      <h1 className="text-3xl font-bold mb-4 text-white">Manage Votes</h1>
+    <main className="p-6 space-y-6">
+      <h1 className="text-3xl font-bold text-white">Manage Votes</h1>
 
-      {/* New Vote Form */}
-      <section className="bg-[#0B1D33] p-4 rounded-xl border border-gray-600 mb-6 text-white">
-        <h2 className="text-xl font-semibold mb-4">Create New Vote</h2>
-
+      {/* Create Vote Section */}
+      <section className="bg-[#0B1D33] p-6 rounded-xl border border-gray-600 text-white">
+        <h2 className="text-2xl font-semibold mb-4">Create New Vote</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label>Title</Label>
-            <Input
-              value={newVote.title}
-              onChange={e => setNewVote({ ...newVote, title: e.target.value })}
-            />
+            <Input value={newVote.title} onChange={e => setNewVote({ ...newVote, title: e.target.value })} />
           </div>
 
           <div>
@@ -127,10 +125,7 @@ export default function AdminVotingPage() {
 
           <div className="md:col-span-2">
             <Label>Description</Label>
-            <Textarea
-              value={newVote.description}
-              onChange={e => setNewVote({ ...newVote, description: e.target.value })}
-            />
+            <Textarea value={newVote.description} onChange={e => setNewVote({ ...newVote, description: e.target.value })} />
           </div>
 
           <div>
@@ -179,14 +174,13 @@ export default function AdminVotingPage() {
             />
           </div>
         </div>
-
         <div className="mt-4">
           <Button onClick={createVote}>Create Vote</Button>
         </div>
       </section>
 
-      {/* Vote List */}
-      <section className="bg-white p-4 rounded-xl border border-gray-300">
+      {/* Votes List Section */}
+      <section className="bg-white p-6 rounded-xl border border-gray-300">
         <h2 className="text-2xl font-semibold mb-4 text-black">All Votes</h2>
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
@@ -215,10 +209,7 @@ export default function AdminVotingPage() {
                     )}
                   </td>
                   <td className="px-3 py-2">
-                    <Link
-                      href={`/admin/voting/${vote.id}`}
-                      className="text-blue-600 hover:underline"
-                    >
+                    <Link href={`/admin/voting/${vote.id}`} className="text-blue-600 hover:underline">
                       View
                     </Link>
                   </td>
