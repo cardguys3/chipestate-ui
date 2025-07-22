@@ -20,32 +20,33 @@ export default function LicenseUploadPage() {
   useEffect(() => {
     const hydrate = async () => {
       const { data, error } = await supabase.auth.getUser()
-      if (error || !data?.user) {
+      if (error || !data?.user?.id) {
         setError('Session expired. Please log in again.')
         return
       }
 
-      setUserId(data.user.id)
+      const user = data.user
+      setUserId(user.id)
 
       const { data: exists } = await supabase
         .from('users_extended')
         .select('id')
-        .eq('id', data.user.id)
+        .eq('id', user.id)
         .single()
 
-      if (!exists && data.user.email) {
+      if (!exists && user.email) {
         const { data: buffer } = await supabase
           .from('registration_buffer')
           .select('*')
-          .eq('email', data.user.email)
+          .eq('email', user.email)
           .single()
 
         if (buffer) {
           const { id: _bID, email: _bEmail, ...safeFields } = buffer
           await supabase.from('users_extended').insert([
-            { id: data.user.id, email: data.user.email, ...safeFields }
+            { id: user.id, email: user.email, ...safeFields }
           ])
-          await supabase.from('registration_buffer').delete().eq('email', data.user.email)
+          await supabase.from('registration_buffer').delete().eq('email', user.email)
         }
       }
 
@@ -69,51 +70,46 @@ export default function LicenseUploadPage() {
     setLoading(true)
     setError('')
 
-    const frontExt = front.name.split('.').pop()
-    const backExt = back.name.split('.').pop()
+    try {
+      const frontExt = front.name.split('.').pop()
+      const backExt = back.name.split('.').pop()
 
-    const frontPath = `${userId}_front.${frontExt}`
-    const backPath = `${userId}_back.${backExt}`
+      const frontPath = `${userId}_front.${frontExt}`
+      const backPath = `${userId}_back.${backExt}`
 
-    const { error: fErr } = await supabase.storage.from('licenses').upload(frontPath, front, {
-      upsert: true
-    })
-    if (fErr) {
-      setError('Failed to upload front image.')
+      const { error: fErr } = await supabase.storage
+        .from('licenses')
+        .upload(frontPath, front, { upsert: true })
+      if (fErr) throw new Error('Failed to upload front image.')
+
+      const { error: bErr } = await supabase.storage
+        .from('licenses')
+        .upload(backPath, back, { upsert: true })
+      if (bErr) throw new Error('Failed to upload back image.')
+
+      const frontUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/licenses/${frontPath}`
+      const backUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/licenses/${backPath}`
+
+      const { error: updateErr } = await supabase
+        .from('users_extended')
+        .update({
+          license_front_url: frontUrl,
+          license_back_url: backUrl,
+          registration_status: 'complete',
+          is_approved: true
+        })
+        .eq('id', userId)
+
+      if (updateErr) throw new Error('Failed to save license data.')
+
+      toast.success('License submitted. Registration complete!')
+      router.push('/dashboard')
+    } catch (e: any) {
+      console.error(e)
+      setError(e.message || 'An error occurred during submission.')
+    } finally {
       setLoading(false)
-      return
     }
-
-    const { error: bErr } = await supabase.storage.from('licenses').upload(backPath, back, {
-      upsert: true
-    })
-    if (bErr) {
-      setError('Failed to upload back image.')
-      setLoading(false)
-      return
-    }
-
-    const frontUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/licenses/${frontPath}`
-    const backUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/licenses/${backPath}`
-
-    const { error: updateErr } = await supabase
-      .from('users_extended')
-      .update({
-        license_front_url: frontUrl,
-        license_back_url: backUrl,
-        registration_status: 'complete',
-        is_approved: true
-      })
-      .eq('id', userId)
-
-    if (updateErr) {
-      setError('Failed to save license data.')
-      setLoading(false)
-      return
-    }
-
-    toast.success('License submitted. Registration complete!')
-    router.push('/dashboard')
   }
 
   const handleSkip = async () => {
