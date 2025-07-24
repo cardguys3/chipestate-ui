@@ -1,35 +1,49 @@
 // supabase/functions/notify-distribution/index.ts
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 serve(async (req) => {
-  const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
-  const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  const { SUPABASE_URL, SUPABASE_ANON_KEY } = Deno.env.toObject()
 
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+  const supabase = createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!)
 
-  if (req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 })
+  const { property_id, distribution_date, chip_earnings } = await req.json()
+
+  if (!property_id || !chip_earnings || !Array.isArray(chip_earnings)) {
+    return new Response("Missing required parameters", { status: 400 })
   }
 
-  const body = await req.json()
-  const { userNotifications } = body // [{ user_id, amount, property_name }]
+  const { data: property, error: propertyErr } = await supabase
+    .from("properties")
+    .select("title")
+    .eq("id", property_id)
+    .single()
 
-  if (!Array.isArray(userNotifications)) {
-    return new Response(JSON.stringify({ error: 'Missing userNotifications array' }), { status: 400 })
+  if (propertyErr) {
+    return new Response("Property not found", { status: 404 })
   }
 
-  const messages = userNotifications.map(n => ({
-    user_id: n.user_id,
-    type: 'chip_distribution',
-    message: `Good News! Your chips just earned $${n.amount.toFixed(2)} from ${n.property_name}.`,
-    metadata: { amount: n.amount, property_name: n.property_name }
+  const messages = chip_earnings.map((entry: any) => ({
+    user_id: entry.user_id,
+    type: "chip_earning",
+    message: `Good News! Your chips just earned $${entry.amount.toFixed(
+      2
+    )} from ${property.title}.`,
+    metadata: {
+      chip_id: entry.chip_id,
+      property_id: property_id,
+      amount: entry.amount,
+      earning_date: distribution_date,
+    },
   }))
 
-  const { error } = await supabase.from('notifications').insert(messages)
-  if (error) {
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 })
+  const { error: insertError } = await supabase.from("notifications").insert(messages)
+
+  if (insertError) {
+    console.error(insertError)
+    return new Response("Failed to send notifications", { status: 500 })
   }
 
-  return new Response(JSON.stringify({ status: 'success', count: messages.length }), { status: 200 })
+  return new Response("Notifications sent", { status: 200 })
 })
