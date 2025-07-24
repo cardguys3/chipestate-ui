@@ -7,6 +7,13 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 
+function formatPhoneNumber(phone: string | null): string {
+  if (!phone) return '—'
+  const cleaned = phone.replace(/\D/g, '')
+  const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/)
+  return match ? `(${match[1]}) ${match[2]}-${match[3]}` : phone
+}
+
 export default function AdminUsersPage() {
   const router = useRouter()
   const [users, setUsers] = useState<any[]>([])
@@ -86,7 +93,7 @@ export default function AdminUsersPage() {
 
     fetchUsers()
   }
-//add new manually verifty fxn here:
+
   async function resendVerification(email: string, id: string) {
     const { data: { session } } = await supabase.auth.getSession()
     const adminId = session?.user?.id ?? null
@@ -122,8 +129,7 @@ export default function AdminUsersPage() {
       fetchUsers()
     }
   }
-// end add manual verify fxn here
-// 🟩 ADDED THIS FUNCTION: allows admin to override and mark email as verified directly
+
   async function manuallyVerifyEmail(id: string) {
     const { data: { session } } = await supabase.auth.getSession()
     const adminId = session?.user?.id ?? null
@@ -214,57 +220,19 @@ export default function AdminUsersPage() {
       <div className="border border-emerald-600 p-4 rounded-xl space-y-4">
         <h2 className="text-xl font-semibold text-emerald-400">Filter Users</h2>
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-          <input
-            type="text"
-            placeholder="Name"
-            value={filters.name}
-            onChange={(e) => setFilters({ ...filters, name: e.target.value })}
-            className="p-2 rounded bg-[#0B1D33] border border-gray-600 text-white"
-          />
-          <input
-            type="text"
-            placeholder="Email"
-            value={filters.email}
-            onChange={(e) => setFilters({ ...filters, email: e.target.value })}
-            className="p-2 rounded bg-[#0B1D33] border border-gray-600 text-white"
-          />
-          <input
-            type="text"
-            placeholder="State"
-            value={filters.state}
-            onChange={(e) => setFilters({ ...filters, state: e.target.value })}
-            className="p-2 rounded bg-[#0B1D33] border border-gray-600 text-white"
-          />
+          <input type="text" placeholder="Name" value={filters.name} onChange={(e) => setFilters({ ...filters, name: e.target.value })} className="p-2 rounded bg-[#0B1D33] border border-gray-600 text-white" />
+          <input type="text" placeholder="Email" value={filters.email} onChange={(e) => setFilters({ ...filters, email: e.target.value })} className="p-2 rounded bg-[#0B1D33] border border-gray-600 text-white" />
+          <input type="text" placeholder="State" value={filters.state} onChange={(e) => setFilters({ ...filters, state: e.target.value })} className="p-2 rounded bg-[#0B1D33] border border-gray-600 text-white" />
           <label className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              checked={filters.activeOnly}
-              onChange={(e) => setFilters({ ...filters, activeOnly: e.target.checked })}
-            />
+            <input type="checkbox" checked={filters.activeOnly} onChange={(e) => setFilters({ ...filters, activeOnly: e.target.checked })} />
             <span>Active Only</span>
           </label>
           <label className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              checked={filters.approvedOnly}
-              onChange={(e) => setFilters({ ...filters, approvedOnly: e.target.checked })}
-            />
+            <input type="checkbox" checked={filters.approvedOnly} onChange={(e) => setFilters({ ...filters, approvedOnly: e.target.checked })} />
             <span>Approved Only</span>
           </label>
-		  <label className="flex items-center space-x-2">
-		  <input
-			type="checkbox"
-			checked={filters.unverifiedOnly}
-			onChange={(e) => setFilters({ ...filters, unverifiedOnly: e.target.checked })}
-		  />
-		  <span>Unverified Only</span>
-		</label>
           <label className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              checked={filters.unverifiedOnly}
-              onChange={(e) => setFilters({ ...filters, unverifiedOnly: e.target.checked })}
-            />
+            <input type="checkbox" checked={filters.unverifiedOnly} onChange={(e) => setFilters({ ...filters, unverifiedOnly: e.target.checked })} />
             <span>Unverified Only</span>
           </label>
         </div>
@@ -279,6 +247,7 @@ export default function AdminUsersPage() {
               <tr>
                 <th className="p-3 font-semibold cursor-pointer" onClick={() => handleSort('name')}>Name {sortArrow('name')}</th>
                 <th className="p-3 font-semibold cursor-pointer" onClick={() => handleSort('email')}>Email {sortArrow('email')}</th>
+                <th className="p-3 font-semibold">Phone</th>
                 <th className="p-3 font-semibold cursor-pointer" onClick={() => handleSort('res_state')}>State {sortArrow('res_state')}</th>
                 <th className="p-3 font-semibold cursor-pointer" onClick={() => handleSort('created_at')}>Created {sortArrow('created_at')}</th>
                 <th className="p-3 font-semibold cursor-pointer" onClick={() => handleSort('is_approved')}>Approved {sortArrow('is_approved')}</th>
@@ -295,59 +264,36 @@ export default function AdminUsersPage() {
                 return (
                   <tr key={u.id} className="border-t border-gray-700 hover:bg-white/5">
                     <td className="p-3">
-                      <Link
-                        href={`/admin/users/${u.id}`}
-                        className="text-blue-400 hover:underline"
-                      >
+                      <Link href={`/admin/users/${u.id}`} className="text-blue-400 hover:underline">
                         {name}
                       </Link>
                     </td>
                     <td className="p-3">{u.email ?? '—'}</td>
+                    <td className="p-3">{formatPhoneNumber(u.phone)}</td>
                     <td className="p-3">{u.res_state ?? '—'}</td>
                     <td className="p-3">{formatDate(u.created_at)}</td>
                     <td className="p-3">{u.is_approved ? 'Yes' : 'No'}</td>
                     <td className="p-3">{u.is_active ? 'Yes' : 'No'}</td>
-					<td className="p-3">
-					  {u.email_confirmed_at
-						? 'Yes'
-						: lastSent
-						  ? `Sent ${daysAgo(lastSent)} day(s) ago`
-						  : (
-							<>
-							  <button
-								onClick={() => resendVerification(u.email, u.id)}
-								className="text-blue-400 hover:underline"
-							  >
-								Send
-							  </button>
-							  <span className="mx-2">|</span>
-							  <button
-								onClick={() => manuallyVerifyEmail(u.id)}
-								className="text-green-400 hover:underline"
-							  >
-								Verify
-							  </button>
-							</>
-						  )
-					  }
-					</td>
+                    <td className="p-3">
+                      {u.email_confirmed_at
+                        ? 'Yes'
+                        : lastSent
+                          ? `Sent ${daysAgo(lastSent)} day(s) ago`
+                          : (
+                            <>
+                              <button onClick={() => resendVerification(u.email, u.id)} className="text-blue-400 hover:underline">Send</button>
+                              <span className="mx-2">|</span>
+                              <button onClick={() => manuallyVerifyEmail(u.id)} className="text-green-400 hover:underline">Verify</button>
+                            </>
+                          )
+                      }
+                    </td>
                     <td className="p-3 space-x-3">
-                      <Link
-                        href={`/admin/users/${u.id}/edit-user`}
-                        className="text-emerald-400 hover:underline"
-                      >
-                        Edit
-                      </Link>
-                      <button
-                        onClick={() => toggleApproval(u.id, u.is_approved)}
-                        className="text-yellow-400 hover:underline"
-                      >
+                      <Link href={`/admin/users/${u.id}/edit-user`} className="text-emerald-400 hover:underline">Edit</Link>
+                      <button onClick={() => toggleApproval(u.id, u.is_approved)} className="text-yellow-400 hover:underline">
                         {u.is_approved ? 'Deny' : 'Approve'}
                       </button>
-                      <button
-                        onClick={() => toggleActive(u.id, u.is_active)}
-                        className="text-red-400 hover:underline"
-                      >
+                      <button onClick={() => toggleActive(u.id, u.is_active)} className="text-red-400 hover:underline">
                         {u.is_active ? 'Deactivate' : 'Activate'}
                       </button>
                     </td>
