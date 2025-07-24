@@ -6,6 +6,12 @@ import { supabase } from '@/lib/supabaseClient'
 import Link from 'next/link'
 import { v4 as uuidv4 } from 'uuid'
 
+function formatPhone(phone: string) {
+  const cleaned = ('' + phone).replace(/\D/g, '')
+  const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/)
+  return match ? `(${match[1]}) ${match[2]}-${match[3]}` : phone
+}
+
 export default function PropertyManagersPage() {
   const router = useRouter()
   const [managers, setManagers] = useState<any[]>([])
@@ -152,8 +158,8 @@ export default function PropertyManagersPage() {
                     </Link>
                   </td>
                   <td className="px-4 py-2">{m.contact_name}</td>
-                  <td className="px-4 py-2">{m.phone}</td>
-                  <td className="px-4 py-2">{m.email}</td>
+				  <td className="px-4 py-2">{formatPhone(m.phone)}</td>
+				  <td className="px-4 py-2">{m.email}</td>
                   <td className="px-4 py-2">{m.city}</td>
                   <td className="px-4 py-2">{m.state}</td>
                   <td className="px-4 py-2">{m.is_active ? 'Active' : 'Inactive'}</td>
