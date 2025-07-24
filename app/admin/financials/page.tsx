@@ -12,6 +12,7 @@ export default function TransactionsPage() {
   const [filter, setFilter] = useState('')
   const [properties, setProperties] = useState<any[]>([])
   const [users, setUsers] = useState<any[]>([])
+  const [balance, setBalance] = useState(0)
   const [newTransaction, setNewTransaction] = useState({
     type: 'admin_fee',
     property_id: '',
@@ -38,6 +39,8 @@ export default function TransactionsPage() {
       setTransactions(transactionsData || [])
       setProperties(propertiesData || [])
       setUsers(usersData || [])
+      const totalBalance = transactionsData?.reduce((sum, tx) => sum + Number(tx.amount || 0), 0) || 0
+      setBalance(totalBalance)
       setLoading(false)
     }
     fetchInitialData()
@@ -71,6 +74,8 @@ export default function TransactionsPage() {
       setNewTransaction({ type: 'admin_fee', property_id: '', amount: '', notes: '', transaction_date: new Date().toISOString().split('T')[0] })
       const { data: updated } = await supabase.from('transactions').select('*').order('transaction_date', { ascending: false })
       setTransactions(updated || [])
+      const newBalance = updated?.reduce((sum, tx) => sum + Number(tx.amount || 0), 0) || 0
+      setBalance(newBalance)
     }
     setCreating(false)
   }
@@ -130,6 +135,8 @@ export default function TransactionsPage() {
 
     const { data: updated } = await supabase.from('transactions').select('*').order('transaction_date', { ascending: false })
     setTransactions(updated || [])
+    const newBalance = updated?.reduce((sum, tx) => sum + Number(tx.amount || 0), 0) || 0
+    setBalance(newBalance)
     alert('Distribution complete.')
     setDistribution({ property_id: '', amount: '', notes: '', distribution_date: new Date().toISOString().split('T')[0] })
     setDistributing(false)
@@ -138,7 +145,13 @@ export default function TransactionsPage() {
   return (
     <main className="min-h-screen bg-[#0B1D33] text-white px-6 py-10">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">Financials</h1>
+        <h1 className="text-2xl font-bold mb-4">Financials</h1>
+
+        {/* Current Balance */}
+        <div className="mb-6 p-4 rounded bg-white/10 text-white">
+          <h2 className="text-lg font-semibold">Current Balance</h2>
+          <p className="text-2xl font-bold mt-1">${balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+        </div>
 
         <div className="mb-6">
           <input
@@ -167,7 +180,7 @@ export default function TransactionsPage() {
             <input
               type="number"
               className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white"
-              placeholder="Total Amount"
+              placeholder="Combined Total Amount to ALL Chip Holders"
               value={distribution.amount}
               onChange={(e) => setDistribution({ ...distribution, amount: e.target.value })}
             />
@@ -197,63 +210,74 @@ export default function TransactionsPage() {
         </div>
 
         {/* Add New Transaction */}
-        <div className="mb-8 p-4 border border-white/10 rounded-lg bg-white/5">
-          <h2 className="text-lg font-bold mb-3">Add New Transaction</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <select
-              className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white"
-              value={newTransaction.type}
-              onChange={(e) => setNewTransaction({ ...newTransaction, type: e.target.value })}
-            >
-              <option value="admin_fee">Admin Fee</option>
-              <option value="chip_purchase">Chip Purchase</option>
-              <option value="refund">Refund</option>
-              <option value="chipholder_distribution">Chipholder Distribution</option>
-              <option value="other">Other</option>
-            </select>
+<div className="mb-8 p-4 border border-white/10 rounded-lg bg-white/5">
+  <h2 className="text-lg font-bold mb-3">Add New Transaction</h2>
+  <p className="text-sm text-yellow-400 mb-4">
+    ⚠️ Enter negative values for money going out (e.g., chipholder distributions, repairs) and positive values for money coming in (e.g., rent payments, refunds).
+  </p>
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <select
+      className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white"
+      value={newTransaction.type}
+      onChange={(e) => setNewTransaction({ ...newTransaction, type: e.target.value })}
+    >
+      <option value="admin_fee">Admin Fee</option>
+      <option value="property_manager_fee">Property Manager Fee</option>
+      <option value="upkeep">Upkeep</option>
+      <option value="repair">Repair</option>
+      <option value="rent">Rental Income</option>
+      <option value="reserve_replenish">Reserve Replenishment</option>
+      <option value="chipholder_distribution">Chipholder Distribution</option>
+      <option value="refund">Refund</option>
+      <option value="chargeback">Chargeback</option>
+      <option value="chip_purchase">Chip Purchase</option>
+      <option value="other">Other</option>
+    </select>
 
-            <select
-              className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white"
-              value={newTransaction.property_id}
-              onChange={(e) => setNewTransaction({ ...newTransaction, property_id: e.target.value })}
-            >
-              <option value="">Select Property</option>
-              {properties.map((p) => (
-                <option key={p.id} value={p.id}>{p.title}</option>
-              ))}
-            </select>
+    <select
+      className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white"
+      value={newTransaction.property_id}
+      onChange={(e) => setNewTransaction({ ...newTransaction, property_id: e.target.value })}
+    >
+      <option value="">Select Property</option>
+      {properties.map((p) => (
+        <option key={p.id} value={p.id}>{p.title}</option>
+      ))}
+    </select>
 
-            <input
-              type="number"
-              className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white"
-              placeholder="Amount"
-              value={newTransaction.amount}
-              onChange={(e) => setNewTransaction({ ...newTransaction, amount: e.target.value })}
-            />
+    <input
+      type="number"
+      step="0.01"
+      className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white"
+      placeholder="Amount"
+      value={newTransaction.amount}
+      onChange={(e) => setNewTransaction({ ...newTransaction, amount: e.target.value })}
+    />
 
-            <input
-              type="date"
-              className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white"
-              value={newTransaction.transaction_date}
-              onChange={(e) => setNewTransaction({ ...newTransaction, transaction_date: e.target.value })}
-            />
+    <input
+      type="date"
+      className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white"
+      value={newTransaction.transaction_date}
+      onChange={(e) => setNewTransaction({ ...newTransaction, transaction_date: e.target.value })}
+    />
 
-            <input
-              type="text"
-              className="md:col-span-2 p-2 rounded bg-[#0B1D33] border border-white/10 text-white"
-              placeholder="Notes"
-              value={newTransaction.notes}
-              onChange={(e) => setNewTransaction({ ...newTransaction, notes: e.target.value })}
-            />
-          </div>
-          <button
-            onClick={handleCreate}
-            disabled={creating || !newTransaction.property_id || !newTransaction.amount}
-            className="mt-4 bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded"
-          >
-            {creating ? 'Saving...' : 'Save Transaction'}
-          </button>
-        </div>
+    <input
+      type="text"
+      className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white col-span-1 md:col-span-2"
+      placeholder="Notes"
+      value={newTransaction.notes}
+      onChange={(e) => setNewTransaction({ ...newTransaction, notes: e.target.value })}
+    />
+  </div>
+  <button
+    onClick={handleCreate}
+    disabled={creating || !newTransaction.property_id || !newTransaction.amount}
+    className="mt-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-2 rounded"
+  >
+    {creating ? 'Creating...' : 'Add Transaction'}
+  </button>
+</div>
+
 
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
