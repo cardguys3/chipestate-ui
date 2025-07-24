@@ -250,7 +250,7 @@ export default function AdminUsersPage() {
                 <th className="p-3 font-semibold">Phone</th>
                 <th className="p-3 font-semibold cursor-pointer" onClick={() => handleSort('res_state')}>State {sortArrow('res_state')}</th>
                 <th className="p-3 font-semibold cursor-pointer" onClick={() => handleSort('created_at')}>Created {sortArrow('created_at')}</th>
-                <th className="p-3 font-semibold cursor-pointer" onClick={() => handleSort('is_approved')}>Approved {sortArrow('is_approved')}</th>
+                <th className="p-3 font-semibold cursor-pointer" onClick={() => handleSort('is_approved')}>Acct Approved {sortArrow('is_approved')}</th>
                 <th className="p-3 font-semibold cursor-pointer" onClick={() => handleSort('is_active')}>Active {sortArrow('is_active')}</th>
                 <th className="p-3 font-semibold">Email Verified</th>
                 <th className="p-3 font-semibold">Actions</th>
