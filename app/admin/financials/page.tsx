@@ -10,10 +10,17 @@ export default function TransactionsPage() {
   // State declarations
   const [transactions, setTransactions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState('')
   const [properties, setProperties] = useState<any[]>([])
   const [users, setUsers] = useState<any[]>([])
   const [balance, setBalance] = useState(0)
+  const [filters, setFilters] = useState({
+  date: '',
+  amount: '',
+  property: '',
+  notes: '',
+  type: ''
+})
+
 
   // New transaction form state
   const [newTransaction, setNewTransaction] = useState({
