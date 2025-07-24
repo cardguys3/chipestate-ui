@@ -197,15 +197,14 @@ export default function TransactionsPage() {
           <p className="text-2xl font-bold mt-1">${balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
         </div>
 
-        {/* Filter Input */}
-        <div className="mb-6">
-          <input
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="w-full p-2 rounded bg-[#0B1D33] border border-white/10 text-white"
-            placeholder="Filter by property, amount, or notes..."
-          />
-        </div>
+        {/* Advanced Filter Section */}
+<div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+  <input className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white" placeholder="Date" value={filters.date} onChange={(e) => setFilters({ ...filters, date: e.target.value })} />
+  <input className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white" placeholder="Amount" value={filters.amount} onChange={(e) => setFilters({ ...filters, amount: e.target.value })} />
+  <input className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white" placeholder="Property" value={filters.property} onChange={(e) => setFilters({ ...filters, property: e.target.value })} />
+  <input className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white" placeholder="Type" value={filters.type} onChange={(e) => setFilters({ ...filters, type: e.target.value })} />
+  <input className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white" placeholder="Notes" value={filters.notes} onChange={(e) => setFilters({ ...filters, notes: e.target.value })} />
+</div>
 
              {/* Distribute to Chipholders */}
         <div className="mb-8 p-4 border border-yellow-500/20 rounded-lg bg-yellow-900/10">
@@ -323,33 +322,42 @@ export default function TransactionsPage() {
   </button>
 </div>
 
-
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr className="bg-white/5">
-                <th className="text-left px-3 py-2 font-semibold">Date</th>
-                <th className="text-left px-3 py-2 font-semibold">Type</th>
-                <th className="text-left px-3 py-2 font-semibold">Amount</th>
-                <th className="text-left px-3 py-2 font-semibold">Property</th>
-                <th className="text-left px-3 py-2 font-semibold">Created By</th>
-                <th className="text-left px-3 py-2 font-semibold">Notes</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((t) => (
-                <tr key={t.id} className="border-t border-white/10 hover:bg-white/5">
-                  <td className="px-3 py-2">{t.transaction_date?.split('T')[0]}</td>
-                  <td className="px-3 py-2">{t.type}</td>
-                  <td className="px-3 py-2">${parseFloat(t.amount).toFixed(2)}</td>
-                  <td className="px-3 py-2">{properties.find(p => p.id === t.property_id)?.title || '—'}</td>
-                  <td className="px-3 py-2">{users.find(u => u.id === t.created_by)?.first_name || '—'}</td>
-                  <td className="px-3 py-2">{t.notes || '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+		{/* Transactions Table with Rounded Corners and Sorting */}
+		<div className="overflow-x-auto">
+		  <table className="min-w-full text-sm border border-white/10 rounded-xl overflow-hidden">
+			<thead className="bg-white/10">
+			  <tr>
+				{/* Clickable column headers for sorting */}
+				<th className="text-left px-3 py-2 font-semibold cursor-pointer" onClick={() => handleSort('transaction_date')}>
+				  Date
+				</th>
+				<th className="text-left px-3 py-2 font-semibold cursor-pointer" onClick={() => handleSort('type')}>
+				  Type
+				</th>
+				<th className="text-left px-3 py-2 font-semibold cursor-pointer" onClick={() => handleSort('amount')}>
+				  Amount
+				</th>
+				<th className="text-left px-3 py-2 font-semibold cursor-pointer" onClick={() => handleSort('property_id')}>
+				  Property
+				</th>
+				<th className="text-left px-3 py-2 font-semibold cursor-pointer" onClick={() => handleSort('notes')}>
+				  Notes
+				</th>
+			  </tr>
+			</thead>
+			<tbody>
+			  {filtered.map((t) => (
+				<tr key={t.id} className="border-t border-white/10 hover:bg-white/5">
+				  <td className="px-3 py-2">{t.transaction_date?.split('T')[0]}</td>
+				  <td className="px-3 py-2">{t.type}</td>
+				  <td className="px-3 py-2">${parseFloat(t.amount).toFixed(2)}</td>
+				  <td className="px-3 py-2">{properties.find(p => p.id === t.property_id)?.title || '—'}</td>
+				  <td className="px-3 py-2">{t.notes || '—'}</td>
+				</tr>
+			  ))}
+			</tbody>
+		  </table>
+		</div>
       </div>
     </main>
   )
