@@ -10,6 +10,16 @@ import { v4 as uuidv4 } from 'uuid'
 
 const BadgesPage = () => {
   const supabase = createClientComponentClient<Database>()
+const [session, setSession] = useState<Session | null>(null)
+
+useEffect(() => {
+  const getSession = async () => {
+    const { data } = await supabase.auth.getSession()
+    setSession(data.session)
+    console.log('✅ Current logged in user ID:', data.session?.user?.id)
+  }
+  getSession()
+}, [])
   const [catalog, setCatalog] = useState<any[]>([])
   const [users, setUsers] = useState<any[]>([])
   const [selectedUserId, setSelectedUserId] = useState('')
