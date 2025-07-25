@@ -39,29 +39,48 @@ const BadgesPage = () => {
   }, [])
 
   // Fetch selected user stats
-  useEffect(() => {
-    if (!selectedUserId) {
-      setSelectedUserInfo(null)
-      return
-    }
 
-    const fetchUserInfo = async () => {
-      const [chipsRes, badgesRes, userRes] = await Promise.all([
-        supabase.rpc('get_user_chip_count', { user_uuid: selectedUserId }), // you must define this RPC
-        supabase.from('user_badges').select('badge_key').eq('user_id', selectedUserId),
-        supabase.from('users_extended').select('email').eq('id', selectedUserId).single()
-      ])
+useEffect(() => {
+  if (!selectedUserId) {
+    setSelectedUserInfo(null)
+    return
+  }
 
-      setSelectedUserInfo({
-        chipCount: chipsRes.data?.chip_count || 0,
-        propertyCount: chipsRes.data?.property_count || 0,
-        badges: badgesRes.data?.map(b => b.badge_key) || [],
-        email: userRes.data?.email || '—'
-      })
-    }
+  const fetchUserInfo = async () => {
+    // Query all chips owned by this user
+    const { data: chipsData, error: chipsErr } = await supabase
+      .from('chips')
+      .select('property_id')
+      .eq('user_id', selectedUserId)
 
-    fetchUserInfo()
-  }, [selectedUserId])
+    const chipCount = chipsData?.length || 0
+    const propertySet = new Set(chipsData?.map(chip => chip.property_id))
+    const propertyCount = propertySet.size
+
+    // Fetch user badges
+    const { data: badgesData } = await supabase
+      .from('user_badges')
+      .select('badge_key')
+      .eq('user_id', selectedUserId)
+
+    // Fetch email
+    const { data: userData } = await supabase
+      .from('users_extended')
+      .select('email')
+      .eq('id', selectedUserId)
+      .single()
+
+    setSelectedUserInfo({
+      chipCount,
+      propertyCount,
+      badges: badgesData?.map(b => b.badge_key) || [],
+      email: userData?.email || '—'
+    })
+  }
+
+  fetchUserInfo()
+}, [selectedUserId])
+
 
   // Award badge manually
   const handleAward = async () => {
