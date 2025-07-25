@@ -1,3 +1,5 @@
+// app/admin/badges/page.tsx
+
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -16,43 +18,42 @@ const BadgesPage = () => {
   const [loading, setLoading] = useState(false)
 
 // Load badge catalog and users
-useEffect(() => {
-  const loadBadgesAndUsers = async () => {
-    // 🔍 Badge Catalog
-    console.log('🔄 Fetching badge catalog...')
-    const { data: badgeData, error: badgeError } = await supabase
-      .from('badges_catalog')
-      .select('*')
+  useEffect(() => {
+    const loadBadgesAndUsers = async () => {
+      console.log('🔄 Fetching badge catalog...')
+      const { data: badgeData, error: badgeError } = await supabase
+        .from('badges_catalog')
+        .select('*')
 
-    if (badgeError) {
-      console.error('❌ badgeError:', badgeError)
-      toast.error('Failed to load badges')
-    } else {
-      console.log('✅ badgeData:', badgeData)
-      setCatalog(badgeData)
+      if (badgeError) {
+        console.error('❌ badgeError:', badgeError)
+        toast.error('Failed to load badges')
+      } else {
+        console.log('✅ badgeData:', badgeData)
+        setCatalog(badgeData)
+      }
+
+      console.log('🔄 Fetching user list...')
+      const { data: userList, error: userError } = await supabase
+        .from('users_extended')
+        .select('id, email, first_name, last_name')
+        .order('first_name', { ascending: true })
+
+      if (userError) {
+        console.error('❌ userError:', userError)
+        toast.error('Failed to load users')
+      } else {
+        console.log('✅ userList:', userList)
+        setUsers(userList)
+      }
     }
 
-    // 🔍 User List
-    console.log('🔄 Fetching user list...')
-    const { data: userList, error: userError } = await supabase
-      .from('users_extended')
-      .select('id, email, first_name, last_name')
-      .order('first_name', { ascending: true })
+    loadBadgesAndUsers()
+  }, [])
 
-    if (userError) {
-      console.error('❌ userError:', userError)
-      toast.error('Failed to load users')
-    } else {
-      console.log('✅ userList:', userList)
-      setUsers(userList)
-    }
-  }
-
-  loadBadgesAndUsers()
-}, [])
-
-return (
-  <main className="min-h-screen bg-[#0B1D33] text-white px-6 py-10">
+  // ✅ THIS MUST BE INSIDE THE COMPONENT
+  return (
+    <main className="min-h-screen bg-[#0B1D33] text-white px-6 py-10">
   
   // Fetch selected user stats
 
