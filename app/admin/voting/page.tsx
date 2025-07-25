@@ -1,5 +1,3 @@
-// app/admin/voting/page.tsx
-
 'use client'
 
 import { useEffect, useState } from "react";
@@ -92,8 +90,8 @@ export default function AdminVotingPage() {
   }
 
   return (
-    <main className="p-6 md:p-10 text-white space-y-10">
-      <h1 className="text-3xl font-bold text-white">Voting Admin Panel</h1>
+    <main className="min-h-screen bg-[#0b1f36] text-white p-6 md:p-10 space-y-10">
+      <h1 className="text-3xl font-bold">🗳️ Voting Admin Panel</h1>
 
       {/* Create Vote Section */}
       <section className="bg-white/5 border border-white/10 rounded-xl p-6">
