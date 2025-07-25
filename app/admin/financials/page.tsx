@@ -382,40 +382,40 @@ const handleDistributeToChipholders = async () => {
   <input className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white" placeholder="Notes" value={filters.notes} onChange={(e) => setFilters({ ...filters, notes: e.target.value })} />
 </div>
 
+
 		{/* Transactions Table with Rounded Corners and Sorting */}
+		<h2 className="text-xl font-bold mb-3 mt-8">Transactions</h2>
 		  <div className="overflow-x-auto border border-white/10 rounded-xl">
 			<table className="min-w-full text-sm">
 			<thead className="bg-white/10">
 			  <tr>
-				{/* Clickable column headers for sorting */}
-				<th className="text-left px-3 py-2 font-semibold cursor-pointer" onClick={() => handleSort('transaction_date')}>
-				  Date
-				</th>
-				<th className="text-left px-3 py-2 font-semibold cursor-pointer" onClick={() => handleSort('type')}>
-				  Type
-				</th>
-				<th className="text-left px-3 py-2 font-semibold cursor-pointer" onClick={() => handleSort('amount')}>
-				  Amount
-				</th>
-				<th className="text-left px-3 py-2 font-semibold cursor-pointer" onClick={() => handleSort('property_id')}>
-				  Property
-				</th>
-				<th className="text-left px-3 py-2 font-semibold cursor-pointer" onClick={() => handleSort('notes')}>
-				  Notes
-				</th>
+				<th className="text-left px-3 py-2 font-semibold cursor-pointer" onClick={() => handleSort('transaction_date')}>Date</th>
+				<th className="text-left px-3 py-2 font-semibold cursor-pointer" onClick={() => handleSort('type')}>Type</th>
+				<th className="text-left px-3 py-2 font-semibold cursor-pointer" onClick={() => handleSort('amount')}>Amount</th>
+				<th className="text-left px-3 py-2 font-semibold cursor-pointer" onClick={() => handleSort('property_id')}>Property</th>
+				<th className="text-left px-3 py-2 font-semibold cursor-pointer" onClick={() => handleSort('notes')}>Notes</th>
+				<th className="text-left px-3 py-2 font-semibold">Balance</th>
 			  </tr>
 			</thead>
 			<tbody>
-			  {filtered.map((t) => (
-				<tr key={t.id} className="border-t border-white/10 hover:bg-white/5">
-				  <td className="px-3 py-2">{t.transaction_date?.split('T')[0]}</td>
-				  <td className="px-3 py-2">{t.type}</td>
-				  <td className="px-3 py-2">${parseFloat(t.amount).toFixed(2)}</td>
-				  <td className="px-3 py-2">{properties.find(p => p.id === t.property_id)?.title || '—'}</td>
-				  <td className="px-3 py-2">{t.notes || '—'}</td>
-				</tr>
-			  ))}
+			  {(() => {
+				let runningBalance = 0
+				return filtered.map((t) => {
+				  runningBalance += parseFloat(t.amount || 0)
+				  return (
+					<tr key={t.id} className="border-t border-white/10 hover:bg-white/5">
+					  <td className="px-3 py-2">{t.transaction_date?.split('T')[0]}</td>
+					  <td className="px-3 py-2">{t.type}</td>
+					  <td className="px-3 py-2">${parseFloat(t.amount).toFixed(2)}</td>
+					  <td className="px-3 py-2">{properties.find(p => p.id === t.property_id)?.title || '—'}</td>
+					  <td className="px-3 py-2">{t.notes || '—'}</td>
+					  <td className="px-3 py-2 text-right">${runningBalance.toFixed(2)}</td>
+					</tr>
+				  )
+				})
+			  })()}
 			</tbody>
+
 		  </table>
 		</div>
       </div>
