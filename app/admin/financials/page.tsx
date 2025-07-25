@@ -59,6 +59,17 @@ export default function TransactionsPage() {
     }
     fetchInitialData()
   }, [])
+  
+    // HANDLE SORT FUNCTION 
+  const handleSort = (field: string) => {
+    if (field === sortField) {
+      setSortAsc(!sortAsc)
+    } else {
+      setSortField(field)
+      setSortAsc(true)
+    }
+  }
+   
 
   // Transaction filter logic
   const filtered = transactions.filter((t) => {
