@@ -8,23 +8,25 @@ import { SessionContextProvider } from '@supabase/auth-helpers-react'
 import { Database } from '@/types/supabase'
 import LoginModal from '@/components/LoginModal'
 
-const supabase = createBrowserClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-    },
-  }
-)
-
 export default function ClientWrapper({ children }: { children: React.ReactNode }) {
+  const [supabase] = useState(() =>
+    createBrowserClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+        },
+      }
+    )
+  )
+
   const [ready, setReady] = useState(false)
   const [showLogin, setShowLogin] = useState(false)
   const modalRef = useRef<HTMLDivElement | null>(null)
 
-  // 👇 Supabase session hydration
+  // ✅ Ensure the session is hydrated on mount
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (!data.session) {
@@ -32,7 +34,7 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
       }
       setReady(true)
     })
-  }, [])
+  }, [supabase])
 
   // 👇 Close login modal on outside click
   useEffect(() => {
