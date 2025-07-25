@@ -62,16 +62,14 @@ export default function TransactionsPage() {
 
   // Transaction filter logic
   const filtered = transactions.filter((t) => {
-    const propertyTitle = properties.find(p => p.id === t.property_id)?.title || ''
-    const creatorName = users.find(u => u.id === t.created_by)?.first_name || ''
-    return (
-      t.notes?.toLowerCase().includes(filter.toLowerCase()) ||
-      t.type?.toLowerCase().includes(filter.toLowerCase()) ||
-      propertyTitle.toLowerCase().includes(filter.toLowerCase()) ||
-      creatorName.toLowerCase().includes(filter.toLowerCase()) ||
-      t.amount?.toString().includes(filter)
-    )
-  })
+  return (
+		(!filters.date || t.transaction_date?.startsWith(filters.date)) &&
+		(!filters.amount || t.amount?.toString().includes(filters.amount)) &&
+		(!filters.property || properties.find(p => p.id === t.property_id)?.title?.toLowerCase().includes(filters.property.toLowerCase())) &&
+		(!filters.notes || t.notes?.toLowerCase().includes(filters.notes.toLowerCase())) &&
+		(!filters.type || t.type?.toLowerCase().includes(filters.type.toLowerCase()))
+	  )
+	})
 
   // Add a new transaction
   const handleCreate = async () => {
