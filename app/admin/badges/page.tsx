@@ -20,7 +20,6 @@ const BadgesPage = () => {
   // Load badge catalog and users
   useEffect(() => {
     const loadBadgesAndUsers = async () => {
-      console.log('🔄 Fetching badge catalog...')
       const { data: badgeData, error: badgeError } = await supabase
         .from('badges_catalog')
         .select('*')
@@ -29,11 +28,9 @@ const BadgesPage = () => {
         console.error('❌ badgeError:', badgeError)
         toast.error('Failed to load badges')
       } else {
-        console.log('✅ badgeData:', badgeData)
         setCatalog(badgeData)
       }
 
-      console.log('🔄 Fetching user list...')
       const { data: userList, error: userError } = await supabase
         .from('users_extended')
         .select('id, email, first_name, last_name')
@@ -43,7 +40,6 @@ const BadgesPage = () => {
         console.error('❌ userError:', userError)
         toast.error('Failed to load users')
       } else {
-        console.log('✅ userList:', userList)
         setUsers(userList)
       }
     }
@@ -59,8 +55,7 @@ const BadgesPage = () => {
     }
 
     const fetchUserInfo = async () => {
-      // Query all chips owned by this user
-      const { data: chipsData, error: chipsErr } = await supabase
+      const { data: chipsData } = await supabase
         .from('chips')
         .select('property_id')
         .eq('user_id', selectedUserId)
@@ -69,13 +64,11 @@ const BadgesPage = () => {
       const propertySet = new Set(chipsData?.map(chip => chip.property_id))
       const propertyCount = propertySet.size
 
-      // Fetch user badges
       const { data: badgesData } = await supabase
         .from('user_badges')
         .select('badge_key')
         .eq('user_id', selectedUserId)
 
-      // Fetch email
       const { data: userData } = await supabase
         .from('users_extended')
         .select('email')
