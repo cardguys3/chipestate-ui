@@ -17,7 +17,7 @@ const BadgesPage = () => {
   const [selectedBadge, setSelectedBadge] = useState('')
   const [loading, setLoading] = useState(false)
 
-// Load badge catalog and users
+  // Load badge catalog and users
   useEffect(() => {
     const loadBadgesAndUsers = async () => {
       console.log('🔄 Fetching badge catalog...')
@@ -51,53 +51,47 @@ const BadgesPage = () => {
     loadBadgesAndUsers()
   }, [])
 
-  // ✅ THIS MUST BE INSIDE THE COMPONENT
-  return (
-    <main className="min-h-screen bg-[#0B1D33] text-white px-6 py-10">
-  
   // Fetch selected user stats
+  useEffect(() => {
+    if (!selectedUserId) {
+      setSelectedUserInfo(null)
+      return
+    }
 
-useEffect(() => {
-  if (!selectedUserId) {
-    setSelectedUserInfo(null)
-    return
-  }
+    const fetchUserInfo = async () => {
+      // Query all chips owned by this user
+      const { data: chipsData, error: chipsErr } = await supabase
+        .from('chips')
+        .select('property_id')
+        .eq('user_id', selectedUserId)
 
-  const fetchUserInfo = async () => {
-    // Query all chips owned by this user
-    const { data: chipsData, error: chipsErr } = await supabase
-      .from('chips')
-      .select('property_id')
-      .eq('user_id', selectedUserId)
+      const chipCount = chipsData?.length || 0
+      const propertySet = new Set(chipsData?.map(chip => chip.property_id))
+      const propertyCount = propertySet.size
 
-    const chipCount = chipsData?.length || 0
-    const propertySet = new Set(chipsData?.map(chip => chip.property_id))
-    const propertyCount = propertySet.size
+      // Fetch user badges
+      const { data: badgesData } = await supabase
+        .from('user_badges')
+        .select('badge_key')
+        .eq('user_id', selectedUserId)
 
-    // Fetch user badges
-    const { data: badgesData } = await supabase
-      .from('user_badges')
-      .select('badge_key')
-      .eq('user_id', selectedUserId)
+      // Fetch email
+      const { data: userData } = await supabase
+        .from('users_extended')
+        .select('email')
+        .eq('id', selectedUserId)
+        .single()
 
-    // Fetch email
-    const { data: userData } = await supabase
-      .from('users_extended')
-      .select('email')
-      .eq('id', selectedUserId)
-      .single()
+      setSelectedUserInfo({
+        chipCount,
+        propertyCount,
+        badges: badgesData?.map(b => b.badge_key) || [],
+        email: userData?.email || '—'
+      })
+    }
 
-    setSelectedUserInfo({
-      chipCount,
-      propertyCount,
-      badges: badgesData?.map(b => b.badge_key) || [],
-      email: userData?.email || '—'
-    })
-  }
-
-  fetchUserInfo()
-}, [selectedUserId])
-
+    fetchUserInfo()
+  }, [selectedUserId])
 
   // Award badge manually
   const handleAward = async () => {
