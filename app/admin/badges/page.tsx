@@ -15,7 +15,6 @@ const BadgesPage = () => {
   const [selectedBadge, setSelectedBadge] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // Load badge catalog
   useEffect(() => {
     const loadBadges = async () => {
       const { data, error } = await supabase.from('badges_catalog').select('*')
@@ -28,9 +27,12 @@ const BadgesPage = () => {
     loadBadges()
   }, [])
 
-  // Manual badge award handler
   const handleAward = async () => {
-    if (!userEmail || !selectedBadge) return toast.error('Email and badge are required')
+    if (!userEmail || !selectedBadge) {
+      toast.error('Email and badge are required')
+      return
+    }
+
     setLoading(true)
 
     const { data: userExtended, error: extErr } = await supabase
