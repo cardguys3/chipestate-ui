@@ -215,14 +215,6 @@ export default function TransactionsPage() {
           <p className="text-2xl font-bold mt-1">${balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
         </div>
 
-        {/* Advanced Filter Section */}
-<div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-  <input className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white" placeholder="Date" value={filters.date} onChange={(e) => setFilters({ ...filters, date: e.target.value })} />
-  <input className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white" placeholder="Amount" value={filters.amount} onChange={(e) => setFilters({ ...filters, amount: e.target.value })} />
-  <input className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white" placeholder="Property" value={filters.property} onChange={(e) => setFilters({ ...filters, property: e.target.value })} />
-  <input className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white" placeholder="Type" value={filters.type} onChange={(e) => setFilters({ ...filters, type: e.target.value })} />
-  <input className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white" placeholder="Notes" value={filters.notes} onChange={(e) => setFilters({ ...filters, notes: e.target.value })} />
-</div>
 
              {/* Distribute to Chipholders */}
         <div className="mb-8 p-4 border border-yellow-500/20 rounded-lg bg-yellow-900/10">
@@ -340,9 +332,18 @@ export default function TransactionsPage() {
   </button>
 </div>
 
+        {/* Advanced Filter Section */}
+<div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+  <input className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white" placeholder="Date" value={filters.date} onChange={(e) => setFilters({ ...filters, date: e.target.value })} />
+  <input className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white" placeholder="Amount" value={filters.amount} onChange={(e) => setFilters({ ...filters, amount: e.target.value })} />
+  <input className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white" placeholder="Property" value={filters.property} onChange={(e) => setFilters({ ...filters, property: e.target.value })} />
+  <input className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white" placeholder="Type" value={filters.type} onChange={(e) => setFilters({ ...filters, type: e.target.value })} />
+  <input className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white" placeholder="Notes" value={filters.notes} onChange={(e) => setFilters({ ...filters, notes: e.target.value })} />
+</div>
+
 		{/* Transactions Table with Rounded Corners and Sorting */}
-		<div className="overflow-x-auto">
-		  <table className="min-w-full text-sm border border-white/10 rounded-xl overflow-hidden">
+		  <div className="overflow-x-auto border border-white/10 rounded-xl">
+			<table className="min-w-full text-sm">
 			<thead className="bg-white/10">
 			  <tr>
 				{/* Clickable column headers for sorting */}
