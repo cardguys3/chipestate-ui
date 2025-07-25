@@ -135,9 +135,10 @@ const BadgesPage = () => {
                 <p className="text-sm text-yellow-400 mb-1">Points: {badge.points}</p>
                 {badge.icon_url && (
                   <img
-                    src={badge.icon_url}
+                    src={encodeURI(badge.icon_url)}
                     alt={badge.name}
                     className="h-12 w-12 object-contain mt-2"
+                    onError={(e) => (e.currentTarget.style.display = 'none')}
                   />
                 )}
               </div>
@@ -150,53 +151,51 @@ const BadgesPage = () => {
           <h2 className="text-xl font-bold mb-4">🏷️ Manually Award a Badge</h2>
 
           {/* Select User Dropdown */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
-			  {catalog.map((badge) => (
-				<div key={badge.key} className="bg-white text-black rounded-lg shadow p-4">
-				  <h3 className="text-lg font-semibold">{badge.name}</h3>
-				  <p className="text-sm text-gray-700">{badge.description}</p>
-				  {badge.icon_url && (
-					  <img
-						src={encodeURI(badge.icon_url)} // Fix: Encode URL so spaces like 'Verified Badge.png' work
-						alt={badge.name}
-						className="h-12 w-12 object-contain mt-2"
-						onError={(e) => (e.currentTarget.style.display = 'none')} // Optional fallback
-					  />
-					)}
-				</div>
-			  ))}
-			</div>
-
-            {/* Select Badge */}
-            <div>
-              <label className="block text-sm mb-1">Select Badge</label>
-              <select
-			  value={selectedBadge}
-			  onChange={e => setSelectedBadge(e.target.value)}
-			  className="w-full rounded px-3 py-2 bg-[#1E2A3C] border border-gray-600 text-white"
-			>
-			  <option value="">Select a badge</option>
-			  {catalog?.map(badge => (
-				<option key={badge.key} value={badge.key}>
-				  {badge.name}
-				</option>
-			  ))}
-			</select>
-            </div>
-
-            {/* Submit Button */}
-            <div className="flex items-end">
-              <button
-                onClick={handleAward}
-                disabled={loading}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg w-full shadow"
-              >
-                {loading ? 'Awarding…' : 'Award Badge'}
-              </button>
-            </div>
+          <div className="mb-4">
+            <label className="block text-sm mb-1">Select User</label>
+            <select
+              value={selectedUserId}
+              onChange={e => setSelectedUserId(e.target.value)}
+              className="w-full rounded px-3 py-2 bg-[#1E2A3C] border border-gray-600 text-white"
+            >
+              <option value="">Select a user</option>
+              {users.map(user => (
+                <option key={user.id} value={user.id}>
+                  {user.first_name} {user.last_name} ({user.email})
+                </option>
+              ))}
+            </select>
           </div>
 
-          {/* Display Selected User Info */}
+          {/* Select Badge Dropdown */}
+          <div className="mb-4">
+            <label className="block text-sm mb-1">Select Badge</label>
+            <select
+              value={selectedBadge}
+              onChange={e => setSelectedBadge(e.target.value)}
+              className="w-full rounded px-3 py-2 bg-[#1E2A3C] border border-gray-600 text-white"
+            >
+              <option value="">Select a badge</option>
+              {catalog.map(badge => (
+                <option key={badge.key} value={badge.key}>
+                  {badge.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Award Button */}
+          <div className="mb-4">
+            <button
+              onClick={handleAward}
+              disabled={loading}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg w-full shadow"
+            >
+              {loading ? 'Awarding…' : 'Award Badge'}
+            </button>
+          </div>
+
+          {/* User Stats */}
           {selectedUserInfo && (
             <div className="bg-white/10 rounded-lg p-4 mt-4 space-y-2 text-sm">
               <p><strong>Email:</strong> {selectedUserInfo.email}</p>
@@ -206,8 +205,7 @@ const BadgesPage = () => {
             </div>
           )}
         </section>
-
-        {/* Future: Badge Removal Tool (To be implemented later) */}
+		{/* Future: Badge Removal Tool (To be implemented later) */}
         {/* Consider adding a table of badges per user with a delete button */}
       </div>
     </main>
