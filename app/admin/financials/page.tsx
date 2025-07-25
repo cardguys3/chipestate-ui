@@ -161,7 +161,7 @@ const handleDistributeToChipholders = async () => {
     return
   }
 
-  // Fetch total chip count for the property (includes unsold chips)
+    // Fetch total chip count for the property (includes unsold chips)
   const { data: allChips, error: allChipsError } = await supabase
     .from('chips')
     .select('id')
@@ -176,7 +176,15 @@ const handleDistributeToChipholders = async () => {
   }
 
   const totalChipsForProperty = allChips.length
-  const amountPerChip = parseFloat(distribution.amount) / totalChipsForProperty
+  const rawAmount = parseFloat(distribution.amount)
+
+  if (rawAmount <= 0) {
+    alert('Distribution amount must be greater than 0.')
+    setDistributing(false)
+    return
+  }
+
+  const amountPerChip = rawAmount / totalChipsForProperty
 
   // Prepare chip earnings for owned chips only
   const earnings = chips.map(c => ({
@@ -196,6 +204,7 @@ const handleDistributeToChipholders = async () => {
   }
 
   // Log the transaction
+
   await supabase.from('transactions').insert({
     id: uuidv4(),
     type: 'chipholder_distribution',
