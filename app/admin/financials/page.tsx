@@ -91,15 +91,26 @@ export default function TransactionsPage() {
    
 
   // Transaction filter logic
-  const filtered = transactions.filter((t) => {
-  return (
-		(!filters.date || t.transaction_date?.startsWith(filters.date)) &&
-		(!filters.amount || t.amount?.toString().includes(filters.amount)) &&
-		(!filters.property || properties.find(p => p.id === t.property_id)?.title?.toLowerCase().includes(filters.property.toLowerCase())) &&
-		(!filters.notes || t.notes?.toLowerCase().includes(filters.notes.toLowerCase())) &&
-		(!filters.type || t.type?.toLowerCase().includes(filters.type.toLowerCase()))
-	  )
-	})
+  const filtered = [...transactions]
+  .filter((t) => {
+    return (
+      (!filters.date || t.transaction_date?.startsWith(filters.date)) &&
+      (!filters.amount || t.amount?.toString().includes(filters.amount)) &&
+      (!filters.property || properties.find(p => p.id === t.property_id)?.title?.toLowerCase().includes(filters.property.toLowerCase())) &&
+      (!filters.notes || t.notes?.toLowerCase().includes(filters.notes.toLowerCase())) &&
+      (!filters.type || t.type?.toLowerCase().includes(filters.type.toLowerCase()))
+    )
+  })
+  .sort((a, b) => {
+    const valA = a[sortField]
+    const valB = b[sortField]
+    if (valA == null) return 1
+    if (valB == null) return -1
+    return sortAsc
+      ? valA.toString().localeCompare(valB.toString(), undefined, { numeric: true })
+      : valB.toString().localeCompare(valA.toString(), undefined, { numeric: true })
+  })
+
 
   // Add a new transaction
   const handleCreate = async () => {
@@ -377,8 +388,25 @@ const handleDistributeToChipholders = async () => {
 <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
   <input className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white" placeholder="Date" value={filters.date} onChange={(e) => setFilters({ ...filters, date: e.target.value })} />
   <input className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white" placeholder="Amount" value={filters.amount} onChange={(e) => setFilters({ ...filters, amount: e.target.value })} />
-  <input className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white" placeholder="Property" value={filters.property} onChange={(e) => setFilters({ ...filters, property: e.target.value })} />
-  <input className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white" placeholder="Type" value={filters.type} onChange={(e) => setFilters({ ...filters, type: e.target.value })} />
+  <select className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white" value={filters.property} onChange={(e) => setFilters({ ...filters, property: e.target.value })}> <option value="">All Properties</option> {properties.map((p) => ( <option key={p.id} value={p.title}>{p.title}</option> ))} </select>
+  <select
+  className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white"
+  value={filters.type}
+  onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+>
+  <option value="">All Types</option>
+  <option value="admin_fee">Admin Fee</option>
+  <option value="property_manager_fee">Property Manager Fee</option>
+  <option value="upkeep">Upkeep</option>
+  <option value="repair">Repair</option>
+  <option value="rent">Rental Income</option>
+  <option value="reserve_replenish">Reserve Replenishment</option>
+  <option value="chipholder_distribution">Chipholder Distribution</option>
+  <option value="refund">Refund</option>
+  <option value="chargeback">Chargeback</option>
+  <option value="chip_purchase">Chip Purchase</option>
+  <option value="other">Other</option>
+</select>
   <input className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white" placeholder="Notes" value={filters.notes} onChange={(e) => setFilters({ ...filters, notes: e.target.value })} />
 </div>
 
