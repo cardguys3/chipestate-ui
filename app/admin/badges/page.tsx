@@ -1,56 +1,81 @@
-// file: app/admin/badges/page.tsx
-
 'use client'
 
 import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Database } from '@/types/supabase'
-import { v4 as uuidv4 } from 'uuid'
 import { toast } from 'react-hot-toast'
+import { v4 as uuidv4 } from 'uuid'
 
 const BadgesPage = () => {
   const supabase = createClientComponentClient<Database>()
   const [catalog, setCatalog] = useState<any[]>([])
-  const [userEmail, setUserEmail] = useState('')
+  const [users, setUsers] = useState<any[]>([])
+  const [selectedUserId, setSelectedUserId] = useState('')
+  const [selectedUserInfo, setSelectedUserInfo] = useState<any | null>(null)
   const [selectedBadge, setSelectedBadge] = useState('')
   const [loading, setLoading] = useState(false)
 
+  // Load badge catalog and users
   useEffect(() => {
-    const loadBadges = async () => {
-      const { data, error } = await supabase.from('badges_catalog').select('*')
-      if (error) {
+    const loadBadgesAndUsers = async () => {
+      const { data: badgeData, error: badgeError } = await supabase.from('badges_catalog').select('*')
+      if (badgeError) {
         toast.error('Failed to load badges')
       } else {
-        setCatalog(data)
+        setCatalog(badgeData)
+      }
+
+      const { data: userList, error: userError } = await supabase
+        .from('users_extended')
+        .select('id, email, first_name, last_name')
+        .order('first_name', { ascending: true })
+
+      if (!userError) {
+        setUsers(userList)
       }
     }
-    loadBadges()
+
+    loadBadgesAndUsers()
   }, [])
 
+  // Fetch selected user stats
+  useEffect(() => {
+    if (!selectedUserId) {
+      setSelectedUserInfo(null)
+      return
+    }
+
+    const fetchUserInfo = async () => {
+      const [chipsRes, badgesRes, userRes] = await Promise.all([
+        supabase.rpc('get_user_chip_count', { user_uuid: selectedUserId }), // you must define this RPC
+        supabase.from('user_badges').select('badge_key').eq('user_id', selectedUserId),
+        supabase.from('users_extended').select('email').eq('id', selectedUserId).single()
+      ])
+
+      setSelectedUserInfo({
+        chipCount: chipsRes.data?.chip_count || 0,
+        propertyCount: chipsRes.data?.property_count || 0,
+        badges: badgesRes.data?.map(b => b.badge_key) || [],
+        email: userRes.data?.email || '—'
+      })
+    }
+
+    fetchUserInfo()
+  }, [selectedUserId])
+
+  // Award badge manually
   const handleAward = async () => {
-    if (!userEmail || !selectedBadge) {
-      toast.error('Email and badge are required')
+    if (!selectedUserId || !selectedBadge) {
+      toast.error('User and badge are required')
       return
     }
 
     setLoading(true)
 
-    const { data: userExtended, error: extErr } = await supabase
-      .from('users_extended')
-      .select('id')
-      .eq('email', userEmail.toLowerCase())
-      .single()
-
-    if (extErr || !userExtended) {
-      toast.error('User not found in users_extended')
-      setLoading(false)
-      return
-    }
-
     const { error: badgeErr } = await supabase.from('user_badges').insert({
       id: uuidv4(),
-      user_id: userExtended.id,
-      badge_key: selectedBadge,
+      user_id: selectedUserId,
+      badge_key: selectedBadge
     })
 
     if (badgeErr) {
@@ -58,9 +83,9 @@ const BadgesPage = () => {
     } else {
       toast.success('Badge awarded!')
       await supabase.from('badge_activity_log').insert({
-        user_id: userExtended.id,
+        user_id: selectedUserId,
         badge_key: selectedBadge,
-        triggered_by: 'manual_award',
+        triggered_by: 'manual_award'
       })
     }
 
@@ -70,16 +95,13 @@ const BadgesPage = () => {
   return (
     <main className="min-h-screen bg-[#0B1D33] text-white px-6 py-10">
       <div className="max-w-6xl mx-auto space-y-10">
-        
+
         {/* Badge Catalog */}
         <section className="bg-white/5 border border-white/10 rounded-xl p-6 shadow">
           <h1 className="text-2xl font-bold mb-6">🎖️ Badge Catalog</h1>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {catalog.map(badge => (
-              <div
-                key={badge.key}
-                className="bg-white/10 p-4 rounded-lg border border-white/10 shadow"
-              >
+              <div key={badge.key} className="bg-white/10 p-4 rounded-lg border border-white/10 shadow">
                 <div className="flex items-center justify-between mb-2">
                   <h2 className="text-lg font-semibold">{badge.name}</h2>
                   <span className="text-xs bg-emerald-700 px-2 py-1 rounded-full uppercase tracking-wide">
@@ -103,17 +125,26 @@ const BadgesPage = () => {
         {/* Manual Badge Awarding */}
         <section className="bg-white/5 border border-white/10 rounded-xl p-6 shadow">
           <h2 className="text-xl font-bold mb-4">🏷️ Manually Award a Badge</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+          {/* Select User Dropdown */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div>
-              <label className="block text-sm mb-1">User Email</label>
-              <input
-                type="email"
-                value={userEmail}
-                onChange={e => setUserEmail(e.target.value)}
+              <label className="block text-sm mb-1">Select User</label>
+              <select
+                value={selectedUserId}
+                onChange={e => setSelectedUserId(e.target.value)}
                 className="w-full rounded px-3 py-2 bg-[#1E2A3C] border border-gray-600 text-white"
-                placeholder="example@domain.com"
-              />
+              >
+                <option value="">Select a user</option>
+                {users.map(user => (
+                  <option key={user.id} value={user.id}>
+                    {user.first_name} {user.last_name} – {user.email}
+                  </option>
+                ))}
+              </select>
             </div>
+
+            {/* Select Badge */}
             <div>
               <label className="block text-sm mb-1">Select Badge</label>
               <select
@@ -129,6 +160,8 @@ const BadgesPage = () => {
                 ))}
               </select>
             </div>
+
+            {/* Submit Button */}
             <div className="flex items-end">
               <button
                 onClick={handleAward}
@@ -139,7 +172,20 @@ const BadgesPage = () => {
               </button>
             </div>
           </div>
+
+          {/* Display Selected User Info */}
+          {selectedUserInfo && (
+            <div className="bg-white/10 rounded-lg p-4 mt-4 space-y-2 text-sm">
+              <p><strong>Email:</strong> {selectedUserInfo.email}</p>
+              <p><strong>Chips Owned:</strong> {selectedUserInfo.chipCount}</p>
+              <p><strong>Properties Owned:</strong> {selectedUserInfo.propertyCount}</p>
+              <p><strong>Current Badges:</strong> {selectedUserInfo.badges.length > 0 ? selectedUserInfo.badges.join(', ') : 'None'}</p>
+            </div>
+          )}
         </section>
+
+        {/* Future: Badge Removal Tool (To be implemented later) */}
+        {/* Consider adding a table of badges per user with a delete button */}
       </div>
     </main>
   )
