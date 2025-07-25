@@ -4,45 +4,37 @@
 
 import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import type { Session } from '@supabase/auth-helpers-nextjs'
 import { Database } from '@/types/supabase'
 import { toast } from 'react-hot-toast'
 import { v4 as uuidv4 } from 'uuid'
 
 const BadgesPage = () => {
   const supabase = createClientComponentClient<Database>()
-const [session, setSession] = useState<Session | null>(null)
-
-useEffect(() => {
-  const getSession = async () => {
-    const { data } = await supabase.auth.getSession()
-    setSession(data.session)
-    console.log('✅ Current logged in user ID:', data.session?.user?.id)
-  }
-  getSession()
-}, [])
+  const [session, setSession] = useState<Session | null>(null)
   const [catalog, setCatalog] = useState<any[]>([])
   const [users, setUsers] = useState<any[]>([])
   const [selectedUserId, setSelectedUserId] = useState('')
   const [selectedUserInfo, setSelectedUserInfo] = useState<any | null>(null)
   const [selectedBadge, setSelectedBadge] = useState('')
   const [loading, setLoading] = useState(false)
-  
-    // ✅ DEBUG: Log current Supabase user ID
+
   useEffect(() => {
-    const fetchSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-
-      console.log('✅ Current logged in user ID:', session?.user?.id)
+    const getSession = async () => {
+      const { data } = await supabase.auth.getSession()
+      setSession(data.session)
+      console.log('✅ Current logged in user ID:', data.session?.user?.id)
     }
-
-    fetchSession()
+    getSession()
   }, [])
 
-  // Load badge catalog and users
   useEffect(() => {
     const loadBadgesAndUsers = async () => {
+      if (!session?.user?.id) {
+        console.warn('No user session available yet.')
+        return
+      }
+
       const { data: badgeData, error: badgeError } = await supabase
         .from('badges_catalog')
         .select('*')
@@ -68,9 +60,8 @@ useEffect(() => {
     }
 
     loadBadgesAndUsers()
-  }, [])
+  }, [session])
 
-  // Fetch selected user stats
   useEffect(() => {
     if (!selectedUserId) {
       setSelectedUserInfo(null)
@@ -109,7 +100,6 @@ useEffect(() => {
     fetchUserInfo()
   }, [selectedUserId])
 
-  // Award badge manually
   const handleAward = async () => {
     if (!selectedUserId || !selectedBadge) {
       toast.error('User and badge are required')
@@ -141,8 +131,6 @@ useEffect(() => {
   return (
     <main className="min-h-screen bg-[#0B1D33] text-white px-6 py-10">
       <div className="max-w-6xl mx-auto space-y-10">
-
-        {/* Badge Catalog */}
         <section className="bg-white/5 border border-white/10 rounded-xl p-6 shadow">
           <h1 className="text-2xl font-bold mb-6">🎖️ Badge Catalog</h1>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -169,11 +157,9 @@ useEffect(() => {
           </div>
         </section>
 
-        {/* Manual Badge Awarding */}
         <section className="bg-white/5 border border-white/10 rounded-xl p-6 shadow">
           <h2 className="text-xl font-bold mb-4">🏷️ Manually Award a Badge</h2>
 
-          {/* Select User Dropdown */}
           <div className="mb-4">
             <label className="block text-sm mb-1">Select User</label>
             <select
@@ -190,7 +176,6 @@ useEffect(() => {
             </select>
           </div>
 
-          {/* Select Badge Dropdown */}
           <div className="mb-4">
             <label className="block text-sm mb-1">Select Badge</label>
             <select
@@ -207,7 +192,6 @@ useEffect(() => {
             </select>
           </div>
 
-          {/* Award Button */}
           <div className="mb-4">
             <button
               onClick={handleAward}
@@ -218,7 +202,6 @@ useEffect(() => {
             </button>
           </div>
 
-          {/* User Stats */}
           {selectedUserInfo && (
             <div className="bg-white/10 rounded-lg p-4 mt-4 space-y-2 text-sm">
               <p><strong>Email:</strong> {selectedUserInfo.email}</p>
@@ -228,8 +211,6 @@ useEffect(() => {
             </div>
           )}
         </section>
-		{/* Future: Badge Removal Tool (To be implemented later) */}
-        {/* Consider adding a table of badges per user with a delete button */}
       </div>
     </main>
   )
