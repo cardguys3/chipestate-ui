@@ -92,21 +92,24 @@ export default function AdminVotingPage() {
   }
 
   return (
-    <main className="px-8 py-6 text-white space-y-6">
-      <h1 className="text-3xl font-bold">Manage Votes</h1>
+    <main className="p-6 md:p-10 text-white space-y-10">
+      <h1 className="text-3xl font-bold text-white">Voting Admin Panel</h1>
 
       {/* Create Vote Section */}
-      <section className="bg-[#0B1D33] rounded-xl border border-gray-700 p-6 shadow-md">
+      <section className="bg-white/5 border border-white/10 rounded-xl p-6">
         <h2 className="text-2xl font-semibold mb-4">Create New Vote</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label>Title</Label>
-            <Input value={newVote.title} onChange={e => setNewVote({ ...newVote, title: e.target.value })} />
+            <Input
+              value={newVote.title}
+              onChange={e => setNewVote({ ...newVote, title: e.target.value })}
+            />
           </div>
           <div>
             <Label>Category</Label>
             <select
-              className="w-full border rounded-md p-2 bg-white text-black"
+              className="w-full p-2 rounded-md bg-black text-white border border-white/20"
               value={newVote.category}
               onChange={e => setNewVote({ ...newVote, category: e.target.value })}
             >
@@ -124,13 +127,16 @@ export default function AdminVotingPage() {
 
           <div className="md:col-span-2">
             <Label>Description</Label>
-            <Textarea value={newVote.description} onChange={e => setNewVote({ ...newVote, description: e.target.value })} />
+            <Textarea
+              value={newVote.description}
+              onChange={e => setNewVote({ ...newVote, description: e.target.value })}
+            />
           </div>
 
           <div>
             <Label>Threshold Type</Label>
             <select
-              className="w-full border rounded-md p-2 bg-white text-black"
+              className="w-full p-2 rounded-md bg-black text-white border border-white/20"
               value={newVote.threshold_type}
               onChange={e => setNewVote({ ...newVote, threshold_type: e.target.value })}
             >
@@ -143,7 +149,7 @@ export default function AdminVotingPage() {
           <div>
             <Label>Property</Label>
             <select
-              className="w-full border rounded-md p-2 bg-white text-black"
+              className="w-full p-2 rounded-md bg-black text-white border border-white/20"
               value={newVote.property_id}
               onChange={e => setNewVote({ ...newVote, property_id: e.target.value })}
             >
@@ -176,11 +182,11 @@ export default function AdminVotingPage() {
       </section>
 
       {/* Vote List Section */}
-      <section className="bg-white rounded-xl border border-gray-300 p-6 shadow-md">
-        <h2 className="text-2xl font-semibold mb-4 text-black">All Votes</h2>
+      <section className="bg-white/5 border border-white/10 rounded-xl p-6">
+        <h2 className="text-2xl font-semibold mb-4">All Votes</h2>
         <div className="overflow-x-auto">
-          <table className="min-w-full text-sm text-black">
-            <thead className="bg-gray-100 text-gray-700">
+          <table className="min-w-full text-sm">
+            <thead className="bg-white/10 text-white">
               <tr>
                 <th className="text-left px-3 py-2">Title</th>
                 <th className="text-left px-3 py-2">Category</th>
@@ -192,20 +198,20 @@ export default function AdminVotingPage() {
             </thead>
             <tbody>
               {votes.map(vote => (
-                <tr key={vote.id} className="border-t border-gray-200 hover:bg-gray-100">
+                <tr key={vote.id} className="border-t border-white/10 hover:bg-white/5">
                   <td className="px-3 py-2">{vote.title}</td>
                   <td className="px-3 py-2">{vote.category}</td>
                   <td className="px-3 py-2">{new Date(vote.start_date).toLocaleString()}</td>
                   <td className="px-3 py-2">{new Date(vote.end_date).toLocaleString()}</td>
                   <td className="px-3 py-2">
                     {vote.is_open ? (
-                      <span className="text-green-600 font-medium">Open</span>
+                      <span className="text-green-400 font-semibold">Open</span>
                     ) : (
-                      <span className="text-gray-500">Closed</span>
+                      <span className="text-red-400 font-semibold">Closed</span>
                     )}
                   </td>
                   <td className="px-3 py-2">
-                    <Link href={`/admin/voting/${vote.id}`} className="text-blue-600 hover:underline">
+                    <Link href={`/admin/voting/${vote.id}`} className="text-blue-400 hover:underline">
                       View
                     </Link>
                   </td>
