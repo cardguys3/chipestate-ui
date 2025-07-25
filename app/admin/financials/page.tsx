@@ -200,7 +200,7 @@ const handleDistributeToChipholders = async () => {
     id: uuidv4(),
     type: 'chipholder_distribution',
     property_id: distribution.property_id,
-    amount: parseFloat(distribution.amount),
+    amount: -Math.abs(parseFloat(distribution.amount)),
     notes: distribution.notes,
     created_by: user?.id,
     transaction_date: distribution.distribution_date
