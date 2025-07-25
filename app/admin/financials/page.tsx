@@ -13,6 +13,8 @@ export default function TransactionsPage() {
   const [properties, setProperties] = useState<any[]>([])
   const [users, setUsers] = useState<any[]>([])
   const [balance, setBalance] = useState(0)
+  const [sortField, setSortField] = useState<string>('transaction_date')
+  const [sortAsc, setSortAsc] = useState<boolean>(true)
   const [filters, setFilters] = useState({
   date: '',
   amount: '',
