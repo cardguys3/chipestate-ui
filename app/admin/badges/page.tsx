@@ -57,7 +57,6 @@ const BadgesPage = () => {
       toast.error('Could not award badge')
     } else {
       toast.success('Badge awarded!')
-
       await supabase.from('badge_activity_log').insert({
         user_id: userExtended.id,
         badge_key: selectedBadge,
@@ -69,9 +68,9 @@ const BadgesPage = () => {
   }
 
   return (
-    <main className="min-h-screen bg-dark text-white px-4 py-8">
-      <div className="max-w-5xl mx-auto space-y-10">
-
+    <main className="min-h-screen bg-[#0B1D33] text-white px-6 py-10">
+      <div className="max-w-6xl mx-auto space-y-10">
+        
         {/* Badge Catalog */}
         <section className="bg-white/5 border border-white/10 rounded-xl p-6 shadow">
           <h1 className="text-2xl font-bold mb-6">🎖️ Badge Catalog</h1>
@@ -111,7 +110,7 @@ const BadgesPage = () => {
                 type="email"
                 value={userEmail}
                 onChange={e => setUserEmail(e.target.value)}
-                className="w-full rounded px-3 py-2 bg-gray-800 border border-gray-600 text-white"
+                className="w-full rounded px-3 py-2 bg-[#1E2A3C] border border-gray-600 text-white"
                 placeholder="example@domain.com"
               />
             </div>
@@ -120,7 +119,7 @@ const BadgesPage = () => {
               <select
                 value={selectedBadge}
                 onChange={e => setSelectedBadge(e.target.value)}
-                className="w-full rounded px-3 py-2 bg-gray-800 border border-gray-600 text-white"
+                className="w-full rounded px-3 py-2 bg-[#1E2A3C] border border-gray-600 text-white"
               >
                 <option value="">Select a badge</option>
                 {catalog.map(b => (
