@@ -107,102 +107,117 @@ export default function TransactionsPage() {
     setCreating(false)
   }
 
-  // Distribute to chipholders
-  const handleDistributeToChipholders = async () => {
-    setDistributing(true)
-    const { data: { user } } = await supabase.auth.getUser()
+// Distribute to chipholders
+const handleDistributeToChipholders = async () => {
+  setDistributing(true)
+  const { data: { user } } = await supabase.auth.getUser()
 
-    const { data: chips, error: chipError } = await supabase
-      .from('chips')
-      .select('id, owner_id')
-      .eq('property_id', distribution.property_id)
-      .eq('is_active', true)
-      .eq('is_hidden', false)
-      .not('owner_id', 'is', null)
+  // Fetch only owned chips for payout creation
+  const { data: chips, error: chipError } = await supabase
+    .from('chips')
+    .select('id, owner_id')
+    .eq('property_id', distribution.property_id)
+    .eq('is_active', true)
+    .eq('is_hidden', false)
+    .not('owner_id', 'is', null)
 
-    if (chipError || !chips) {
-      alert('Error fetching chips.')
-      setDistributing(false)
-      return
-    }
+  if (chipError || !chips) {
+    alert('Error fetching chips.')
+    setDistributing(false)
+    return
+  }
 
-    const totalChips = chips.length
-    if (totalChips === 0) {
-      alert('No chips found with owners for this property.')
-      setDistributing(false)
-      return
-    }
+  if (chips.length === 0) {
+    alert('No chips found with owners for this property.')
+    setDistributing(false)
+    return
+  }
 
-    const amountPerChip = parseFloat(distribution.amount) / totalChips
+  // Fetch total chip count for the property (includes unsold chips)
+  const { data: allChips, error: allChipsError } = await supabase
+    .from('chips')
+    .select('id')
+    .eq('property_id', distribution.property_id)
+    .eq('is_active', true)
+    .eq('is_hidden', false)
 
-    // Prepare chip earnings
-    const earnings = chips.map(c => ({
-      id: uuidv4(),
-      chip_id: c.id,
-      user_id: c.owner_id,
-      property_id: distribution.property_id,
-      amount: parseFloat(amountPerChip.toFixed(2)),
-      earning_date: distribution.distribution_date
-    }))
+  if (allChipsError || !allChips || allChips.length === 0) {
+    alert('Error fetching total chip count.')
+    setDistributing(false)
+    return
+  }
 
-    const { error: insertErr } = await supabase.from('chip_earnings').insert(earnings)
-    if (insertErr) {
-      alert('Error inserting chip earnings.')
-      setDistributing(false)
-      return
-    }
+  const totalChipsForProperty = allChips.length
+  const amountPerChip = parseFloat(distribution.amount) / totalChipsForProperty
 
-    // Insert financial transaction
-    await supabase.from('transactions').insert({
-      id: uuidv4(),
-      type: 'chipholder_distribution',
-      property_id: distribution.property_id,
-      amount: parseFloat(distribution.amount),
-      notes: distribution.notes,
-      created_by: user?.id,
-      transaction_date: distribution.distribution_date
+  // Prepare chip earnings for owned chips only
+  const earnings = chips.map(c => ({
+    id: uuidv4(),
+    chip_id: c.id,
+    user_id: c.owner_id,
+    property_id: distribution.property_id,
+    amount: parseFloat(amountPerChip.toFixed(2)),
+    earning_date: distribution.distribution_date
+  }))
+
+  const { error: insertErr } = await supabase.from('chip_earnings').insert(earnings)
+  if (insertErr) {
+    alert('Error inserting chip earnings.')
+    setDistributing(false)
+    return
+  }
+
+  // Log the transaction
+  await supabase.from('transactions').insert({
+    id: uuidv4(),
+    type: 'chipholder_distribution',
+    property_id: distribution.property_id,
+    amount: parseFloat(distribution.amount),
+    notes: distribution.notes,
+    created_by: user?.id,
+    transaction_date: distribution.distribution_date
+  })
+
+  // Prepare user notification payload
+  const property = properties.find(p => p.id === distribution.property_id)
+  const propertyName = property?.title || 'a ChipEstate property'
+
+  const userSums: Record<string, number> = {}
+  for (const e of earnings) {
+    userSums[e.user_id] = (userSums[e.user_id] || 0) + e.amount
+  }
+
+  const userNotifications = Object.entries(userSums).map(([user_id, amount]) => ({
+    user_id,
+    amount: parseFloat(amount.toFixed(2)),
+    property_name: propertyName
+  }))
+
+  // Call Supabase Edge Function to notify users
+  try {
+    const response = await fetch('https://szzglzcddjrnrtguwjsc.functions.supabase.co/notify-distribution', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userNotifications })
     })
 
-    // Prepare user notification payload
-    const property = properties.find(p => p.id === distribution.property_id)
-    const propertyName = property?.title || 'a ChipEstate property'
-
-    const userSums: Record<string, number> = {}
-    for (const e of earnings) {
-      userSums[e.user_id] = (userSums[e.user_id] || 0) + e.amount
+    if (!response.ok) {
+      console.error('Failed to trigger notification function:', await response.text())
     }
-
-    const userNotifications = Object.entries(userSums).map(([user_id, amount]) => ({
-      user_id,
-      amount: parseFloat(amount.toFixed(2)),
-      property_name: propertyName
-    }))
-
-    // Call Supabase Edge Function
-    try {
-      const response = await fetch('https://szzglzcddjrnrtguwjsc.functions.supabase.co/notify-distribution', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userNotifications })
-      })
-
-      if (!response.ok) {
-        console.error('Failed to trigger notification function:', await response.text())
-      }
-    } catch (error) {
-      console.error('Error calling notify-distribution:', error)
-    }
-
-    // Refresh UI
-    const { data: updated } = await supabase.from('transactions').select('*').order('transaction_date', { ascending: false })
-    setTransactions(updated || [])
-    const newBalance = updated?.reduce((sum, tx) => sum + Number(tx.amount || 0), 0) || 0
-    setBalance(newBalance)
-
-    alert('Distribution complete.')
-    setDistribution({ property_id: '', amount: '', notes: '', distribution_date: new Date().toISOString().split('T')[0] })
-    setDistributing(false)
+  } catch (error) {
+    console.error('Error calling notify-distribution:', error)
   }
+
+  // Refresh UI
+  const { data: updated } = await supabase.from('transactions').select('*').order('transaction_date', { ascending: false })
+  setTransactions(updated || [])
+  const newBalance = updated?.reduce((sum, tx) => sum + Number(tx.amount || 0), 0) || 0
+  setBalance(newBalance)
+
+  alert('Distribution complete.')
+  setDistribution({ property_id: '', amount: '', notes: '', distribution_date: new Date().toISOString().split('T')[0] })
+  setDistributing(false)
+}
 
   return (
     <main className="min-h-screen bg-[#0B1D33] text-white px-6 py-10">
