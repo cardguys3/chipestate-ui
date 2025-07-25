@@ -40,7 +40,8 @@ export default function TransactionsPage() {
     notes: '',
     distribution_date: new Date().toISOString().split('T')[0]
   })
-
+  const [totalChipsForProperty, setTotalChipsForProperty] = useState<number | null>(null)
+  const [ownedChipsForProperty, setOwnedChipsForProperty] = useState<number | null>(null)
   const [creating, setCreating] = useState(false)
   const [distributing, setDistributing] = useState(false)
 
@@ -61,6 +62,22 @@ export default function TransactionsPage() {
     }
     fetchInitialData()
   }, [])
+  
+  const updateChipCounts = async (propertyId: string) => {
+  if (!propertyId) {
+    setTotalChipsForProperty(null)
+    setOwnedChipsForProperty(null)
+    return
+  }
+
+  const [{ data: total }, { data: owned }] = await Promise.all([
+    supabase.from('chips').select('id', { count: 'exact' }).eq('property_id', propertyId).eq('is_active', true).eq('is_hidden', false),
+    supabase.from('chips').select('id', { count: 'exact' }).eq('property_id', propertyId).eq('is_active', true).eq('is_hidden', false).not('owner_id', 'is', null),
+  ])
+
+  setTotalChipsForProperty(total?.length ?? 0)
+  setOwnedChipsForProperty(owned?.length ?? 0)
+}
   
     // HANDLE SORT FUNCTION 
   const handleSort = (field: string) => {
@@ -236,10 +253,14 @@ const handleDistributeToChipholders = async () => {
           <h2 className="text-lg font-bold mb-3">Distribute to Chipholders</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <select
-              className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white"
-              value={distribution.property_id}
-              onChange={(e) => setDistribution({ ...distribution, property_id: e.target.value })}
-            >
+			  className="p-2 rounded bg-[#0B1D33] border border-white/10 text-white"
+			  value={distribution.property_id}
+			  onChange={(e) => {
+				const selectedId = e.target.value
+				setDistribution({ ...distribution, property_id: selectedId })
+				updateChipCounts(selectedId)
+			  }}
+			>
               <option value="">Select Property</option>
               {properties.map((p) => (
                 <option key={p.id} value={p.id}>{p.title}</option>
@@ -269,6 +290,11 @@ const handleDistributeToChipholders = async () => {
               onChange={(e) => setDistribution({ ...distribution, notes: e.target.value })}
             />
           </div>
+		  {distribution.property_id && (
+  <div className="mt-4 text-sm text-yellow-300">
+    Total Chips: {totalChipsForProperty ?? '...'} | Owned Chips: {ownedChipsForProperty ?? '...'}
+  </div>
+)}
           <button
             onClick={handleDistributeToChipholders}
             disabled={distributing || !distribution.property_id || !distribution.amount}
