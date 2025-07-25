@@ -413,8 +413,8 @@ const handleDistributeToChipholders = async () => {
 
 		{/* Transactions Table with Rounded Corners and Sorting */}
 		<h2 className="text-xl font-bold mb-3 mt-8">Transactions</h2>
-		  <div className="overflow-x-auto border border-white/10 rounded-xl">
-			<table className="min-w-full text-sm">
+		<div className="overflow-x-auto border border-white/10 rounded-xl">
+		  <table className="min-w-full text-sm">
 			<thead className="bg-white/10">
 			  <tr>
 				<th className="text-left px-3 py-2 font-semibold cursor-pointer" onClick={() => handleSort('transaction_date')}>Date</th>
@@ -427,9 +427,15 @@ const handleDistributeToChipholders = async () => {
 			</thead>
 			<tbody>
 			  {(() => {
-				let runningBalance = 0
-				return filtered.map((t) => {
-				  runningBalance += parseFloat(t.amount || 0)
+				// Sort by oldest first for proper balance calc
+				const sorted = [...transactions].sort((a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime());
+
+				// Calculate running balance
+				let runningBalance = 0;
+
+				// Reverse for display: newest first
+				return sorted.map((t) => {
+				  runningBalance += Number(t.amount || 0);
 				  return (
 					<tr key={t.id} className="border-t border-white/10 hover:bg-white/5">
 					  <td className="px-3 py-2">{t.transaction_date?.split('T')[0]}</td>
@@ -437,13 +443,14 @@ const handleDistributeToChipholders = async () => {
 					  <td className="px-3 py-2">${parseFloat(t.amount).toFixed(2)}</td>
 					  <td className="px-3 py-2">{properties.find(p => p.id === t.property_id)?.title || '—'}</td>
 					  <td className="px-3 py-2">{t.notes || '—'}</td>
-					  <td className="px-3 py-2 text-right">${runningBalance.toFixed(2)}</td>
+					  <td className={`px-3 py-2 text-right font-mono ${runningBalance < 0 ? 'text-red-400' : 'text-green-400'}`}>
+						${runningBalance.toFixed(2)}
+					  </td>
 					</tr>
 				  )
-				})
+				}).reverse();
 			  })()}
 			</tbody>
-
 		  </table>
 		</div>
       </div>
