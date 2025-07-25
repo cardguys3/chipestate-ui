@@ -16,6 +16,19 @@ const BadgesPage = () => {
   const [selectedUserInfo, setSelectedUserInfo] = useState<any | null>(null)
   const [selectedBadge, setSelectedBadge] = useState('')
   const [loading, setLoading] = useState(false)
+  
+    // ✅ DEBUG: Log current Supabase user ID
+  useEffect(() => {
+    const fetchSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      console.log('✅ Current logged in user ID:', session?.user?.id)
+    }
+
+    fetchSession()
+  }, [])
 
   // Load badge catalog and users
   useEffect(() => {
