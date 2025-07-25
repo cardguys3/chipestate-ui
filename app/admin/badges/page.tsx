@@ -20,13 +20,18 @@ const BadgesPage = () => {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    const getSession = async () => {
-      const { data } = await supabase.auth.getSession()
-      setSession(data.session)
-      console.log('✅ Current logged in user ID:', data.session?.user?.id)
+  const getUser = async () => {
+    const { data, error } = await supabase.auth.getUser()
+    if (error) {
+      console.error('❌ Failed to get user:', error.message)
+      return
     }
-    getSession()
-  }, [])
+    setSession({ user: data.user } as any) // minimal Session shape
+    console.log('✅ Current logged in user ID:', data.user?.id)
+  }
+
+  getUser()
+}, [])
 
   useEffect(() => {
     const loadBadgesAndUsers = async () => {
