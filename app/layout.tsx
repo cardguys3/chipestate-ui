@@ -13,7 +13,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: 'ChipEstate',
-  description: 'Invest in fractional real estate.',
+  description: 'The Bitcoin of Fractional Real Estate.',
 }
 
 export default function RootLayout({
@@ -26,7 +26,8 @@ export default function RootLayout({
       <body className={`${inter.className} bg-[#0B1D33] text-white`}>
         <ClientWrapper>
           <Header />
-          {children}
+          {/* ✅ Wrap children in <main> to ensure consistent layout and spacing */}
+          <main>{children}</main>
           <Footer />
         </ClientWrapper>
       </body>
