@@ -51,7 +51,9 @@ useEffect(() => {
   loadBadgesAndUsers()
 }, [])
 
-
+return (
+  <main className="min-h-screen bg-[#0B1D33] text-white px-6 py-10">
+  
   // Fetch selected user stats
 
 useEffect(() => {
