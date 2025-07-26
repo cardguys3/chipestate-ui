@@ -2,11 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
-import { Line } from 'react-chartjs-2'
 import Link from 'next/link'
 import Slider from 'rc-slider'
 import 'rc-slider/assets/index.css'
-import { Bar, Line } from 'react-chartjs-2';
+import { Bar, Line } from 'react-chartjs-2'
 import {
   Chart as ChartJS,
   LineElement,
