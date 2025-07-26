@@ -201,22 +201,31 @@ export default function DashboardPage() {
       </main>
     )
   }
-
+      {/* Quick Links */}
   return (
     <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-        <h1 className="text-3xl font-bold mb-4 md:mb-0">Welcome, {firstName}!</h1>
-        <div className="flex gap-2 items-center">
-          <span className="text-lg font-semibold">🔗 Quick Links</span>
-          {[{ label: 'Account', href: '/account' }, { label: 'Trade Chips', href: '/trade' }, { label: 'Sell Chips', href: '/trade/list' }].map(({ label, href }) => (
-            <Link key={label} href={href}>
-              <button className="bg-emerald-600 hover:bg-emerald-500 border border-emerald-500 px-3 py-1 rounded-xl transition-colors duration-200">
-                {label}
-              </button>
-            </Link>
-          ))}
-        </div>
-      </div>
+	  <h1 className="text-3xl font-bold mb-4 md:mb-0">Welcome, {firstName}!</h1>
+	  <div className="flex flex-wrap gap-2 items-center">
+		<span className="text-lg font-semibold">🔗 Quick Links</span>
+		{[
+		  { label: 'Account', href: '/account' },
+		  { label: 'Trade Chips', href: '/trade' },
+		  { label: 'Sell Chips', href: '/trade/list' },
+		  { label: 'Open Votes', href: '/votes/history' }
+		].map(({ label, href }) => (
+		  <Link key={label} href={href}>
+			<button className="relative bg-emerald-600 hover:bg-emerald-500 border border-emerald-500 px-3 py-1 rounded-xl transition-colors duration-200">
+			  {label}
+			  {/* 🔴 Optional red flag icon for open vote alert */}
+			  {label === 'Open Votes' && (
+				<span className="absolute top-0 right-0 -mt-1 -mr-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-emerald-600" title="You have open votes" />
+			  )}
+			</button>
+		  </Link>
+		))}
+	  </div>
+	</div>
 
       {/* Badges */}
 		{userBadges.length > 0 && (
@@ -237,48 +246,40 @@ export default function DashboardPage() {
 			<div className="mt-2">
 			  <Link href="/badges">
 				<span className="text-emerald-400 hover:underline text-sm">
-				  View all available badges and how to earn them →
+				  How to earn badges →
 				</span>
 			  </Link>
 			</div>
 		  </div>
 		)}
 
-{/* Open Votes */}
-<div className="mb-6">
-  <h2 className="text-xl font-semibold mb-2">🗳️ Open Votes</h2>
+	{/* Metrics */}
+	<div className="mb-6">
+	  <h2 className="text-xl font-semibold mb-2">📊 Personal Metrics</h2>
+	  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
+		<div className="bg-gray-800 rounded-xl p-4">
+		  <div className="text-sm text-gray-400">Net Worth</div>
+		  <div className="text-2xl font-bold">${netWorth.toFixed(2)}</div>
+		</div>
+		<div className="bg-gray-800 rounded-xl p-4">
+		  <div className="text-sm text-gray-400">Chip Earnings (selected)</div>
+		  <div className="text-2xl font-bold">${totalPayout.toFixed(2)}</div>
+		</div>
+		<div className="bg-gray-800 rounded-xl p-4">
+		  <div className="text-sm text-gray-400">All-Time Earnings</div>
+		  <div className="text-2xl font-bold">${totalEarnings.toFixed(2)}</div>
+		</div>
+		<div className="bg-gray-800 rounded-xl p-4">
+		  <div className="text-sm text-gray-400">Properties Owned</div>
+		  <div className="text-2xl font-bold">{properties.length}</div>
+		</div>
+		<div className="bg-gray-800 rounded-xl p-4">
+		  <div className="text-sm text-gray-400">Total Chips</div>
+		  <div className="text-2xl font-bold">{chips.length}</div>
+		</div>
+	  </div>
+	</div>
 
-  {/* This section is always rendered to give users visibility */}
-  <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
-    <p className="text-gray-300 text-sm mb-2">
-      You currently have no open items to vote on.
-    </p>
-    <Link href="/votes/history">
-      <span className="text-emerald-400 hover:underline text-sm">
-        View your voting history →
-      </span>
-    </Link>
-  </div>
-</div>
-
-      {/* Metrics */}
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">📊 Personal Metrics</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-gray-800 rounded-xl p-4">
-            <div className="text-sm text-gray-400">Net Worth</div>
-            <div className="text-2xl font-bold">${netWorth.toFixed(2)}</div>
-          </div>
-          <div className="bg-gray-800 rounded-xl p-4">
-            <div className="text-sm text-gray-400">Chip Earnings (selected)</div>
-            <div className="text-2xl font-bold">${totalPayout.toFixed(2)}</div>
-          </div>
-          <div className="bg-gray-800 rounded-xl p-4">
-            <div className="text-sm text-gray-400">All-Time Earnings</div>
-            <div className="text-2xl font-bold">${totalEarnings.toFixed(2)}</div>
-          </div>
-        </div>
-      </div>
 
       {/* Charts */}
       <div className="mb-6">
