@@ -60,7 +60,7 @@ const chartOptionsWithDollarYAxis: ChartOptions<'line'> = {
 }
 
 // Chart config for number-based Y axis
-const chartOptionsWithNumberYAxis: ChartOptions<'line'> = {
+const chartOptionsWithNumberYAxis: ChartOptions<'bar'> = {
   scales: {
     y: {
       ticks: {
