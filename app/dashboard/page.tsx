@@ -269,9 +269,24 @@ export default function DashboardPage() {
 		  <div className="text-sm text-gray-400">All-Time Earnings</div>
 		  <div className="text-2xl font-bold">${totalEarnings.toFixed(2)}</div>
 		</div>
-		<div className="bg-gray-800 rounded-xl p-4">
+		<div className="relative group bg-gray-800 rounded-xl p-4">
 		  <div className="text-sm text-gray-400">Properties Owned</div>
-		  <div className="text-2xl font-bold">{properties.length}</div>
+		  <div className="text-2xl font-bold cursor-pointer">{properties.length}</div>
+
+		  {/* Tooltip / flyout list of property titles */}
+		  {properties.length > 0 && (
+			<div className="absolute z-10 left-0 top-full mt-2 w-64 bg-[#1E2A3C] border border-emerald-500 text-sm text-white rounded-lg shadow-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+			  <p className="font-semibold text-emerald-400 mb-1">Your Properties:</p>
+			  <ul className="list-disc pl-5 space-y-1 max-h-48 overflow-y-auto">
+				{properties.slice(0, 10).map((p) => (
+				  <li key={p.id} className="text-white">{p.title}</li>
+				))}
+			  </ul>
+			  {properties.length > 10 && (
+				<p className="mt-2 text-gray-400 italic">+ {properties.length - 10} more…</p>
+			  )}
+			</div>
+		  )}
 		</div>
 		<div className="bg-gray-800 rounded-xl p-4">
 		  <div className="text-sm text-gray-400">Total Chips</div>
@@ -282,32 +297,54 @@ export default function DashboardPage() {
 
 
       {/* Charts */}
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">📈 Earnings Over Time</h2>
-        <div className="mb-4">
-          <Slider
-            range
-            min={0}
-            max={months.length - 1}
-            defaultValue={monthIndexes}
-            onChange={(value) => setMonthIndexes(value as [number, number])}
-          />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-gray-800 rounded-xl p-4">
-            <h3 className="text-lg font-semibold mb-2">By Chip</h3>
-            <Line data={chipChartData} options={chartOptionsWithDollarYAxis} />
-          </div>
-          <div className="bg-gray-800 rounded-xl p-4">
-            <h3 className="text-lg font-semibold mb-2">By Property</h3>
-            <Line data={propertyChartData} options={chartOptionsWithDollarYAxis} />
-          </div>
-          <div className="bg-gray-800 rounded-xl p-4">
-            <h3 className="text-lg font-semibold mb-2">Total Earnings</h3>
-            <Line data={monthlyEarningsData} options={chartOptionsWithDollarYAxis} />
-          </div>
-        </div>
-      </div>
-    </main>
+		<div className="mb-6">
+		  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+			{/* Existing Charts – half height */}
+			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
+			  <h3 className="text-sm font-semibold mb-2">By Chip</h3>
+			  <Line data={chipChartData} options={chartOptionsWithDollarYAxis} />
+			</div>
+			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
+			  <h3 className="text-sm font-semibold mb-2">By Property</h3>
+			  <Line data={propertyChartData} options={chartOptionsWithDollarYAxis} />
+			</div>
+			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
+			  <h3 className="text-sm font-semibold mb-2">Total Earnings</h3>
+			  <Line data={monthlyEarningsData} options={chartOptionsWithDollarYAxis} />
+			</div>
+
+			{/* NEW: Chip Count Over Time */}
+			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
+			  <h3 className="text-sm font-semibold mb-2">Chip Count</h3>
+			  <Line data={chipCountData} options={chartOptionsWithNumberYAxis} />
+			</div>
+
+			{/* NEW: Average Earnings per Chip */}
+			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
+			  <h3 className="text-sm font-semibold mb-2">Avg Earnings per Chip</h3>
+			  <Line data={avgEarningsPerChipData} options={chartOptionsWithDollarYAxis} />
+			</div>
+
+			{/* NEW: Properties Contributing to Earnings */}
+			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
+			  <h3 className="text-sm font-semibold mb-2">Active Properties</h3>
+			  <Line data={activePropertiesData} options={chartOptionsWithNumberYAxis} />
+			</div>
+
+			{/* NEW: Total Value of Chips Held */}
+			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
+			  <h3 className="text-sm font-semibold mb-2">Chip Value Held</h3>
+			  <Line data={chipValueHeldData} options={chartOptionsWithDollarYAxis} />
+			</div>
+
+			{/* NEW: Earnings by Vote Category */}
+			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
+			  <h3 className="text-sm font-semibold mb-2">By Vote Category</h3>
+			  <Bar data={voteCategoryEarningsData} options={chartOptionsWithDollarYAxis} />
+			</div>
+		  </div>
+		</div>
+	</main>
+
   )
 }
