@@ -110,7 +110,7 @@ export default function AdminVotingPage() {
 		/>
 
 		<select
-		  className="p-2 rounded bg-white/10 text-white border border-white/20"
+		  className="w-full px-3 py-2 bg-[#1E2A3C] border border-gray-600 text-white rounded"
 		  value={newVote.category}
 		  onChange={e => setNewVote({ ...newVote, category: e.target.value })}
 		>
@@ -126,7 +126,7 @@ export default function AdminVotingPage() {
 		</select>
 
 		<select
-		  className="p-2 rounded bg-white/10 text-white border border-white/20"
+		  className="w-full px-3 py-2 bg-[#1E2A3C] border border-gray-600 text-white rounded"
 		  value={newVote.threshold_type}
 		  onChange={e => setNewVote({ ...newVote, threshold_type: e.target.value })}
 		>
@@ -149,7 +149,7 @@ export default function AdminVotingPage() {
 
 		<input
 		  type="datetime-local"
-		  className="p-2 rounded bg-white/10 text-white border border-white/20"
+		  className="w-full px-3 py-2 bg-[#1E2A3C] border border-gray-600 text-white rounded"
 		  value={newVote.start_date}
 		  onChange={e => setNewVote({ ...newVote, start_date: e.target.value })}
 		/>
