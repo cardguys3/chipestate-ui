@@ -89,7 +89,7 @@ const chartOptionsWithNumberYAxis: ChartOptions<'bar'> = {
   },
 }
 
-// ✅ NEW: For line charts with numeric Y-axis
+// ✅ For line charts with numeric Y-axis
 const chartOptionsWithLineNumberYAxis: ChartOptions<'line'> = {
   scales: {
     y: {
@@ -118,6 +118,37 @@ const chartOptionsWithLineNumberYAxis: ChartOptions<'line'> = {
     },
   },
 }
+
+// ✅ NEW: For bar charts with numeric Y-axis — to fix Bar chart type error
+const chartOptionsWithBarNumberYAxis: ChartOptions<'bar'> = {
+  scales: {
+    y: {
+      ticks: {
+        stepSize: 1,
+        color: 'white',
+      },
+      grid: {
+        color: '#334155',
+      },
+    },
+    x: {
+      ticks: {
+        color: 'white',
+      },
+      grid: {
+        color: '#334155',
+      },
+    },
+  },
+  plugins: {
+    legend: {
+      labels: {
+        color: 'white',
+      },
+    },
+  },
+}
+
 
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null)
@@ -403,7 +434,7 @@ export default function DashboardPage() {
 			</div>
 			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
 			  <h3 className="text-sm font-semibold mb-2">Votes by Category</h3>
-			  <Bar data={voteCategoryEarningsData} options={chartOptionsWithLineNumberYAxis} />
+			  <Bar data={voteCategoryEarningsData} options={chartOptionsWithBarNumberYAxis} />
 			</div>
 		  </div>
 		</div>
