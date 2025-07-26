@@ -116,82 +116,83 @@ export default function BadgesPage() {
       <div className="max-w-6xl mx-auto space-y-10">
         <section className="bg-white/5 border border-white/10 rounded-xl p-6 shadow">
           <h1 className="text-2xl font-bold mb-6">🎖️ Badge Catalog</h1>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-		  {catalog.map(badge => (	  
-			  <div key={badge.key} className="bg-white/10 p-3 rounded-lg border border-white/10 shadow flex flex-col items-center text-center">
-			  {/* 👇 Badge icon container with compact fallback */}
-			  <div className="w-20 h-20 mb-1 rounded border border-yellow-500 bg-white/10 flex items-center justify-center">
-				  <img
-					src={badge.icon_url}
-					alt={badge.name}
-					className="w-16 h-16 object-contain"
-					onError={(e) => {
-					  console.warn('❌ Broken icon:', badge.name, badge.icon_url)
-					  e.currentTarget.style.display = 'none'
-					}}
-				  />
+			 {/* 🔁 Reformatted badge grid to show 10 per row, no gray box, green border */}
+			<div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-10 gap-4">
+			  {catalog.map(badge => (
+				<div key={badge.key} className="flex flex-col items-center text-center">
+				  <div className="w-16 h-16 mb-1 rounded-full border-2 border-green-500 bg-transparent flex items-center justify-center">
+					<img
+					  src={badge.icon_url}
+					  alt={badge.name}
+					  className="w-14 h-14 object-contain rounded-full"
+					  onError={(e) => {
+						console.warn('❌ Broken icon:', badge.name, badge.icon_url)
+						e.currentTarget.style.display = 'none'
+					  }}
+					/>
+				  </div>
+				  <h2 className="text-xs font-medium mt-1">{badge.name}</h2>
 				</div>
-			  {/* 👇 Badge name only */}
-			  <h2 className="text-sm font-medium">{badge.name}</h2>
+			  ))}
 			</div>
+        </section>
+  	  <section className="bg-white/5 border border-white/10 rounded-xl p-6 shadow">
+	  <h2 className="text-xl font-bold mb-4">🏷️ Manually Award a Badge</h2>
+
+	  {/* Inputs are now side-by-side */}
+	  <div className="flex flex-col md:flex-row md:items-end gap-4 mb-4">
+		<div className="flex-1">
+		  <label className="block text-sm mb-1">Select User</label>
+		  <select
+			value={selectedUserId}
+			onChange={e => setSelectedUserId(e.target.value)}
+			className="w-full rounded px-3 py-2 bg-[#1E2A3C] border border-gray-600 text-white"
+		  >
+			<option value="">Select a user</option>
+			{users.map(user => (
+			  <option key={user.id} value={user.id}>
+				{user.first_name} {user.last_name} ({user.email})
+			  </option>
 			))}
-          </div>
-        </section>
+		  </select>
+		</div>
 
-        <section className="bg-white/5 border border-white/10 rounded-xl p-6 shadow">
-          <h2 className="text-xl font-bold mb-4">🏷️ Manually Award a Badge</h2>
+		<div className="flex-1">
+		  <label className="block text-sm mb-1">Select Badge</label>
+		  <select
+			value={selectedBadge}
+			onChange={e => setSelectedBadge(e.target.value)}
+			className="w-full rounded px-3 py-2 bg-[#1E2A3C] border border-gray-600 text-white"
+		  >
+			<option value="">Select a badge</option>
+			{catalog.map(badge => (
+			  <option key={badge.key} value={badge.key}>
+				{badge.name}
+			  </option>
+			))}
+		  </select>
+		</div>
 
-          <div className="mb-4">
-            <label className="block text-sm mb-1">Select User</label>
-            <select
-              value={selectedUserId}
-              onChange={e => setSelectedUserId(e.target.value)}
-              className="w-full rounded px-3 py-2 bg-[#1E2A3C] border border-gray-600 text-white"
-            >
-              <option value="">Select a user</option>
-              {users.map(user => (
-                <option key={user.id} value={user.id}>
-                  {user.first_name} {user.last_name} ({user.email})
-                </option>
-              ))}
-            </select>
-          </div>
+		<div className="md:w-auto w-full">
+		  <button
+			onClick={handleAward}
+			disabled={loading}
+			className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg w-full md:w-auto shadow"
+		  >
+			{loading ? 'Awarding…' : 'Award Badge'}
+		  </button>
+		</div>
+	  </div>
 
-          <div className="mb-4">
-            <label className="block text-sm mb-1">Select Badge</label>
-            <select
-              value={selectedBadge}
-              onChange={e => setSelectedBadge(e.target.value)}
-              className="w-full rounded px-3 py-2 bg-[#1E2A3C] border border-gray-600 text-white"
-            >
-              <option value="">Select a badge</option>
-              {catalog.map(badge => (
-                <option key={badge.key} value={badge.key}>
-                  {badge.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="mb-4">
-            <button
-              onClick={handleAward}
-              disabled={loading}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg w-full shadow"
-            >
-              {loading ? 'Awarding…' : 'Award Badge'}
-            </button>
-          </div>
-
-          {selectedUserInfo && (
-            <div className="bg-white/10 rounded-lg p-4 mt-4 space-y-2 text-sm">
-              <p><strong>Email:</strong> {selectedUserInfo.email}</p>
-              <p><strong>Chips Owned:</strong> {selectedUserInfo.chipCount}</p>
-              <p><strong>Properties Owned:</strong> {selectedUserInfo.propertyCount}</p>
-              <p><strong>Current Badges:</strong> {selectedUserInfo.badges.length > 0 ? selectedUserInfo.badges.join(', ') : 'None'}</p>
-            </div>
-          )}
-        </section>
+	  {selectedUserInfo && (
+		<div className="bg-white/10 rounded-lg p-4 mt-4 space-y-2 text-sm">
+		  <p><strong>Email:</strong> {selectedUserInfo.email}</p>
+		  <p><strong>Chips Owned:</strong> {selectedUserInfo.chipCount}</p>
+		  <p><strong>Properties Owned:</strong> {selectedUserInfo.propertyCount}</p>
+		  <p><strong>Current Badges:</strong> {selectedUserInfo.badges.length > 0 ? selectedUserInfo.badges.join(', ') : 'None'}</p>
+		</div>
+	  )}
+	</section>		
       </div>
     </main>
   )
