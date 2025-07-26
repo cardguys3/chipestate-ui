@@ -137,7 +137,7 @@ export default function AdminVotingPage() {
 		</select>
 
 		<select
-		  className="p-2 rounded bg-white/10 text-white border border-white/20"
+		  className="w-full px-3 py-2 bg-[#1E2A3C] border border-gray-600 text-white rounded"
 		  value={newVote.property_id}
 		  onChange={e => setNewVote({ ...newVote, property_id: e.target.value })}
 		>
@@ -156,7 +156,7 @@ export default function AdminVotingPage() {
 
 		<input
 		  type="datetime-local"
-		  className="p-2 rounded bg-white/10 text-white border border-white/20"
+		  className="w-full px-3 py-2 bg-[#1E2A3C] border border-gray-600 text-white rounded"
 		  value={newVote.end_date}
 		  onChange={e => setNewVote({ ...newVote, end_date: e.target.value })}
 		/>
