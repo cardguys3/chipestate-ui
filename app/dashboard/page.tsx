@@ -360,69 +360,88 @@ export default function DashboardPage() {
 	  <h2 className="text-xl font-semibold mb-2">📊 Performance</h2>
 	  
 	  {/* Filters */}
-<div className="flex flex-wrap gap-4 mb-4 items-end">
-  {/* Property Filter */}
-  <div className="flex flex-col">
-    <label htmlFor="propertyFilter" className="text-sm text-gray-400">Property</label>
-    <select
-      id="propertyFilter"
-      value=""
-      onChange={(e) => {
-        const selectedId = e.target.value
-        if (selectedId === '') return setSelectedProps([])
-        setSelectedProps([selectedId])
-      }}
-      className="bg-[#1E2A3C] border border-emerald-600 text-white rounded-md px-3 py-1 text-sm"
-    >
-      <option value="">All</option>
-      {properties.map((p) => (
-        <option key={p.id} value={p.id}>{p.title}</option>
-      ))}
-    </select>
-  </div>
+	<div className="flex flex-wrap gap-4 mb-4 items-end">
+	  {/* ✅ Property Filter with Multi-Select */}
+	<div className="flex flex-col">
+	  <label className="text-sm text-gray-400">Property</label>
+	  <div className="bg-[#1E2A3C] border border-emerald-600 rounded-md p-2 max-h-36 overflow-y-auto text-sm text-white">
+		{properties.map((p) => (
+		  <label key={p.id} className="flex items-center space-x-2 mb-1">
+			<input
+			  type="checkbox"
+			  checked={selectedProps.includes(p.id)}
+			  onChange={(e) => {
+				if (e.target.checked) {
+				  setSelectedProps([...selectedProps, p.id])
+				} else {
+				  setSelectedProps(selectedProps.filter((id) => id !== p.id))
+				}
+			  }}
+			/>
+			<span>{p.title}</span>
+		  </label>
+		))}
+	  </div>
+	</div>
 
-  {/* Chip Filter */}
-  <div className="flex flex-col">
-    <label htmlFor="chipFilter" className="text-sm text-gray-400">Chip</label>
-    <select
-      id="chipFilter"
-      value=""
-      onChange={(e) => {
-        const selectedId = e.target.value
-        if (selectedId === '') return setSelectedChips([])
-        setSelectedChips([selectedId])
-      }}
-      className="bg-[#1E2A3C] border border-emerald-600 text-white rounded-md px-3 py-1 text-sm"
-    >
-      <option value="">All</option>
-      {chips.map((c) => {
-        const propTitle = properties.find(p => p.id === c.property_id)?.title || 'Unknown'
-        return (
-          <option key={c.id} value={c.id}>{`${c.serial} - ${propTitle}`}</option>
-        )
-      })}
-    </select>
-  </div>
 
-  {/* Date Filter */}
-  <div className="flex flex-col">
-    <label htmlFor="monthFilter" className="text-sm text-gray-400">Date (Month)</label>
-    <select
-      id="monthFilter"
-      onChange={(e) => {
-        const index = months.indexOf(e.target.value)
-        if (index >= 0) setMonthIndexes([index, index])
-        else if (months.length >= 2) setMonthIndexes([0, months.length - 1])
-      }}
-      className="bg-[#1E2A3C] border border-emerald-600 text-white rounded-md px-3 py-1 text-sm"
-    >
-      <option value="">All</option>
-      {months.map((m) => (
-        <option key={m} value={m}>{m}</option>
-      ))}
-    </select>
-  </div>
-</div>
+	 {/* ✅ Chip Filter with Multi-Select and Hidden Chip ID */}
+	<div className="flex flex-col">
+	  <label className="text-sm text-gray-400">Chip</label>
+	  <div className="bg-[#1E2A3C] border border-emerald-600 rounded-md p-2 max-h-36 overflow-y-auto text-sm text-white">
+		{chips.map((chip) => {
+		  const propTitle = properties.find((p) => p.id === chip.property_id)?.title || 'Unknown'
+		  const label = `${chip.serial} - ${propTitle}`
+		  return (
+			<label key={chip.id} className="flex items-center space-x-2 mb-1">
+			  <input
+				type="checkbox"
+				checked={selectedChips.includes(chip.id)}
+				onChange={(e) => {
+				  if (e.target.checked) {
+					setSelectedChips([...selectedChips, chip.id])
+				  } else {
+					setSelectedChips(selectedChips.filter((id) => id !== chip.id))
+				  }
+				}}
+			  />
+			  <span>{label}</span>
+			</label>
+		  )
+		})}
+	  </div>
+	</div>
+
+	{/* ✅ Date Filter with Multi-Select by Month */}
+	<div className="flex flex-col">
+	  <label className="text-sm text-gray-400">Date (Month)</label>
+	  <div className="bg-[#1E2A3C] border border-emerald-600 rounded-md p-2 max-h-36 overflow-y-auto text-sm text-white">
+		{months.map((month, idx) => (
+		  <label key={month} className="flex items-center space-x-2 mb-1">
+			<input
+			  type="checkbox"
+			  checked={idx >= monthIndexes[0] && idx <= monthIndexes[1]}
+			  onChange={(e) => {
+				let start = monthIndexes[0]
+				let end = monthIndexes[1]
+
+				if (e.target.checked) {
+				  start = Math.min(start, idx)
+				  end = Math.max(end, idx)
+				} else {
+				  if (idx === start && idx === end) return setMonthIndexes([0, months.length - 1])
+				  else if (idx === start) start++
+				  else if (idx === end) end--
+				}
+				setMonthIndexes([start, end])
+			  }}
+			/>
+			<span>{month}</span>
+		  </label>
+		))}
+	  </div>
+	</div>
+
 
 	  
 	  

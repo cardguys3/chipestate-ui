@@ -103,7 +103,7 @@ export default function AdminVotingPage() {
 	  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
 		<input
 		  type="text"
-		  placeholder="Title"
+		  placeholder="New Vote Name"
 		  className="p-2 rounded bg-white/10 text-white border border-white/20"
 		  value={newVote.title}
 		  onChange={e => setNewVote({ ...newVote, title: e.target.value })}
