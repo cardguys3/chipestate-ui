@@ -117,31 +117,23 @@ export default function BadgesPage() {
         <section className="bg-white/5 border border-white/10 rounded-xl p-6 shadow">
           <h1 className="text-2xl font-bold mb-6">🎖️ Badge Catalog</h1>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-		  {catalog.map(badge => (
-			  <div key={badge.key} className="bg-white/10 p-4 rounded-lg border border-white/10 shadow flex flex-col items-center text-center">
-			   {/* 👇 Icon container with forced size, border, and fallback */}
-				<div className="h-20 w-20 mb-2 rounded border border-white bg-white/10 flex items-center justify-center overflow-hidden">
-				  {badge.icon_url ? (
-					<img
-					  src={encodeURI(badge.icon_url)}
-					  alt={badge.name}
-					  className="h-16 w-16 object-contain bg-blue-100"
-					  onError={(e) => {
-						console.warn(`❌ Failed to load icon for badge "${badge.name}"`, badge.icon_url)
-						e.currentTarget.style.display = 'none'
-					  }}
-					/>
-				  ) : (
-					<div className="text-xs text-gray-300 px-1 text-center">No icon</div>
-				  )}
-				</div>				
-				<h2 className="text-base font-semibold mb-1">{badge.name}</h2>
-				<span className="text-xs bg-emerald-700 px-2 py-1 rounded-full uppercase tracking-wide mb-2">
-				  {badge.category || 'General'}
-				</span>
-				<p className="text-sm mb-1">{badge.description}</p>
-				<p className="text-sm text-yellow-400">Points: {badge.points}</p>
-			  </div>
+		  {catalog.map(badge => (	  
+			  <div key={badge.key} className="bg-white/10 p-3 rounded-lg border border-white/10 shadow flex flex-col items-center text-center">
+			  {/* 👇 Badge icon container with compact fallback */}
+			  <div className="w-20 h-20 mb-1 rounded border border-yellow-500 bg-white/10 flex items-center justify-center">
+				  <img
+					src={badge.icon_url}
+					alt={badge.name}
+					className="w-16 h-16 object-contain"
+					onError={(e) => {
+					  console.warn('❌ Broken icon:', badge.name, badge.icon_url)
+					  e.currentTarget.style.display = 'none'
+					}}
+				  />
+				</div>
+			  {/* 👇 Badge name only */}
+			  <h2 className="text-sm font-medium">{badge.name}</h2>
+			</div>
 			))}
           </div>
         </section>
