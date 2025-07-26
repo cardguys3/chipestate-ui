@@ -19,8 +19,10 @@ export default function BadgesPage() {
   const [selectedBadge, setSelectedBadge] = useState('')
   const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
+    useEffect(() => {
     if (!session?.user?.id) return
+
+    console.log('🔐 Logged in as:', session?.user?.email) // <-- Added for debugging
 
     const loadBadgesAndUsers = async () => {
       const { data: badgeData, error: badgeError } = await supabase
@@ -41,6 +43,7 @@ export default function BadgesPage() {
 
     loadBadgesAndUsers()
   }, [session, supabase])
+
 
   useEffect(() => {
     if (!selectedUserId) {
