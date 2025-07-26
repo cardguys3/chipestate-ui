@@ -244,6 +244,23 @@ export default function DashboardPage() {
 		  </div>
 		)}
 
+{/* Open Votes */}
+<div className="mb-6">
+  <h2 className="text-xl font-semibold mb-2">🗳️ Open Votes</h2>
+
+  {/* This section is always rendered to give users visibility */}
+  <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+    <p className="text-gray-300 text-sm mb-2">
+      You currently have no open items to vote on.
+    </p>
+    <Link href="/votes/history">
+      <span className="text-emerald-400 hover:underline text-sm">
+        View your voting history →
+      </span>
+    </Link>
+  </div>
+</div>
+
       {/* Metrics */}
       <div className="mb-6">
         <h2 className="text-xl font-semibold mb-2">📊 Personal Metrics</h2>
