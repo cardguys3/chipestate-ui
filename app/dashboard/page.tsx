@@ -303,7 +303,7 @@ export default function DashboardPage() {
       </main>
     )
   }
-      {/* Quick Links */}
+      // Quick Links
   return (
     <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
