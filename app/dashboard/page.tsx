@@ -358,6 +358,74 @@ export default function DashboardPage() {
 	{/* Metrics */}
 	<div className="mb-6">
 	  <h2 className="text-xl font-semibold mb-2">📊 Performance</h2>
+	  
+	  {/* Filters */}
+<div className="flex flex-wrap gap-4 mb-4 items-end">
+  {/* Property Filter */}
+  <div className="flex flex-col">
+    <label htmlFor="propertyFilter" className="text-sm text-gray-400">Property</label>
+    <select
+      id="propertyFilter"
+      value=""
+      onChange={(e) => {
+        const selectedId = e.target.value
+        if (selectedId === '') return setSelectedProps([])
+        setSelectedProps([selectedId])
+      }}
+      className="bg-[#1E2A3C] border border-emerald-600 text-white rounded-md px-3 py-1 text-sm"
+    >
+      <option value="">All</option>
+      {properties.map((p) => (
+        <option key={p.id} value={p.id}>{p.title}</option>
+      ))}
+    </select>
+  </div>
+
+  {/* Chip Filter */}
+  <div className="flex flex-col">
+    <label htmlFor="chipFilter" className="text-sm text-gray-400">Chip</label>
+    <select
+      id="chipFilter"
+      value=""
+      onChange={(e) => {
+        const selectedId = e.target.value
+        if (selectedId === '') return setSelectedChips([])
+        setSelectedChips([selectedId])
+      }}
+      className="bg-[#1E2A3C] border border-emerald-600 text-white rounded-md px-3 py-1 text-sm"
+    >
+      <option value="">All</option>
+      {chips.map((c) => {
+        const propTitle = properties.find(p => p.id === c.property_id)?.title || 'Unknown'
+        return (
+          <option key={c.id} value={c.id}>{`${c.serial} - ${propTitle}`}</option>
+        )
+      })}
+    </select>
+  </div>
+
+  {/* Date Filter */}
+  <div className="flex flex-col">
+    <label htmlFor="monthFilter" className="text-sm text-gray-400">Date (Month)</label>
+    <select
+      id="monthFilter"
+      onChange={(e) => {
+        const index = months.indexOf(e.target.value)
+        if (index >= 0) setMonthIndexes([index, index])
+        else if (months.length >= 2) setMonthIndexes([0, months.length - 1])
+      }}
+      className="bg-[#1E2A3C] border border-emerald-600 text-white rounded-md px-3 py-1 text-sm"
+    >
+      <option value="">All</option>
+      {months.map((m) => (
+        <option key={m} value={m}>{m}</option>
+      ))}
+    </select>
+  </div>
+</div>
+
+	  
+	  
 	  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
 		<div className="bg-gray-800 rounded-xl p-4">
 		  <div className="text-sm text-gray-400">Net Worth</div>
@@ -401,69 +469,81 @@ export default function DashboardPage() {
 		{/* Charts */}
 		<div className="mb-6">
 		  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-			{/* Existing 3 */}
+			{/* By Chip */}
 			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
 			  <h3 className="text-sm font-semibold mb-2">By Chip</h3>
 			  {chipChartData?.labels?.length && chipChartData?.datasets?.length ? (
-				<Line data={chipChartData} options={chartOptionsWithDollarYAxis} />
-			  ) : (
-				<p className="text-gray-400 text-sm">No data available</p>
-			  )}
-			</div>
-			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
-			  <h3 className="text-sm font-semibold mb-2">By Property</h3>
-			  {propertyChartData?.labels?.length && propertyChartData?.datasets?.length ? (
-				<Line data={propertyChartData} options={chartOptionsWithDollarYAxis} />
-			  ) : (
-				<p className="text-gray-400 text-sm">No data available</p>
-			  )}
-			</div>
-			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
-			  <h3 className="text-sm font-semibold mb-2">Total Earnings</h3>
-			  {monthlyEarningsData?.labels?.length && monthlyEarningsData?.datasets?.length ? (
-				<Line data={monthlyEarningsData} options={chartOptionsWithDollarYAxis} />
+				<Line data={chipChartData} options={{ ...chartOptionsWithDollarYAxis, plugins: { legend: { display: false } } }} />
 			  ) : (
 				<p className="text-gray-400 text-sm">No data available</p>
 			  )}
 			</div>
 
-			{/* New charts - powered by real data */}
+			{/* By Property */}
+			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
+			  <h3 className="text-sm font-semibold mb-2">By Property</h3>
+			  {propertyChartData?.labels?.length && propertyChartData?.datasets?.length ? (
+				<Line data={propertyChartData} options={{ ...chartOptionsWithDollarYAxis, plugins: { legend: { display: false } } }} />
+			  ) : (
+				<p className="text-gray-400 text-sm">No data available</p>
+			  )}
+			</div>
+
+			{/* Total Earnings */}
+			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
+			  <h3 className="text-sm font-semibold mb-2">Total Earnings</h3>
+			  {monthlyEarningsData?.labels?.length && monthlyEarningsData?.datasets?.length ? (
+				<Line data={monthlyEarningsData} options={{ ...chartOptionsWithDollarYAxis, plugins: { legend: { display: false } } }} />
+			  ) : (
+				<p className="text-gray-400 text-sm">No data available</p>
+			  )}
+			</div>
+
+			{/* Chip Count */}
 			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
 			  <h3 className="text-sm font-semibold mb-2">Chip Count</h3>
 			  {chipCountData?.labels?.length && chipCountData?.datasets?.length ? (
-				<Line data={chipCountData} options={chartOptionsWithLineNumberYAxis} />
+				<Line data={chipCountData} options={{ ...chartOptionsWithLineNumberYAxis, plugins: { legend: { display: false } } }} />
 			  ) : (
 				<p className="text-gray-400 text-sm">No data available</p>
 			  )}
 			</div>
+
+			{/* Avg Earnings per Chip */}
 			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
 			  <h3 className="text-sm font-semibold mb-2">Avg Earnings per Chip</h3>
 			  {avgEarningsPerChipData?.labels?.length && avgEarningsPerChipData?.datasets?.length ? (
-				<Line data={avgEarningsPerChipData} options={chartOptionsWithDollarYAxis} />
+				<Line data={avgEarningsPerChipData} options={{ ...chartOptionsWithDollarYAxis, plugins: { legend: { display: false } } }} />
 			  ) : (
 				<p className="text-gray-400 text-sm">No data available</p>
 			  )}
 			</div>
+
+			{/* Active Properties */}
 			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
 			  <h3 className="text-sm font-semibold mb-2">Active Properties</h3>
 			  {activePropertiesData?.labels?.length && activePropertiesData?.datasets?.length ? (
-				<Line data={activePropertiesData} options={chartOptionsWithLineNumberYAxis} />
+				<Line data={activePropertiesData} options={{ ...chartOptionsWithLineNumberYAxis, plugins: { legend: { display: false } } }} />
 			  ) : (
 				<p className="text-gray-400 text-sm">No data available</p>
 			  )}
 			</div>
+
+			{/* Chip Value Held */}
 			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
 			  <h3 className="text-sm font-semibold mb-2">Chip Value Held</h3>
 			  {chipValueHeldData?.labels?.length && chipValueHeldData?.datasets?.length ? (
-				<Line data={chipValueHeldData} options={chartOptionsWithDollarYAxis} />
+				<Line data={chipValueHeldData} options={{ ...chartOptionsWithDollarYAxis, plugins: { legend: { display: false } } }} />
 			  ) : (
 				<p className="text-gray-400 text-sm">No data available</p>
 			  )}
 			</div>
+
+			{/* Votes by Category */}
 			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
 			  <h3 className="text-sm font-semibold mb-2">Votes by Category</h3>
 			  {voteCategoryEarningsData?.labels?.length && voteCategoryEarningsData?.datasets?.length ? (
-				<Bar data={voteCategoryEarningsData} options={chartOptionsWithBarNumberYAxis} />
+				<Bar data={voteCategoryEarningsData} options={{ ...chartOptionsWithBarNumberYAxis, plugins: { legend: { display: false } } }} />
 			  ) : (
 				<p className="text-gray-400 text-sm">No data available</p>
 			  )}
