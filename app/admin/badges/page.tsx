@@ -118,25 +118,34 @@ export default function BadgesPage() {
           <h1 className="text-2xl font-bold mb-6">🎖️ Badge Catalog</h1>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {catalog.map(badge => (
-              <div key={badge.key} className="bg-white/10 p-4 rounded-lg border border-white/10 shadow">
-                <div className="flex items-center justify-between mb-2">
-                  <h2 className="text-lg font-semibold">{badge.name}</h2>
-                  <span className="text-xs bg-emerald-700 px-2 py-1 rounded-full uppercase tracking-wide">
-                    {badge.category || 'General'}
-                  </span>
-                </div>
-                <p className="text-sm mb-1">{badge.description}</p>
-                <p className="text-sm text-yellow-400 mb-1">Points: {badge.points}</p>
-                {badge.icon_url && (
-                  <img
-                    src={encodeURI(badge.icon_url)}
-                    alt={badge.name}
-                    className="h-12 w-12 object-contain mt-2"
-                    onError={(e) => (e.currentTarget.style.display = 'none')}
-                  />
-                )}
-              </div>
-            ))}
+			  <div key={badge.key} className="bg-white/10 p-4 rounded-lg border border-white/10 shadow flex flex-col items-center text-center">
+				{/* 👇 Badge icon displayed prominently at top */}
+				{badge.icon_url ? (
+				  <img
+					src={encodeURI(badge.icon_url)}
+					alt={badge.name}
+					className="h-16 w-16 object-contain mb-2"
+					onError={(e) => (e.currentTarget.style.display = 'none')}
+				  />
+				) : (
+				  <div className="h-16 w-16 mb-2 rounded bg-gray-700 flex items-center justify-center text-sm text-gray-300">
+					No Icon
+				  </div>
+				)}
+
+				{/* 👇 Badge name shown underneath the icon */}
+				<h2 className="text-base font-semibold mb-1">{badge.name}</h2>
+
+				{/* 👇 Category badge */}
+				<span className="text-xs bg-emerald-700 px-2 py-1 rounded-full uppercase tracking-wide mb-2">
+				  {badge.category || 'General'}
+				</span>
+
+				{/* 👇 Description and point value */}
+				<p className="text-sm mb-1">{badge.description}</p>
+				<p className="text-sm text-yellow-400">Points: {badge.points}</p>
+			  </div>
+			))}
           </div>
         </section>
 
