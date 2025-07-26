@@ -255,7 +255,7 @@ export default function DashboardPage() {
 
 	{/* Metrics */}
 	<div className="mb-6">
-	  <h2 className="text-xl font-semibold mb-2">📊 Personal Metrics</h2>
+	  <h2 className="text-xl font-semibold mb-2">📊 Performance</h2>
 	  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
 		<div className="bg-gray-800 rounded-xl p-4">
 		  <div className="text-sm text-gray-400">Net Worth</div>
