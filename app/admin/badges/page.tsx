@@ -119,19 +119,22 @@ export default function BadgesPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 		  {catalog.map(badge => (
 			  <div key={badge.key} className="bg-white/10 p-4 rounded-lg border border-white/10 shadow flex flex-col items-center text-center">
-				{/* 👇 Icon container with forced size & fallback */}
-				<div className="h-20 w-20 mb-2 rounded bg-white/20 flex items-center justify-center overflow-hidden">
-				  <img
-					src={encodeURI(badge.icon_url || '')}
-					alt={badge.name}
-					className="h-16 w-16 object-contain"
-					onError={(e) => {
-					  console.warn(`❌ Failed to load icon for badge "${badge.name}"`)
-					  e.currentTarget.style.display = 'none'
-					}}
-				  />
-				</div>
-
+			   {/* 👇 Icon container with forced size, border, and fallback */}
+				<div className="h-20 w-20 mb-2 rounded border border-white bg-white/10 flex items-center justify-center overflow-hidden">
+				  {badge.icon_url ? (
+					<img
+					  src={encodeURI(badge.icon_url)}
+					  alt={badge.name}
+					  className="h-16 w-16 object-contain bg-blue-100"
+					  onError={(e) => {
+						console.warn(`❌ Failed to load icon for badge "${badge.name}"`, badge.icon_url)
+						e.currentTarget.style.display = 'none'
+					  }}
+					/>
+				  ) : (
+					<div className="text-xs text-gray-300 px-1 text-center">No icon</div>
+				  )}
+				</div>				
 				<h2 className="text-base font-semibold mb-1">{badge.name}</h2>
 				<span className="text-xs bg-emerald-700 px-2 py-1 rounded-full uppercase tracking-wide mb-2">
 				  {badge.category || 'General'}
