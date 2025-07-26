@@ -6,17 +6,21 @@ import { Line } from 'react-chartjs-2'
 import Link from 'next/link'
 import Slider from 'rc-slider'
 import 'rc-slider/assets/index.css'
+import { Bar, Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
+  LineElement,
+  BarElement,
   CategoryScale,
   LinearScale,
   PointElement,
-  LineElement,
   Tooltip,
-  ChartOptions
-} from 'chart.js'
+  Legend,
+} from 'chart.js';
+ChartJS.register(LineElement, BarElement, CategoryScale, LinearScale, PointElement, Tooltip, Legend);
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip)
+
+
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -54,6 +58,37 @@ const chartOptionsWithDollarYAxis: ChartOptions<'line'> = {
   }
 }
 
+// Chart config for number-based Y axis
+const chartOptionsWithNumberYAxis: ChartOptions<'line'> = {
+  scales: {
+    y: {
+      ticks: {
+        stepSize: 1,
+        color: 'white'
+      },
+      grid: {
+        color: '#334155'
+      }
+    },
+    x: {
+      ticks: {
+        color: 'white'
+      },
+      grid: {
+        color: '#334155'
+      }
+    }
+  },
+  plugins: {
+    legend: {
+      labels: {
+        color: 'white'
+      }
+    }
+  }
+}
+
+
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null)
   const [firstName, setFirstName] = useState<string>('User')
@@ -66,7 +101,13 @@ export default function DashboardPage() {
   const [monthIndexes, setMonthIndexes] = useState<[number, number]>([0, 0])
   const [userBadges, setUserBadges] = useState<any[]>([])
   const [registrationStatus, setRegistrationStatus] = useState<string | null>(null)
+  const [chipCountData, setChipCountData] = useState<any>(null)
+  const [avgEarningsPerChipData, setAvgEarningsPerChipData] = useState<any>(null)
+  const [activePropertiesData, setActivePropertiesData] = useState<any>(null)
+  const [chipValueHeldData, setChipValueHeldData] = useState<any>(null)
+  const [voteCategoryEarningsData, setVoteCategoryEarningsData] = useState<any>(null)
 
+{/* useEffects Section*/}
   useEffect(() => {
     const loadData = async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -296,10 +337,10 @@ export default function DashboardPage() {
 	</div>
 
 
-      {/* Charts */}
+			  {/* Charts */}
 		<div className="mb-6">
 		  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-			{/* Existing Charts – half height */}
+			{/* Existing 3 */}
 			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
 			  <h3 className="text-sm font-semibold mb-2">By Chip</h3>
 			  <Line data={chipChartData} options={chartOptionsWithDollarYAxis} />
@@ -313,38 +354,29 @@ export default function DashboardPage() {
 			  <Line data={monthlyEarningsData} options={chartOptionsWithDollarYAxis} />
 			</div>
 
-			{/* NEW: Chip Count Over Time */}
+			{/* New charts - powered by real data */}
 			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
 			  <h3 className="text-sm font-semibold mb-2">Chip Count</h3>
 			  <Line data={chipCountData} options={chartOptionsWithNumberYAxis} />
 			</div>
-
-			{/* NEW: Average Earnings per Chip */}
 			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
 			  <h3 className="text-sm font-semibold mb-2">Avg Earnings per Chip</h3>
 			  <Line data={avgEarningsPerChipData} options={chartOptionsWithDollarYAxis} />
 			</div>
-
-			{/* NEW: Properties Contributing to Earnings */}
 			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
 			  <h3 className="text-sm font-semibold mb-2">Active Properties</h3>
 			  <Line data={activePropertiesData} options={chartOptionsWithNumberYAxis} />
 			</div>
-
-			{/* NEW: Total Value of Chips Held */}
 			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
 			  <h3 className="text-sm font-semibold mb-2">Chip Value Held</h3>
 			  <Line data={chipValueHeldData} options={chartOptionsWithDollarYAxis} />
 			</div>
-
-			{/* NEW: Earnings by Vote Category */}
 			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
-			  <h3 className="text-sm font-semibold mb-2">By Vote Category</h3>
-			  <Bar data={voteCategoryEarningsData} options={chartOptionsWithDollarYAxis} />
+			  <h3 className="text-sm font-semibold mb-2">Votes by Category</h3>
+			  <Bar data={voteCategoryEarningsData} options={chartOptionsWithNumberYAxis} />
 			</div>
 		  </div>
 		</div>
 	</main>
-
   )
 }
