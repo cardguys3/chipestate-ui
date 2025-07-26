@@ -398,43 +398,75 @@ export default function DashboardPage() {
 	</div>
 
 
-			  {/* Charts */}
+		{/* Charts */}
 		<div className="mb-6">
 		  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
 			{/* Existing 3 */}
 			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
 			  <h3 className="text-sm font-semibold mb-2">By Chip</h3>
-			  <Line data={chipChartData} options={chartOptionsWithDollarYAxis} />
+			  {chipChartData?.labels?.length && chipChartData?.datasets?.length ? (
+				<Line data={chipChartData} options={chartOptionsWithDollarYAxis} />
+			  ) : (
+				<p className="text-gray-400 text-sm">No data available</p>
+			  )}
 			</div>
 			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
 			  <h3 className="text-sm font-semibold mb-2">By Property</h3>
-			  <Line data={propertyChartData} options={chartOptionsWithDollarYAxis} />
+			  {propertyChartData?.labels?.length && propertyChartData?.datasets?.length ? (
+				<Line data={propertyChartData} options={chartOptionsWithDollarYAxis} />
+			  ) : (
+				<p className="text-gray-400 text-sm">No data available</p>
+			  )}
 			</div>
 			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
 			  <h3 className="text-sm font-semibold mb-2">Total Earnings</h3>
-			  <Line data={monthlyEarningsData} options={chartOptionsWithDollarYAxis} />
+			  {monthlyEarningsData?.labels?.length && monthlyEarningsData?.datasets?.length ? (
+				<Line data={monthlyEarningsData} options={chartOptionsWithDollarYAxis} />
+			  ) : (
+				<p className="text-gray-400 text-sm">No data available</p>
+			  )}
 			</div>
 
 			{/* New charts - powered by real data */}
 			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
 			  <h3 className="text-sm font-semibold mb-2">Chip Count</h3>
-			  <Line data={chipCountData} options={chartOptionsWithLineNumberYAxis} />
+			  {chipCountData?.labels?.length && chipCountData?.datasets?.length ? (
+				<Line data={chipCountData} options={chartOptionsWithLineNumberYAxis} />
+			  ) : (
+				<p className="text-gray-400 text-sm">No data available</p>
+			  )}
 			</div>
 			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
 			  <h3 className="text-sm font-semibold mb-2">Avg Earnings per Chip</h3>
-			  <Line data={avgEarningsPerChipData} options={chartOptionsWithDollarYAxis} />
+			  {avgEarningsPerChipData?.labels?.length && avgEarningsPerChipData?.datasets?.length ? (
+				<Line data={avgEarningsPerChipData} options={chartOptionsWithDollarYAxis} />
+			  ) : (
+				<p className="text-gray-400 text-sm">No data available</p>
+			  )}
 			</div>
 			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
 			  <h3 className="text-sm font-semibold mb-2">Active Properties</h3>
-			  <Line data={activePropertiesData} options={chartOptionsWithLineNumberYAxis} />
+			  {activePropertiesData?.labels?.length && activePropertiesData?.datasets?.length ? (
+				<Line data={activePropertiesData} options={chartOptionsWithLineNumberYAxis} />
+			  ) : (
+				<p className="text-gray-400 text-sm">No data available</p>
+			  )}
 			</div>
 			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
 			  <h3 className="text-sm font-semibold mb-2">Chip Value Held</h3>
-			  <Line data={chipValueHeldData} options={chartOptionsWithDollarYAxis} />
+			  {chipValueHeldData?.labels?.length && chipValueHeldData?.datasets?.length ? (
+				<Line data={chipValueHeldData} options={chartOptionsWithDollarYAxis} />
+			  ) : (
+				<p className="text-gray-400 text-sm">No data available</p>
+			  )}
 			</div>
 			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
 			  <h3 className="text-sm font-semibold mb-2">Votes by Category</h3>
-			  <Bar data={voteCategoryEarningsData} options={chartOptionsWithBarNumberYAxis} />
+			  {voteCategoryEarningsData?.labels?.length && voteCategoryEarningsData?.datasets?.length ? (
+				<Bar data={voteCategoryEarningsData} options={chartOptionsWithBarNumberYAxis} />
+			  ) : (
+				<p className="text-gray-400 text-sm">No data available</p>
+			  )}
 			</div>
 		  </div>
 		</div>
