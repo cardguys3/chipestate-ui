@@ -1,17 +1,17 @@
-// app/admin/badges/page.tsx
+// /app/admin/badges/page.tsx
 
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import type { Session } from '@supabase/auth-helpers-nextjs'
-import { Database } from '@/types/supabase'
+import { useSupabaseClient, useSession } from '@supabase/auth-helpers-react'
+import type { Database } from '@/types/supabase'
 import { toast } from 'react-hot-toast'
 import { v4 as uuidv4 } from 'uuid'
 
-const BadgesPage = () => {
-  const supabase = createClientComponentClient<Database>()
-  const [session, setSession] = useState<Session | null>(null)
+export default function BadgesPage() {
+  const supabase = useSupabaseClient<Database>()
+  const session = useSession()
+
   const [catalog, setCatalog] = useState<any[]>([])
   const [users, setUsers] = useState<any[]>([])
   const [selectedUserId, setSelectedUserId] = useState('')
@@ -20,52 +20,27 @@ const BadgesPage = () => {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-  const getUser = async () => {
-    const { data, error } = await supabase.auth.getUser()
-    if (error) {
-      console.error('❌ Failed to get user:', error.message)
-      return
-    }
-    setSession({ user: data.user } as any) // minimal Session shape
-    console.log('✅ Current logged in user ID:', data.user?.id)
-  }
+    if (!session?.user?.id) return
 
-  getUser()
-}, [])
-
-  useEffect(() => {
     const loadBadgesAndUsers = async () => {
-      if (!session?.user?.id) {
-        console.warn('No user session available yet.')
-        return
-      }
-
       const { data: badgeData, error: badgeError } = await supabase
         .from('badges_catalog')
         .select('*')
 
-      if (badgeError) {
-        console.error('❌ badgeError:', badgeError)
-        toast.error('Failed to load badges')
-      } else {
-        setCatalog(badgeData)
-      }
+      if (badgeError) toast.error('Failed to load badges')
+      else setCatalog(badgeData || [])
 
       const { data: userList, error: userError } = await supabase
         .from('users_extended')
         .select('id, email, first_name, last_name')
         .order('first_name', { ascending: true })
 
-      if (userError) {
-        console.error('❌ userError:', userError)
-        toast.error('Failed to load users')
-      } else {
-        setUsers(userList)
-      }
+      if (userError) toast.error('Failed to load users')
+      else setUsers(userList || [])
     }
 
     loadBadgesAndUsers()
-  }, [session])
+  }, [session, supabase])
 
   useEffect(() => {
     if (!selectedUserId) {
@@ -103,7 +78,7 @@ const BadgesPage = () => {
     }
 
     fetchUserInfo()
-  }, [selectedUserId])
+  }, [selectedUserId, supabase])
 
   const handleAward = async () => {
     if (!selectedUserId || !selectedBadge) {
@@ -220,5 +195,3 @@ const BadgesPage = () => {
     </main>
   )
 }
-
-export default BadgesPage
