@@ -16,6 +16,8 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import type { ChartOptions } from 'chart.js'; // ✅ Add this line
+
 ChartJS.register(LineElement, BarElement, CategoryScale, LinearScale, PointElement, Tooltip, Legend);
 
 
