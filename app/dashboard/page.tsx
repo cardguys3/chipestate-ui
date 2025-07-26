@@ -1,3 +1,5 @@
+// app/dashboard/page.tsx
+
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -16,18 +18,16 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import type { ChartOptions } from 'chart.js'; // ✅ Add this line
+import type { ChartOptions } from 'chart.js' // ✅ Needed for type safety
 
-ChartJS.register(LineElement, BarElement, CategoryScale, LinearScale, PointElement, Tooltip, Legend);
-
-
-
+ChartJS.register(LineElement, BarElement, CategoryScale, LinearScale, PointElement, Tooltip, Legend)
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
+// ✅ For line charts with dollar Y-axis
 const chartOptionsWithDollarYAxis: ChartOptions<'line'> = {
   scales: {
     y: {
@@ -35,60 +35,89 @@ const chartOptionsWithDollarYAxis: ChartOptions<'line'> = {
         callback: function (value) {
           return `$${value}`
         },
-        color: 'white'
+        color: 'white',
       },
       grid: {
-        color: '#334155'
-      }
+        color: '#334155',
+      },
     },
     x: {
       ticks: {
-        color: 'white'
+        color: 'white',
       },
       grid: {
-        color: '#334155'
-      }
-    }
+        color: '#334155',
+      },
+    },
   },
   plugins: {
     legend: {
       labels: {
-        color: 'white'
-      }
-    }
-  }
+        color: 'white',
+      },
+    },
+  },
 }
 
-// Chart config for number-based Y axis
+// ✅ For bar charts with numeric Y-axis
 const chartOptionsWithNumberYAxis: ChartOptions<'bar'> = {
   scales: {
     y: {
       ticks: {
         stepSize: 1,
-        color: 'white'
+        color: 'white',
       },
       grid: {
-        color: '#334155'
-      }
+        color: '#334155',
+      },
     },
     x: {
       ticks: {
-        color: 'white'
+        color: 'white',
       },
       grid: {
-        color: '#334155'
-      }
-    }
+        color: '#334155',
+      },
+    },
   },
   plugins: {
     legend: {
       labels: {
-        color: 'white'
-      }
-    }
-  }
+        color: 'white',
+      },
+    },
+  },
 }
 
+// ✅ NEW: For line charts with numeric Y-axis
+const chartOptionsWithLineNumberYAxis: ChartOptions<'line'> = {
+  scales: {
+    y: {
+      ticks: {
+        stepSize: 1,
+        color: 'white',
+      },
+      grid: {
+        color: '#334155',
+      },
+    },
+    x: {
+      ticks: {
+        color: 'white',
+      },
+      grid: {
+        color: '#334155',
+      },
+    },
+  },
+  plugins: {
+    legend: {
+      labels: {
+        color: 'white',
+      },
+    },
+  },
+}
 
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null)
@@ -358,7 +387,7 @@ export default function DashboardPage() {
 			{/* New charts - powered by real data */}
 			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
 			  <h3 className="text-sm font-semibold mb-2">Chip Count</h3>
-			  <Line data={chipCountData} options={chartOptionsWithNumberYAxis} />
+			  <Line data={chipCountData} options={chartOptionsWithLineNumberYAxis} />
 			</div>
 			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
 			  <h3 className="text-sm font-semibold mb-2">Avg Earnings per Chip</h3>
@@ -366,7 +395,7 @@ export default function DashboardPage() {
 			</div>
 			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
 			  <h3 className="text-sm font-semibold mb-2">Active Properties</h3>
-			  <Line data={activePropertiesData} options={chartOptionsWithNumberYAxis} />
+			  <Line data={activePropertiesData} options={chartOptionsWithLineNumberYAxis} />
 			</div>
 			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
 			  <h3 className="text-sm font-semibold mb-2">Chip Value Held</h3>
@@ -374,7 +403,7 @@ export default function DashboardPage() {
 			</div>
 			<div className="bg-gray-800 rounded-xl p-4 h-[200px]">
 			  <h3 className="text-sm font-semibold mb-2">Votes by Category</h3>
-			  <Bar data={voteCategoryEarningsData} options={chartOptionsWithNumberYAxis} />
+			  <Bar data={voteCategoryEarningsData} options={chartOptionsWithLineNumberYAxis} />
 			</div>
 		  </div>
 		</div>
