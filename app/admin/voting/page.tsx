@@ -96,91 +96,87 @@ export default function AdminVotingPage() {
       <div className="max-w-6xl mx-auto space-y-10">
         <h1 className="text-3xl font-bold">🗳️ Voting Admin Panel</h1>
 
-        {/* Create Vote Section */}
-        <section className="bg-white/5 border border-white/10 rounded-xl p-6">
-          <h2 className="text-2xl font-semibold mb-4">Create New Vote</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label>Title</Label>
-              <Input
-                value={newVote.title}
-                onChange={e => setNewVote({ ...newVote, title: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>Category</Label>
-              <select
-                className="w-full p-2 rounded-md bg-black text-white border border-white/20"
-                value={newVote.category}
-                onChange={e => setNewVote({ ...newVote, category: e.target.value })}
-              >
-                <option value="">-- Select Category --</option>
-                <option value="lease_renewal">Lease Renewal</option>
-                <option value="manager_change">Property Manager Change</option>
-                <option value="reserve_policy">Reserve Policy</option>
-                <option value="capital_improvements">Capital Improvements</option>
-                <option value="distribution_policy">Distribution Policy</option>
-                <option value="property_sale">Property Sale</option>
-                <option value="governance_change">Governance Changes</option>
-                <option value="general_feedback">General Feedback</option>
-              </select>
-            </div>
+			{/* Create Vote Section */}
+			<section className="border border-white/20 rounded-lg p-6 space-y-4 mb-10">
+	  <h2 className="text-lg font-semibold">Create New Vote</h2>
 
-            <div className="md:col-span-2">
-              <Label>Description</Label>
-              <Textarea
-                value={newVote.description}
-                onChange={e => setNewVote({ ...newVote, description: e.target.value })}
-              />
-            </div>
+	  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+		<input
+		  type="text"
+		  placeholder="Title"
+		  className="p-2 rounded bg-white/10 text-white border border-white/20"
+		  value={newVote.title}
+		  onChange={e => setNewVote({ ...newVote, title: e.target.value })}
+		/>
 
-            <div>
-              <Label>Threshold Type</Label>
-              <select
-                className="w-full p-2 rounded-md bg-black text-white border border-white/20"
-                value={newVote.threshold_type}
-                onChange={e => setNewVote({ ...newVote, threshold_type: e.target.value })}
-              >
-                <option value="simple">Simple Majority</option>
-                <option value="super_60">Supermajority 60%</option>
-                <option value="super_67">Supermajority 66.7%</option>
-                <option value="minority_veto">Minority Veto</option>
-              </select>
-            </div>
-            <div>
-              <Label>Property</Label>
-              <select
-                className="w-full p-2 rounded-md bg-black text-white border border-white/20"
-                value={newVote.property_id}
-                onChange={e => setNewVote({ ...newVote, property_id: e.target.value })}
-              >
-                <option value="">-- Select Property --</option>
-                {properties.map(p => (
-                  <option key={p.id} value={p.id}>{p.title}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <Label>Start Date</Label>
-              <Input
-                type="datetime-local"
-                value={newVote.start_date}
-                onChange={e => setNewVote({ ...newVote, start_date: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>End Date</Label>
-              <Input
-                type="datetime-local"
-                value={newVote.end_date}
-                onChange={e => setNewVote({ ...newVote, end_date: e.target.value })}
-              />
-            </div>
-          </div>
-          <div className="mt-4">
-            <Button onClick={createVote}>Create Vote</Button>
-          </div>
-        </section>
+		<select
+		  className="p-2 rounded bg-white/10 text-white border border-white/20"
+		  value={newVote.category}
+		  onChange={e => setNewVote({ ...newVote, category: e.target.value })}
+		>
+		  <option value="">-- Select Category --</option>
+		  <option value="lease_renewal">Lease Renewal</option>
+		  <option value="manager_change">Property Manager Change</option>
+		  <option value="reserve_policy">Reserve Policy</option>
+		  <option value="capital_improvements">Capital Improvements</option>
+		  <option value="distribution_policy">Distribution Policy</option>
+		  <option value="property_sale">Property Sale</option>
+		  <option value="governance_change">Governance Changes</option>
+		  <option value="general_feedback">General Feedback</option>
+		</select>
+
+		<select
+		  className="p-2 rounded bg-white/10 text-white border border-white/20"
+		  value={newVote.threshold_type}
+		  onChange={e => setNewVote({ ...newVote, threshold_type: e.target.value })}
+		>
+		  <option value="simple">Simple Majority</option>
+		  <option value="super_60">Supermajority 60%</option>
+		  <option value="super_67">Supermajority 66.7%</option>
+		  <option value="minority_veto">Minority Veto</option>
+		</select>
+
+		<select
+		  className="p-2 rounded bg-white/10 text-white border border-white/20"
+		  value={newVote.property_id}
+		  onChange={e => setNewVote({ ...newVote, property_id: e.target.value })}
+		>
+		  <option value="">-- Select Property --</option>
+		  {properties.map(p => (
+			<option key={p.id} value={p.id}>{p.title}</option>
+		  ))}
+		</select>
+
+		<input
+		  type="datetime-local"
+		  className="p-2 rounded bg-white/10 text-white border border-white/20"
+		  value={newVote.start_date}
+		  onChange={e => setNewVote({ ...newVote, start_date: e.target.value })}
+		/>
+
+		<input
+		  type="datetime-local"
+		  className="p-2 rounded bg-white/10 text-white border border-white/20"
+		  value={newVote.end_date}
+		  onChange={e => setNewVote({ ...newVote, end_date: e.target.value })}
+		/>
+	  </div>
+
+	  <textarea
+		placeholder="Description"
+		className="w-full p-2 rounded bg-white/10 text-white border border-white/20"
+		value={newVote.description}
+		onChange={e => setNewVote({ ...newVote, description: e.target.value })}
+	  />
+
+	  <button
+		onClick={createVote}
+		className="mt-2 px-4 py-2 bg-emerald-500 rounded hover:bg-emerald-600"
+	  >
+		Create Vote
+	  </button>
+	</section>
+
 
         {/* Vote List Section */}
         <section className="bg-white/5 border border-white/10 rounded-xl p-6">
