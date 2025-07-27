@@ -332,33 +332,6 @@ return registrationStatus && registrationStatus !== 'approved' ? (
         </div>
       </div>
 
-
-      {/* ✅ Move all the dashboard JSX content here inside the main block */}
-      {userBadges.length > 0 && (
-        <div className="mb-6 w-full">
-          <div className="flex flex-wrap gap-4">
-            {userBadges.map((badge) => (
-              <div key={badge.id} className="flex flex-col items-center w-20">
-                <img
-                  src={badge.badges_catalog?.icon_url}
-                  alt={badge.badges_catalog?.name}
-                  title={badge.badges_catalog?.description}
-                  className="w-16 h-16 rounded-full shadow-md hover:scale-105 transition-transform"
-                />
-                <div className="text-xs text-center mt-1">{badge.badges_catalog?.name}</div>
-              </div>
-            ))}
-          </div>
-          <div className="mt-2">
-            <Link href="/badges">
-              <span className="text-emerald-400 hover:underline text-sm">
-                How to earn badges →
-              </span>
-            </Link>
-          </div>
-        </div>
-      )}
-	  
      {/* Badges */}
         {userBadges.length > 0 && (
           <div className="mb-6 w-full">
@@ -600,5 +573,6 @@ return registrationStatus && registrationStatus !== 'approved' ? (
 		  </div>
 		</div>
 	</main>
-  )
+  </>
+ )
 }
