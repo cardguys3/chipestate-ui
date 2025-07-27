@@ -249,7 +249,8 @@ export default function DashboardPage() {
       acc[id].push(item)
       return acc
     }, {} as Record<string, any[]>)
-
+	
+//buildChartData return block 
     return {
       labels: months.slice(monthIndexes[0], monthIndexes[1] + 1),
       datasets: Object.entries(grouped).map(([id, data], i) => {
@@ -270,7 +271,8 @@ export default function DashboardPage() {
       })
     }
   }
-
+  
+// ✅ Chart dataset initialization
   const chipChartData = buildChartData(filteredEarnings, 'chip_id')
   const propertyChartData = buildChartData(filteredEarnings, 'property_id')
   const monthlyEarningsData = {
@@ -305,7 +307,6 @@ return registrationStatus && registrationStatus !== 'approved' ? (
     </div>
   </main>
 ) : (
-  <>
     <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <h1 className="text-3xl font-bold mb-4 md:mb-0">Welcome, {firstName}!</h1>
@@ -574,4 +575,3 @@ return registrationStatus && registrationStatus !== 'approved' ? (
 		</div>
 	</main>
  )
-}
