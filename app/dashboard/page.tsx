@@ -168,7 +168,7 @@ export default function DashboardPage() {
   const [chipValueHeldData, setChipValueHeldData] = useState<any>(null)
   const [voteCategoryEarningsData, setVoteCategoryEarningsData] = useState<any>(null)
 
-{/* useEffects Section*/}
+//useEffects Section
   useEffect(() => {
     const loadData = async () => {
       const { data: { user } } = await supabase.auth.getUser()
