@@ -292,11 +292,9 @@ export default function DashboardPage() {
   ]
 };
 
-// ✅ Wrap everything in a single return, and avoid top-level conditional main conflict
-let content;
-
-if (registrationStatus && registrationStatus !== 'approved') {
-  content = (
+// ✅ Wrap everything in a single return, with conditional rendering
+return (
+  registrationStatus && registrationStatus !== 'approved' ? (
     <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
       <div className="text-center mt-20">
         <h1 className="text-3xl font-bold mb-4">
@@ -307,9 +305,7 @@ if (registrationStatus && registrationStatus !== 'approved') {
         </p>
       </div>
     </main>
-  );
-} else {
-  content = (
+  ) : (
     <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <h1 className="text-3xl font-bold mb-4 md:mb-0">Welcome, {firstName}!</h1>
@@ -334,12 +330,32 @@ if (registrationStatus && registrationStatus !== 'approved') {
           ))}
         </div>
       </div>
-      {/* rest of dashboard layout remains here */}
-    </main>
-  );
-}
 
-return content;
+      {/* ✅ Move all the dashboard JSX content here inside the main block */}
+      {userBadges.length > 0 && (
+        <div className="mb-6 w-full">
+          <div className="flex flex-wrap gap-4">
+            {userBadges.map((badge) => (
+              <div key={badge.id} className="flex flex-col items-center w-20">
+                <img
+                  src={badge.badges_catalog?.icon_url}
+                  alt={badge.badges_catalog?.name}
+                  title={badge.badges_catalog?.description}
+                  className="w-16 h-16 rounded-full shadow-md hover:scale-105 transition-transform"
+                />
+                <div className="text-xs text-center mt-1">{badge.badges_catalog?.name}</div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-2">
+            <Link href="/badges">
+              <span className="text-emerald-400 hover:underline text-sm">
+                How to earn badges →
+              </span>
+            </Link>
+          </div>
+        </div>
+      )}
 
 
       {/* Badges */}
