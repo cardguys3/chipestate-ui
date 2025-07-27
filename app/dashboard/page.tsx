@@ -291,10 +291,11 @@ export default function DashboardPage() {
     }
   ]
 };
+
 // ✅ Wrap everything in a single return, with conditional rendering
 return (
-  (
-    registrationStatus && registrationStatus !== 'approved' ? (
+  <>
+    {registrationStatus && registrationStatus !== 'approved' ? (
       <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
         <div className="text-center mt-20">
           <h1 className="text-3xl font-bold mb-4">
