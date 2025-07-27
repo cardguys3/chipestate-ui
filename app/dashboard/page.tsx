@@ -295,7 +295,9 @@ export default function DashboardPage() {
 };
 
 // ✅ Dashboard Entry Screen
-if (registrationStatus && registrationStatus !== 'approved') {
+if (registrationStatus === null) return null
+
+if (registrationStatus !== 'approved') {
   return (
     <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
       <div className="text-center mt-20">
@@ -309,7 +311,6 @@ if (registrationStatus && registrationStatus !== 'approved') {
     </main>
   )
 }
-
 return (
   <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
