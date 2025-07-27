@@ -570,24 +570,26 @@ if (registrationStatus === null) {
 			  )}
 			</div>
 
-        {/* Votes by Category */}
-        <div className="bg-gray-800 rounded-xl p-4 h-[200px]">
-          <h3 className="text-sm font-semibold mb-2">Votes by Category</h3>
-          {voteCategoryEarningsData?.labels?.length && voteCategoryEarningsData?.datasets?.length ? (
-            <Bar
-              data={voteCategoryEarningsData}
-              options={{
-                ...chartOptionsWithBarNumberYAxis,
-                plugins: { legend: { display: false } },
-              }}
-            />
-          ) : (
-            <p className="text-gray-400 text-sm">No data available</p>
-          )}
+          {/* Votes by Category */}
+          <div className="bg-gray-800 rounded-xl p-4 h-[200px]">
+            <h3 className="text-sm font-semibold mb-2">Votes by Category</h3>
+            {voteCategoryEarningsData?.labels?.length && voteCategoryEarningsData?.datasets?.length ? (
+              <Bar
+                data={voteCategoryEarningsData}
+                options={{
+                  ...chartOptionsWithBarNumberYAxis,
+                  plugins: { legend: { display: false } }
+                }}
+              />
+            ) : (
+              <p className="text-gray-400 text-sm">No data available</p>
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  </main>
-);
+    </main>
+  );
 }
+
+return content;
 
