@@ -292,46 +292,55 @@ export default function DashboardPage() {
   ]
 };
 
-// ✅ Wrap everything in a single return, with conditional rendering
-return (
-  <>
-    {registrationStatus && registrationStatus !== 'approved' ? (
-      <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
-        <div className="text-center mt-20">
-          <h1 className="text-3xl font-bold mb-4">
-            Your registration is still pending approval.
-          </h1>
-          <p className="text-lg">
-            You’ll be notified once your account is reviewed by the ChipEstate team.
-          </p>
+// ✅ Wrap everything in a single return, and avoid top-level conditional main conflict
+let content;
+
+if (registrationStatus && registrationStatus !== 'approved') {
+  content = (
+    <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
+      <div className="text-center mt-20">
+        <h1 className="text-3xl font-bold mb-4">
+          Your registration is still pending approval.
+        </h1>
+        <p className="text-lg">
+          You’ll be notified once your account is reviewed by the ChipEstate team.
+        </p>
+      </div>
+    </main>
+  );
+} else {
+  content = (
+    <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+        <h1 className="text-3xl font-bold mb-4 md:mb-0">Welcome, {firstName}!</h1>
+        <div className="flex flex-wrap gap-2 items-center">
+          <span className="text-lg font-semibold">🔗 Quick Links</span>
+          {[{ label: 'Account', href: '/account' },
+            { label: 'Trade Chips', href: '/trade' },
+            { label: 'Sell Chips', href: '/trade/list' },
+            { label: 'Open Votes', href: '/votes/history' }
+          ].map(({ label, href }) => (
+            <Link key={label} href={href}>
+              <button className="relative bg-emerald-600 hover:bg-emerald-500 border border-emerald-500 px-3 py-1 rounded-xl transition-colors duration-200">
+                {label}
+                {label === 'Open Votes' && (
+                  <span
+                    className="absolute top-0 right-0 -mt-1 -mr-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-emerald-600"
+                    title="You have open votes"
+                  />
+                )}
+              </button>
+            </Link>
+          ))}
         </div>
-      </main>
-    ) : (
-      <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-          <h1 className="text-3xl font-bold mb-4 md:mb-0">Welcome, {firstName}!</h1>
-          <div className="flex flex-wrap gap-2 items-center">
-            <span className="text-lg font-semibold">🔗 Quick Links</span>
-            {[
-              { label: 'Account', href: '/account' },
-              { label: 'Trade Chips', href: '/trade' },
-              { label: 'Sell Chips', href: '/trade/list' },
-              { label: 'Open Votes', href: '/votes/history' }
-            ].map(({ label, href }) => (
-              <Link key={label} href={href}>
-                <button className="relative bg-emerald-600 hover:bg-emerald-500 border border-emerald-500 px-3 py-1 rounded-xl transition-colors duration-200">
-                  {label}
-                  {label === 'Open Votes' && (
-                    <span
-                      className="absolute top-0 right-0 -mt-1 -mr-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-emerald-600"
-                      title="You have open votes"
-                    />
-                  )}
-                </button>
-              </Link>
-            ))}
-          </div>
-        </div>
+      </div>
+      {/* rest of dashboard layout remains here */}
+    </main>
+  );
+}
+
+return content;
+
 
       {/* Badges */}
       {userBadges.length > 0 && (
