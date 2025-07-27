@@ -273,89 +273,85 @@ export default function DashboardPage() {
 
   const chipChartData = buildChartData(filteredEarnings, 'chip_id')
   const propertyChartData = buildChartData(filteredEarnings, 'property_id')
-   const monthlyEarningsData = {
-    labels: months.slice(monthIndexes[0], monthIndexes[1] + 1),
-    datasets: [
-      {
-        label: 'Total Monthly Earnings',
-        data: months.slice(monthIndexes[0], monthIndexes[1] + 1).map(month =>
-          filteredEarnings
-            .filter(e => e.month === month)
-            .reduce((sum, e) => sum + Number(e.total || 0), 0)
-        ),
-        borderColor: '#10B981',
-        backgroundColor: '#10B981',
-        fill: false,
-        pointRadius: 2,
-        pointHoverRadius: 4
-      }
-    ]
-  }
+  const monthlyEarningsData = {
+  labels: months.slice(monthIndexes[0], monthIndexes[1] + 1),
+  datasets: [
+    {
+      label: 'Total Monthly Earnings',
+      data: months.slice(monthIndexes[0], monthIndexes[1] + 1).map(month =>
+        filteredEarnings
+          .filter(e => e.month === month)
+          .reduce((sum, e) => sum + Number(e.total || 0), 0)
+      ),
+      borderColor: '#10B981',
+      backgroundColor: '#10B981',
+      fill: false,
+      pointRadius: 2,
+      pointHoverRadius: 4
+    }
+  ]
+};
 
-  if (registrationStatus && registrationStatus !== 'approved') {
-    return (
-      <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
-        <div className="text-center mt-20">
-          <h1 className="text-3xl font-bold mb-4">Your registration is still pending approval.</h1>
-          <p className="text-lg">You’ll be notified once your account is reviewed by the ChipEstate team.</p>
-        </div>
-      </main>
-    )
-  }
-
-  // ✅ Move comment *outside* return
-  return (
-    <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-        <h1 className="text-3xl font-bold mb-4 md:mb-0">Welcome, {firstName}!</h1>
-        <div className="flex flex-wrap gap-2 items-center">
-          <span className="text-lg font-semibold">🔗 Quick Links</span>
-          {[
-            { label: 'Account', href: '/account' },
-            { label: 'Trade Chips', href: '/trade' },
-            { label: 'Sell Chips', href: '/trade/list' },
-            { label: 'Open Votes', href: '/votes/history' }
-          ].map(({ label, href }) => (
-            <Link key={label} href={href}>
-              <button className="relative bg-emerald-600 hover:bg-emerald-500 border border-emerald-500 px-3 py-1 rounded-xl transition-colors duration-200">
-                {label}
-                {label === 'Open Votes' && (
-                  <span
-                    className="absolute top-0 right-0 -mt-1 -mr-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-emerald-600"
-                    title="You have open votes"
-                  />
-                )}
-              </button>
-            </Link>
-          ))}
-        </div>
+// ✅ Wrap everything in a single return, with conditional rendering
+return (
+  <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
+    {registrationStatus && registrationStatus !== 'approved' ? (
+      <div className="text-center mt-20">
+        <h1 className="text-3xl font-bold mb-4">Your registration is still pending approval.</h1>
+        <p className="text-lg">You’ll be notified once your account is reviewed by the ChipEstate team.</p>
       </div>
+    ) : (
+      <>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+          <h1 className="text-3xl font-bold mb-4 md:mb-0">Welcome, {firstName}!</h1>
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-lg font-semibold">🔗 Quick Links</span>
+            {[
+              { label: 'Account', href: '/account' },
+              { label: 'Trade Chips', href: '/trade' },
+              { label: 'Sell Chips', href: '/trade/list' },
+              { label: 'Open Votes', href: '/votes/history' }
+            ].map(({ label, href }) => (
+              <Link key={label} href={href}>
+                <button className="relative bg-emerald-600 hover:bg-emerald-500 border border-emerald-500 px-3 py-1 rounded-xl transition-colors duration-200">
+                  {label}
+                  {label === 'Open Votes' && (
+                    <span
+                      className="absolute top-0 right-0 -mt-1 -mr-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-emerald-600"
+                      title="You have open votes"
+                    />
+                  )}
+                </button>
+              </Link>
+            ))}
+          </div>
+        </div>
 
-      {/* Badges */}
-		{userBadges.length > 0 && (
-		  <div className="mb-6 w-full">
-			<div className="flex flex-wrap gap-4">
-			  {userBadges.map((badge) => (
-				<div key={badge.id} className="flex flex-col items-center w-20">
-				  <img
-					src={badge.badges_catalog?.icon_url}
-					alt={badge.badges_catalog?.name}
-					title={badge.badges_catalog?.description}
-					className="w-16 h-16 rounded-full shadow-md hover:scale-105 transition-transform"
-				  />
-				  <div className="text-xs text-center mt-1">{badge.badges_catalog?.name}</div>
-				</div>
-			  ))}
-			</div>
-			<div className="mt-2">
-			  <Link href="/badges">
-				<span className="text-emerald-400 hover:underline text-sm">
-				  How to earn badges →
-				</span>
-			  </Link>
-			</div>
-		  </div>
-		)}
+        {/* Badges */}
+        {userBadges.length > 0 && (
+          <div className="mb-6 w-full">
+            <div className="flex flex-wrap gap-4">
+              {userBadges.map((badge) => (
+                <div key={badge.id} className="flex flex-col items-center w-20">
+                  <img
+                    src={badge.badges_catalog?.icon_url}
+                    alt={badge.badges_catalog?.name}
+                    title={badge.badges_catalog?.description}
+                    className="w-16 h-16 rounded-full shadow-md hover:scale-105 transition-transform"
+                  />
+                  <div className="text-xs text-center mt-1">{badge.badges_catalog?.name}</div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-2">
+              <Link href="/badges">
+                <span className="text-emerald-400 hover:underline text-sm">
+                  How to earn badges →
+                </span>
+              </Link>
+            </div>
+          </div>
+        )}
 
 	{/* Metrics */}
 	<div className="mb-6">
