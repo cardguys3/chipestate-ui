@@ -292,23 +292,19 @@ export default function DashboardPage() {
   ]
 };
 
-// ✅ Wrap everything in a single return, with conditional rendering
-if (registrationStatus && registrationStatus !== 'approved') {
-  return (
-    <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
-      <div className="text-center mt-20">
-        <h1 className="text-3xl font-bold mb-4">
-          Your registration is still pending approval.
-        </h1>
-        <p className="text-lg">
-          You’ll be notified once your account is reviewed by the ChipEstate team.
-        </p>
-      </div>
-    </main>
-  )
-}
-
-return (
+// ✅ Final: single return statement with proper ternary structure and no syntax errors
+return registrationStatus && registrationStatus !== 'approved' ? (
+  <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
+    <div className="text-center mt-20">
+      <h1 className="text-3xl font-bold mb-4">
+        Your registration is still pending approval.
+      </h1>
+      <p className="text-lg">
+        You’ll be notified once your account is reviewed by the ChipEstate team.
+      </p>
+    </div>
+  </main>
+) : (
   <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
       <h1 className="text-3xl font-bold mb-4 md:mb-0">Welcome, {firstName}!</h1>
