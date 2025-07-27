@@ -335,7 +335,6 @@ return (
           </div>
         </div>
 
-
      {/* Badges */}
         {userBadges.length > 0 && (
           <div className="mb-6 w-full">
