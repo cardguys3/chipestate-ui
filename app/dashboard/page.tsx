@@ -8,16 +8,7 @@ import Link from 'next/link'
 import Slider from 'rc-slider'
 import 'rc-slider/assets/index.css'
 import { Bar, Line } from 'react-chartjs-2'
-import {
-  Chart as ChartJS,
-  LineElement,
-  BarElement,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  Tooltip,
-  Legend,
-} from 'chart.js';
+import {Chart as ChartJS, LineElement, BarElement, CategoryScale, LinearScale, PointElement, Tooltip, Legend,} from 'chart.js';
 import type { ChartOptions } from 'chart.js' // ✅ Needed for type safety
 
 ChartJS.register(LineElement, BarElement, CategoryScale, LinearScale, PointElement, Tooltip, Legend)
@@ -141,8 +132,6 @@ export default function DashboardPage() {
     loadData()
   }, [])
 
-	if (!user) return null
-
   const getColor = (i: number) => {
     const colors = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#6366F1', '#EC4899', '#14B8A6', '#F97316']
     return colors[i % colors.length]
@@ -212,13 +201,15 @@ export default function DashboardPage() {
 };
 
 // ✅ Dashboard Entry
-if (!user) return null;
-const isApproved = user?.is_approved === true;
-const isActive = user?.is_active === true;
-const isEmailVerified = user?.email_verified === true || !!user?.email_confirmed_at;
-const currentStatus = isApproved && isActive && isEmailVerified ? 'approved' : 'pending';
+//if (!user) return null;
+//const isApproved = user?.is_approved === true;
+//const isActive = user?.is_active === true;
+//const isEmailVerified = user?.email_verified === true || !!user?.email_confirmed_at;
+//const currentStatus = isApproved && isActive && isEmailVerified ? 'approved' : 'pending';
 
-if (currentStatus !== 'approved') {
+if (!user || registrationStatus === null) return null;
+
+if (registrationStatus !== 'approved') {
   return (
     <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
       <div className="text-center mt-20">
