@@ -595,5 +595,4 @@ return (
   );
 }
 
-return content;
 
