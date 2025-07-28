@@ -299,8 +299,9 @@ if (!user) return null;
 const isApproved = user?.is_approved === true;
 const isActive = user?.is_active === true;
 const isEmailVerified = user?.email_verified === true || !!user?.email_confirmed_at;
-const registrationStatus = isApproved && isActive && isEmailVerified ? 'approved' : 'pending';
-if (registrationStatus !== 'approved') {
+const currentStatus = isApproved && isActive && isEmailVerified ? 'approved' : 'pending';
+
+if (currentStatus !== 'approved') {
   return (
     <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
       <div className="text-center mt-20">
@@ -314,6 +315,7 @@ if (registrationStatus !== 'approved') {
     </main>
   );
 }
+
 
 // ✅ Return approved dashboard content directly
 return (
