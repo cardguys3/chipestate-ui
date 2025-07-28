@@ -30,123 +30,37 @@ const supabase = createBrowserClient(
 // ✅ For line charts with dollar Y-axis
 const chartOptionsWithDollarYAxis: ChartOptions<'line'> = {
   scales: {
-    y: {
-      ticks: {
-        callback: function (value) {
-          return `$${value}`
-        },
-        color: 'white',
-      },
-      grid: {
-        color: '#334155',
-      },
-    },
-    x: {
-      ticks: {
-        color: 'white',
-      },
-      grid: {
-        color: '#334155',
-      },
-    },
+    y: { ticks: { callback: (value) => `$${value}`, color: 'white' }, grid: { color: '#334155' } },
+    x: { ticks: { color: 'white' }, grid: { color: '#334155' } },
   },
-  plugins: {
-    legend: {
-      labels: {
-        color: 'white',
-      },
-    },
-  },
+  plugins: { legend: { labels: { color: 'white' } } },
 }
 
 // ✅ For bar charts with numeric Y-axis
 const chartOptionsWithNumberYAxis: ChartOptions<'bar'> = {
   scales: {
-    y: {
-      ticks: {
-        stepSize: 1,
-        color: 'white',
-      },
-      grid: {
-        color: '#334155',
-      },
-    },
-    x: {
-      ticks: {
-        color: 'white',
-      },
-      grid: {
-        color: '#334155',
-      },
-    },
+    y: { ticks: { stepSize: 1, color: 'white' }, grid: { color: '#334155' } },
+    x: { ticks: { color: 'white' }, grid: { color: '#334155' } },
   },
-  plugins: {
-    legend: {
-      labels: {
-        color: 'white',
-      },
-    },
-  },
+  plugins: { legend: { labels: { color: 'white' } } },
 }
 
 // ✅ For line charts with numeric Y-axis
 const chartOptionsWithLineNumberYAxis: ChartOptions<'line'> = {
   scales: {
-    y: {
-      ticks: {
-        stepSize: 1,
-        color: 'white',
-      },
-      grid: {
-        color: '#334155',
-      },
-    },
-    x: {
-      ticks: {
-        color: 'white',
-      },
-      grid: {
-        color: '#334155',
-      },
-    },
+    y: { ticks: { stepSize: 1, color: 'white', },  grid: { color: '#334155', }, },
+    x: { ticks: { color: 'white', }, grid: { color: '#334155', }, }, 
   },
-  plugins: {
-    legend: {
-      labels: {
-        color: 'white',
-      },
-    },
-  },
+  plugins: { legend: { labels: { color: 'white', }, }, },
 }
 
 // ✅ NEW: For bar charts with numeric Y-axis — to fix Bar chart type error
 const chartOptionsWithBarNumberYAxis: ChartOptions<'bar'> = {
   scales: {
-    y: {
-      ticks: {
-        stepSize: 1,
-        color: 'white',
-      },
-      grid: {
-        color: '#334155',
-      },
-    },
-    x: {
-      ticks: {
-        color: 'white',
-      },
-      grid: {
-        color: '#334155',
-      },
-    },
-  },
-  plugins: {
-    legend: {
-      labels: {
-        color: 'white',
-      },
-    },
-  },
+    y: { ticks: { stepSize: 1, color: 'white', }, grid: { color: '#334155', }, },
+    x: { ticks: { color: 'white', }, grid: { color: '#334155', }, }, 
+   },  
+   plugins: { legend: { labels: { color: 'white', }, }, },
 }
 
 
@@ -187,8 +101,9 @@ export default function DashboardPage() {
 		const isApproved = userData?.is_approved === true
 		const isActive = userData?.is_active === true
 		const isEmailVerified = userData?.email_verified === true || !!userData?.email_confirmed_at
+		const isFullyApproved = isApproved && isActive && isEmailVerified
 
-		if (!isApproved || !isActive || !isEmailVerified) return
+      if (!isFullyApproved) return
 
 
       const { data: chipData } = await supabase.from('chips_view').select('*').eq('owner_id', user.id)
@@ -225,6 +140,8 @@ export default function DashboardPage() {
 
     loadData()
   }, [])
+
+	if (!user) return null
 
   const getColor = (i: number) => {
     const colors = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#6366F1', '#EC4899', '#14B8A6', '#F97316']
@@ -305,17 +222,12 @@ if (currentStatus !== 'approved') {
   return (
     <main className="min-h-screen bg-[#0e1a2b] text-white p-8">
       <div className="text-center mt-20">
-        <h1 className="text-3xl font-bold mb-4">
-          Your registration is still pending approval.
-        </h1>
-        <p className="text-lg">
-          You’ll be notified once your account is reviewed by the ChipEstate team.
-        </p>
+        <h1 className="text-3xl font-bold mb-4">Your registration is still pending approval.</h1>
+        <p className="text-lg">You’ll be notified once your account is reviewed by the ChipEstate team.</p>
       </div>
     </main>
   );
 }
-
 
 // ✅ Return approved dashboard content directly
 return (
@@ -334,10 +246,7 @@ return (
             <button className="relative bg-emerald-600 hover:bg-emerald-500 border border-emerald-500 px-3 py-1 rounded-xl transition-colors duration-200">
               {label}
               {label === 'Open Votes' && (
-                <span
-                  className="absolute top-0 right-0 -mt-1 -mr-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-emerald-600"
-                  title="You have open votes"
-                />
+                <span className="absolute top-0 right-0 -mt-1 -mr-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-emerald-600" title="You have open votes"/>
               )}
             </button>
           </Link>
