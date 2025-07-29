@@ -532,7 +532,8 @@ export default function DashboardPage() {
 
 
 // ==== BLOCK: Dashboard Page Function END ====
-    </main>
+    </>
   );
 }
 // ==== BLOCK: Dashboard Page Function END ====
+
