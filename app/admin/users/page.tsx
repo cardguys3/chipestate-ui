@@ -7,13 +7,16 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 
+// ==== BLOCK: Format Phone Number START ====
 function formatPhoneNumber(phone: string | null): string {
   if (!phone) return '—'
   const cleaned = phone.replace(/\D/g, '')
   const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/)
   return match ? `(${match[1]}) ${match[2]}-${match[3]}` : phone
 }
+// ==== BLOCK: Format Phone Number END ====
 
+// ==== BLOCK: Admin Users Page Component START ====
 export default function AdminUsersPage() {
   const router = useRouter()
   const [users, setUsers] = useState<any[]>([])
@@ -29,10 +32,13 @@ export default function AdminUsersPage() {
   const [sortField, setSortField] = useState<string>('created_at')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
 
+  // ==== BLOCK: useEffect – Initial Data Load START ====
   useEffect(() => {
     fetchUsers()
   }, [])
+  // ==== BLOCK: useEffect – Initial Data Load END ====
 
+  // ==== BLOCK: fetchUsers START ====
   async function fetchUsers() {
     const { data: usersData } = await supabase
       .from('users_extended')
@@ -48,7 +54,10 @@ export default function AdminUsersPage() {
     const recentVerifications: Record<string, string | null> = {}
     if (logsData) {
       for (const log of logsData) {
-        if (!recentVerifications[log.entity_id] || new Date(log.created_at) > new Date(recentVerifications[log.entity_id]!)) {
+        if (
+          !recentVerifications[log.entity_id] ||
+          new Date(log.created_at) > new Date(recentVerifications[log.entity_id]!)
+        ) {
           recentVerifications[log.entity_id] = log.created_at
         }
       }
@@ -59,7 +68,9 @@ export default function AdminUsersPage() {
       setVerifications(recentVerifications)
     }
   }
+  // ==== BLOCK: fetchUsers END ====
 
+  // ==== BLOCK: toggleApproval START ====
   async function toggleApproval(id: string, current: boolean) {
     const { data: { session } } = await supabase.auth.getSession()
     const adminId = session?.user?.id ?? null
@@ -76,7 +87,9 @@ export default function AdminUsersPage() {
 
     fetchUsers()
   }
+  // ==== BLOCK: toggleApproval END ====
 
+  // ==== BLOCK: toggleActive START ====
   async function toggleActive(id: string, current: boolean) {
     const { data: { session } } = await supabase.auth.getSession()
     const adminId = session?.user?.id ?? null
@@ -93,7 +106,9 @@ export default function AdminUsersPage() {
 
     fetchUsers()
   }
-
+  // ==== BLOCK: toggleActive END ====
+}
+// ==== BLOCK: resendVerification START ====
   async function resendVerification(email: string, id: string) {
     const { data: { session } } = await supabase.auth.getSession()
     const adminId = session?.user?.id ?? null
@@ -129,7 +144,9 @@ export default function AdminUsersPage() {
       fetchUsers()
     }
   }
+// ==== BLOCK: resendVerification END ====
 
+// ==== BLOCK: manuallyVerifyEmail START ====
   async function manuallyVerifyEmail(id: string) {
     const { data: { session } } = await supabase.auth.getSession()
     const adminId = session?.user?.id ?? null
@@ -156,7 +173,9 @@ export default function AdminUsersPage() {
     alert('Email manually marked as verified.')
     fetchUsers()
   }
+// ==== BLOCK: manuallyVerifyEmail END ====
 
+// ==== BLOCK: handleSort START ====
   const handleSort = (field: string) => {
     if (sortField === field) {
       setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))
@@ -165,7 +184,9 @@ export default function AdminUsersPage() {
       setSortDirection('asc')
     }
   }
+// ==== BLOCK: handleSort END ====
 
+// ==== BLOCK: filteredUsers START ====
   const filtered = users
     .filter((u) => {
       const fullName = `${u.first_name ?? ''} ${u.last_name ?? ''}`.toLowerCase()
@@ -190,21 +211,31 @@ export default function AdminUsersPage() {
         ? Number(aValue) - Number(bValue)
         : Number(bValue) - Number(aValue)
     })
+// ==== BLOCK: filteredUsers END ====
 
+// ==== BLOCK: formatDate START ====
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return '—'
     const d = new Date(dateStr)
     return isNaN(d.getTime()) ? '—' : d.toLocaleDateString()
   }
+// ==== BLOCK: formatDate END ====
 
+// ==== BLOCK: daysAgo START ====
   const daysAgo = (dateStr: string) => {
     const diff = (new Date().getTime() - new Date(dateStr).getTime()) / (1000 * 60 * 60 * 24)
     return Math.floor(diff)
   }
+// ==== BLOCK: daysAgo END ====
 
+
+// ==== BLOCK: sortArrow START ====
   const sortArrow = (field: string) =>
     sortField === field ? (sortDirection === 'asc' ? '↑' : '↓') : ''
+// ==== BLOCK: sortArrow END ====
 
+
+// ==== BLOCK: JSX return START ====
   return (
     <main className="min-h-screen bg-[#0B1D33] text-white p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -306,4 +337,4 @@ export default function AdminUsersPage() {
       )}
     </main>
   )
-}
+// ==== BLOCK: JSX return END ====

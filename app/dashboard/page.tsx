@@ -296,9 +296,9 @@ export default function DashboardPage() {
 
 
 // ==== BLOCK: Dashboard Performance Section START ====
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold mb-2">📊 Performance</h2>
-        </div>
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold mb-2">📊 Performance</h2>
+      </div>
 // ==== BLOCK: Dashboard Performance Section END ====
 
 
