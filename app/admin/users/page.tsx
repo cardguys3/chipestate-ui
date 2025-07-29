@@ -236,105 +236,105 @@ export default function AdminUsersPage() {
 
 
 // ==== BLOCK: JSX return START ====
-  return (
-    <main className="min-h-screen bg-[#0B1D33] text-white p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Users</h1>
-        <Link
-          href="/admin/users/add"
-          className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl shadow"
-        >
-          + Add User
-        </Link>
+return (
+  <main className="min-h-screen bg-[#0B1D33] text-white p-6 space-y-6">
+    <div className="flex items-center justify-between">
+      <h1 className="text-3xl font-bold">Users</h1>
+      <Link
+        href="/admin/users/add"
+        className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl shadow"
+      >
+        + Add User
+      </Link>
+    </div>
+
+    <div className="border border-emerald-600 p-4 rounded-xl space-y-4">
+      <h2 className="text-xl font-semibold text-emerald-400">Filter Users</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <input type="text" placeholder="Name" value={filters.name} onChange={(e) => setFilters({ ...filters, name: e.target.value })} className="p-2 rounded bg-[#0B1D33] border border-gray-600 text-white" />
+        <input type="text" placeholder="Email" value={filters.email} onChange={(e) => setFilters({ ...filters, email: e.target.value })} className="p-2 rounded bg-[#0B1D33] border border-gray-600 text-white" />
+        <input type="text" placeholder="State" value={filters.state} onChange={(e) => setFilters({ ...filters, state: e.target.value })} className="p-2 rounded bg-[#0B1D33] border border-gray-600 text-white" />
+        <label className="flex items-center space-x-2">
+          <input type="checkbox" checked={filters.activeOnly} onChange={(e) => setFilters({ ...filters, activeOnly: e.target.checked })} />
+          <span>Active Only</span>
+        </label>
+        <label className="flex items-center space-x-2">
+          <input type="checkbox" checked={filters.approvedOnly} onChange={(e) => setFilters({ ...filters, approvedOnly: e.target.checked })} />
+          <span>Approved Only</span>
+        </label>
+        <label className="flex items-center space-x-2">
+          <input type="checkbox" checked={filters.unverifiedOnly} onChange={(e) => setFilters({ ...filters, unverifiedOnly: e.target.checked })} />
+          <span>Unverified Only</span>
+        </label>
       </div>
+    </div>
 
-      <div className="border border-emerald-600 p-4 rounded-xl space-y-4">
-        <h2 className="text-xl font-semibold text-emerald-400">Filter Users</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-          <input type="text" placeholder="Name" value={filters.name} onChange={(e) => setFilters({ ...filters, name: e.target.value })} className="p-2 rounded bg-[#0B1D33] border border-gray-600 text-white" />
-          <input type="text" placeholder="Email" value={filters.email} onChange={(e) => setFilters({ ...filters, email: e.target.value })} className="p-2 rounded bg-[#0B1D33] border border-gray-600 text-white" />
-          <input type="text" placeholder="State" value={filters.state} onChange={(e) => setFilters({ ...filters, state: e.target.value })} className="p-2 rounded bg-[#0B1D33] border border-gray-600 text-white" />
-          <label className="flex items-center space-x-2">
-            <input type="checkbox" checked={filters.activeOnly} onChange={(e) => setFilters({ ...filters, activeOnly: e.target.checked })} />
-            <span>Active Only</span>
-          </label>
-          <label className="flex items-center space-x-2">
-            <input type="checkbox" checked={filters.approvedOnly} onChange={(e) => setFilters({ ...filters, approvedOnly: e.target.checked })} />
-            <span>Approved Only</span>
-          </label>
-          <label className="flex items-center space-x-2">
-            <input type="checkbox" checked={filters.unverifiedOnly} onChange={(e) => setFilters({ ...filters, unverifiedOnly: e.target.checked })} />
-            <span>Unverified Only</span>
-          </label>
-        </div>
+    {filtered.length === 0 ? (
+      <p className="text-lg text-gray-300">No users found.</p>
+    ) : (
+      <div className="overflow-x-auto rounded-lg border border-gray-700">
+        <table className="min-w-full text-sm">
+          <thead className="bg-gray-800 text-left text-white">
+            <tr>
+              <th className="p-3 font-semibold cursor-pointer" onClick={() => handleSort('name')}>Name {sortArrow('name')}</th>
+              <th className="p-3 font-semibold cursor-pointer" onClick={() => handleSort('email')}>Email {sortArrow('email')}</th>
+              <th className="p-3 font-semibold">Phone</th>
+              <th className="p-3 font-semibold cursor-pointer" onClick={() => handleSort('res_state')}>State {sortArrow('res_state')}</th>
+              <th className="p-3 font-semibold cursor-pointer" onClick={() => handleSort('created_at')}>Created {sortArrow('created_at')}</th>
+              <th className="p-3 font-semibold cursor-pointer" onClick={() => handleSort('is_approved')}>Acct Approved {sortArrow('is_approved')}</th>
+              <th className="p-3 font-semibold cursor-pointer" onClick={() => handleSort('is_active')}>Active {sortArrow('is_active')}</th>
+              <th className="p-3 font-semibold">Email Verified</th>
+              <th className="p-3 font-semibold">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((u) => {
+              const name = `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim() || '—'
+              const lastSent = verifications[u.id]
+
+              return (
+                <tr key={u.id} className="border-t border-gray-700 hover:bg-white/5">
+                  <td className="p-3">
+                    <Link href={`/admin/users/${u.id}`} className="text-blue-400 hover:underline">
+                      {name}
+                    </Link>
+                  </td>
+                  <td className="p-3">{u.email ?? '—'}</td>
+                  <td className="p-3">{formatPhoneNumber(u.phone)}</td>
+                  <td className="p-3">{u.res_state ?? '—'}</td>
+                  <td className="p-3">{formatDate(u.created_at)}</td>
+                  <td className="p-3">{u.is_approved ? 'Yes' : 'No'}</td>
+                  <td className="p-3">{u.is_active ? 'Yes' : 'No'}</td>
+                  <td className="p-3">
+                    {u.email_confirmed_at
+                      ? 'Yes'
+                      : lastSent
+                        ? `Sent ${daysAgo(lastSent)} day(s) ago`
+                        : (
+                          <>
+                            <button onClick={() => resendVerification(u.email, u.id)} className="text-blue-400 hover:underline">Send</button>
+                            <span className="mx-2">|</span>
+                            <button onClick={() => manuallyVerifyEmail(u.id)} className="text-green-400 hover:underline">Verify</button>
+                          </>
+                        )
+                    }
+                  </td>
+                  <td className="p-3 space-x-3">
+                    <Link href={`/admin/users/${u.id}/edit-user`} className="text-emerald-400 hover:underline">Edit</Link>
+                    <button onClick={() => toggleApproval(u.id, u.is_approved)} className="text-yellow-400 hover:underline">
+                      {u.is_approved ? 'Deny' : 'Approve'}
+                    </button>
+                    <button onClick={() => toggleActive(u.id, u.is_active)} className="text-red-400 hover:underline">
+                      {u.is_active ? 'Deactivate' : 'Activate'}
+                    </button>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
       </div>
-
-      {filtered.length === 0 ? (
-        <p className="text-lg text-gray-300">No users found.</p>
-      ) : (
-        <div className="overflow-x-auto rounded-lg border border-gray-700">
-          <table className="min-w-full text-sm">
-            <thead className="bg-gray-800 text-left text-white">
-              <tr>
-                <th className="p-3 font-semibold cursor-pointer" onClick={() => handleSort('name')}>Name {sortArrow('name')}</th>
-                <th className="p-3 font-semibold cursor-pointer" onClick={() => handleSort('email')}>Email {sortArrow('email')}</th>
-                <th className="p-3 font-semibold">Phone</th>
-                <th className="p-3 font-semibold cursor-pointer" onClick={() => handleSort('res_state')}>State {sortArrow('res_state')}</th>
-                <th className="p-3 font-semibold cursor-pointer" onClick={() => handleSort('created_at')}>Created {sortArrow('created_at')}</th>
-                <th className="p-3 font-semibold cursor-pointer" onClick={() => handleSort('is_approved')}>Acct Approved {sortArrow('is_approved')}</th>
-                <th className="p-3 font-semibold cursor-pointer" onClick={() => handleSort('is_active')}>Active {sortArrow('is_active')}</th>
-                <th className="p-3 font-semibold">Email Verified</th>
-                <th className="p-3 font-semibold">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((u) => {
-                const name = `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim() || '—'
-                const lastSent = verifications[u.id]
-
-                return (
-                  <tr key={u.id} className="border-t border-gray-700 hover:bg-white/5">
-                    <td className="p-3">
-                      <Link href={`/admin/users/${u.id}`} className="text-blue-400 hover:underline">
-                        {name}
-                      </Link>
-                    </td>
-                    <td className="p-3">{u.email ?? '—'}</td>
-                    <td className="p-3">{formatPhoneNumber(u.phone)}</td>
-                    <td className="p-3">{u.res_state ?? '—'}</td>
-                    <td className="p-3">{formatDate(u.created_at)}</td>
-                    <td className="p-3">{u.is_approved ? 'Yes' : 'No'}</td>
-                    <td className="p-3">{u.is_active ? 'Yes' : 'No'}</td>
-                    <td className="p-3">
-                      {u.email_confirmed_at
-                        ? 'Yes'
-                        : lastSent
-                          ? `Sent ${daysAgo(lastSent)} day(s) ago`
-                          : (
-                            <>
-                              <button onClick={() => resendVerification(u.email, u.id)} className="text-blue-400 hover:underline">Send</button>
-                              <span className="mx-2">|</span>
-                              <button onClick={() => manuallyVerifyEmail(u.id)} className="text-green-400 hover:underline">Verify</button>
-                            </>
-                          )
-                      }
-                    </td>
-                    <td className="p-3 space-x-3">
-                      <Link href={`/admin/users/${u.id}/edit-user`} className="text-emerald-400 hover:underline">Edit</Link>
-                      <button onClick={() => toggleApproval(u.id, u.is_approved)} className="text-yellow-400 hover:underline">
-                        {u.is_approved ? 'Deny' : 'Approve'}
-                      </button>
-                      <button onClick={() => toggleActive(u.id, u.is_active)} className="text-red-400 hover:underline">
-                        {u.is_active ? 'Deactivate' : 'Activate'}
-                      </button>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </main>
-  )
+    )}
+  </main>
+)
 // ==== BLOCK: JSX return END ====
