@@ -1,6 +1,6 @@
 // /app/admin/users/fetchUsers.ts
 import { cookies } from 'next/headers'
-import { createServerClient } from '../../../utils/supabase/server'
+import { createServerClient } from '../../../../utils/supabase/server'
 
 export async function fetchUsers() {
   const supabase = createServerClient<Database>();
