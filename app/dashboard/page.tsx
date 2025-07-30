@@ -305,7 +305,7 @@ export default function DashboardPage() {
 
 
 // ==== BLOCK: Performance Filters – Wrapper START ====
-        <div className="flex flex-wrap gap-4 mb-4 items-end">
+<div className="flex flex-wrap gap-4 mb-4 items-end">
 // ==== BLOCK: Performance Filters – Wrapper END ====
 
 
