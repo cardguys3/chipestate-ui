@@ -234,20 +234,23 @@ export default function AdminUsersPage() {
     sortField === field ? (sortDirection === 'asc' ? '↑' : '↓') : ''
 // ==== BLOCK: sortArrow END ====
 
+// ==== BLOCK: JSX return PART 1 START ====
+function AdminUsersPageContent() {
+  return (
+    <main className="min-h-screen bg-[#0B1D33] text-white p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">Users</h1>
+        <Link
+          href="/admin/users/add"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl shadow"
+        >
+          + Add User
+        </Link>
+      </div>
 
-// ==== BLOCK: JSX return START ====
-return (
-  <main className="min-h-screen bg-[#0B1D33] text-white p-6 space-y-6">
-    <div className="flex items-center justify-between">
-      <h1 className="text-3xl font-bold">Users</h1>
-      <Link
-        href="/admin/users/add"
-        className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl shadow"
-      >
-        + Add User
-      </Link>
-    </div>
+// ==== BLOCK: JSX return PART 1 END ====
 
+// ==== BLOCK: JSX return PART 2 START ====
     <div className="border border-emerald-600 p-4 rounded-xl space-y-4">
       <h2 className="text-xl font-semibold text-emerald-400">Filter Users</h2>
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
@@ -268,10 +271,13 @@ return (
         </label>
       </div>
     </div>
-
+// ==== BLOCK: JSX return PART 2 END ====
+// ==== BLOCK: JSX return PART 3 START ====
     {filtered.length === 0 ? (
       <p className="text-lg text-gray-300">No users found.</p>
     ) : (
+// ==== BLOCK: JSX return PART 3 END ====
+// ==== BLOCK: JSX return PART 4 START ====
       <div className="overflow-x-auto rounded-lg border border-gray-700">
         <table className="min-w-full text-sm">
           <thead className="bg-gray-800 text-left text-white">
@@ -288,6 +294,8 @@ return (
             </tr>
           </thead>
           <tbody>
+// ==== BLOCK: JSX return PART 4 END ====
+// ==== BLOCK: JSX return PART 5 START ====
             {filtered.map((u) => {
               const name = `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim() || '—'
               const lastSent = verifications[u.id]
@@ -331,11 +339,12 @@ return (
                 </tr>
               )
             })}
+// ==== BLOCK: JSX return PART 5 END ====
+// ==== BLOCK: JSX return PART 6 START ====
           </tbody>
         </table>
       </div>
     )}
   </main>
 )
-// ==== BLOCK: JSX return END ====
-
+// ==== BLOCK: JSX return PART 6 END ====

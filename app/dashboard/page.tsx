@@ -535,5 +535,8 @@ export default function DashboardPage() {
     </>
   );
 }
+
+export const dynamic = 'force-dynamic'
 // ==== BLOCK: Dashboard Page Function END ====
+
 
