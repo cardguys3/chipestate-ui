@@ -1,32 +1,19 @@
-// /app/utils/logStatusChange.ts
+// ==== FILE: /utils/logStatusChange.ts ====
 
-import { createServerClient } from '@/utils/supabase/server'
-import { cookies } from 'next/headers'
+import { createClient } from './supabase/server'
 
-type LogStatusChangeParams = {
-  entity_type: 'user' | 'property' | 'property_manager'
+type LogParams = {
   entity_id: string
-  status_type: string
-  status: string
-  changed_by?: string | null
+  entity_type: 'user' | 'property' | 'property_manager'
+  field_changed: string
+  change_type: string
 }
 
-export async function logStatusChange({
-  entity_type,
-  entity_id,
-  status_type,
-  status,
-  changed_by,
-}: LogStatusChangeParams) {
-  const supabase = createServerClient(cookies())
+export async function logStatusChange(params: LogParams) {
+  const supabase = createClient()
+  const { error } = await supabase.from('status_change_log').insert([params])
 
-  await supabase.from('status_change_log').insert([
-    {
-      entity_type,
-      entity_id,
-      status_type,
-      status,
-      changed_by: changed_by ?? null,
-    },
-  ])
+  if (error) {
+    console.error('Error logging status change:', error)
+  }
 }
