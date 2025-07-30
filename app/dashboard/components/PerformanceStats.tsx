@@ -1,65 +1,88 @@
 // /app/dashboard/components/PerformanceStats.tsx
 
-'use client'
+'use client';
 
-import React from 'react'
-import { Card, CardContent } from '@/components/ui/card'
+import { useMemo } from 'react';
+import { Card, CardContent } from './internal/Card';
+
+type Property = {
+  id: string;
+  title: string;
+  current_value: number;
+};
 
 type Chip = {
-  properties?: {
-    current_value?: number
-    chip_count?: number
-    title?: string
-  }
+  id: string;
+  property_id: string;
+};
+
+type ChipEarning = {
+  id: string;
+  property_id: string;
+  amount: number;
+};
+
+interface Props {
+  properties: Property[];
+  chips: Chip[];
+  earnings: ChipEarning[];
 }
 
-type PerformanceStatsProps = {
-  chips: Chip[]
-  properties: any[]
-  netWorth: number
-  totalEarnings: number
-  totalPayout: number
-}
+export default function PerformanceStats({ properties, chips, earnings }: Props) {
+  const stats = useMemo(() => {
+    const totalChips = chips.length;
 
-const PerformanceStats: React.FC<PerformanceStatsProps> = ({
-  chips,
-  properties,
-  netWorth,
-  totalEarnings,
-  totalPayout
-}) => {
+    const totalEarnings = earnings.reduce((acc, e) => acc + (e.amount || 0), 0);
+
+    const propertyValueMap: Record<string, number> = {};
+    properties.forEach((p) => {
+      propertyValueMap[p.id] = p.current_value || 0;
+    });
+
+    const totalValue = chips.reduce((acc, chip) => {
+      const propValue = propertyValueMap[chip.property_id] || 0;
+      return acc + propValue;
+    }, 0);
+
+    const averageValue = totalChips > 0 ? totalValue / totalChips : 0;
+
+    return {
+      totalChips,
+      totalEarnings,
+      totalValue,
+      averageValue,
+    };
+  }, [properties, chips, earnings]);
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
       <Card>
-        <CardContent className="p-4">
-          <div className="text-sm text-gray-400">Net Worth</div>
-          <div className="text-xl font-semibold">${netWorth.toFixed(2)}</div>
+        <CardContent>
+          <p className="text-sm text-gray-400">Chips Owned</p>
+          <p className="text-2xl font-semibold">{stats.totalChips}</p>
         </CardContent>
       </Card>
+
       <Card>
-        <CardContent className="p-4">
-          <div className="text-sm text-gray-400">Total Payout</div>
-          <div className="text-xl font-semibold">${totalPayout.toFixed(2)}</div>
+        <CardContent>
+          <p className="text-sm text-gray-400">Total Earnings</p>
+          <p className="text-2xl font-semibold">${stats.totalEarnings.toFixed(2)}</p>
         </CardContent>
       </Card>
+
       <Card>
-        <CardContent className="p-4">
-          <div className="text-sm text-gray-400">Earnings</div>
-          <div className="text-xl font-semibold">${totalEarnings.toFixed(2)}</div>
+        <CardContent>
+          <p className="text-sm text-gray-400">Total Property Value</p>
+          <p className="text-2xl font-semibold">${stats.totalValue.toLocaleString()}</p>
         </CardContent>
       </Card>
+
       <Card>
-        <CardContent className="p-4">
-          <div className="text-sm text-gray-400">Return (ROI)</div>
-          <div className="text-xl font-semibold">
-            {(netWorth !== 0
-              ? ((totalEarnings / netWorth) * 100).toFixed(1)
-              : '0.0') + '%'}
-          </div>
+        <CardContent>
+          <p className="text-sm text-gray-400">Avg Value per Chip</p>
+          <p className="text-2xl font-semibold">${stats.averageValue.toFixed(2)}</p>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
-
-export default PerformanceStats
