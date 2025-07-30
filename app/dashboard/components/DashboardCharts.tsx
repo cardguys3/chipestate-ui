@@ -1,21 +1,21 @@
 // /app/dashboard/components/DashboardCharts.tsx
 
-'use client'
+'use client';
 
-import React from 'react'
-import { MonthlyPayout } from '../types'
-import EarningsByChipChart from './charts/EarningsByChipChart'
-import EarningsByPropertyChart from './charts/EarningsByPropertyChart'
-import EarningsOverTimeChart from './charts/EarningsOverTimeChart'
-import ChipEarningsComparisonChart from './charts/ChipEarningsComparisonChart'
-import PropertyComparisonChart from './charts/PropertyComparisonChart'
+import React from 'react';
+import { MonthlyPayout } from '../types';
+import EarningsByChipChart from './charts/EarningsByChipChart';
+import EarningsByPropertyChart from './charts/EarningsByPropertyChart';
+import EarningsOverTimeChart from './charts/EarningsOverTimeChart';
+import ChipEarningsComparisonChart from './charts/ChipEarningsComparisonChart';
+import PropertyComparisonChart from './charts/PropertyComparisonChart';
 
 interface DashboardChartsProps {
-  earningsData: MonthlyPayout[]
-  selectedChips: string[]
-  selectedProps: string[]
-  months: string[]
-  monthIndexes: number[]
+  earningsData: MonthlyPayout[];
+  selectedChips: string[];
+  selectedProps: string[];
+  months: string[];
+  monthIndexes: number[];
 }
 
 const DashboardCharts: React.FC<DashboardChartsProps> = ({
@@ -86,8 +86,8 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
         </div>
       </div>
     </div>
-  )
+  );
   // ==== BLOCK: Dashboard Charts Section END ====
-}
+};
 
-export default DashboardCharts
+export default DashboardCharts;
