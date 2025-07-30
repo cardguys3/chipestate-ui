@@ -1,9 +1,15 @@
-import type { NextConfig } from 'next'
+// next.config.ts
+import path from 'path'
+import { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  reactStrictMode: true,
-  images: {
-    domains: ['szzglzcddjrnrtguwjsc.supabase.co'], // Replace with your actual Supabase storage domain
+  webpack: (config) => {
+    config.resolve = config.resolve || {}
+    config.resolve.alias = {
+      ...(config.resolve.alias || {}),
+      '@': path.resolve(__dirname),
+    }
+    return config
   },
 }
 
