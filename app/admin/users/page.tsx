@@ -340,11 +340,15 @@ function AdminUsersPageContent() {
               )
             })}
 // ==== BLOCK: JSX return PART 5 END ====
-// ==== BLOCK: JSX return PART 6 START ====
-          </tbody>
-        </table>
+// ==== BLOCK: JSX return FINAL MAIN CLOSE ==== AFTER
+            </tbody>
+          </table>
+        </div>
       </div>
     )}
   </main>
-)
-// ==== BLOCK: JSX return PART 6 END ====
+)}
+
+export default AdminUsersPage
+// ==== BLOCK: JSX return FINAL MAIN CLOSE END ====
+
