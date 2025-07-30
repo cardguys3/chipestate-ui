@@ -1,31 +1,30 @@
-// ==== FILE: /app/admin/users/manuallyVerifyEmail.ts START ====
+// /app/admin/users/manuallyVerifyEmail.ts
+
 'use server'
 
-import { createClient } from '@/utils/supabase/server'
-import { revalidatePath } from 'next/cache'
-import { logStatusChange } from '@/utils/logStatusChange'
+import { createClient } from '../../../utils/supabase/server'
+import { logStatusChange } from '../../../utils/logStatusChange'
 
 export async function manuallyVerifyEmail(userId: string) {
   const supabase = createClient()
 
   const { error } = await supabase
     .from('users_extended')
-    .update({ email_confirmed_at: new Date().toISOString() })
+    .update({ email_verified: true })
     .eq('id', userId)
 
   if (error) {
-    console.error('Error manually verifying email:', error)
-    return { error: 'Failed to verify email manually.' }
+    console.error('Error verifying email manually:', error.message)
+    throw new Error('Email verification failed.')
   }
 
   await logStatusChange({
-    entity_id: userId,
+    user_id: userId,
     entity_type: 'user',
-    field_changed: 'email_confirmed_at',
-    change_type: 'manual_override'
+    field_changed: 'email_verified',
+    new_value: 'true',
+    triggered_by: 'admin_manual',
   })
 
-  revalidatePath('/admin/users')
-  return { success: true }
+  return true
 }
-// ==== FILE: /app/admin/users/manuallyVerifyEmail.ts END ====
