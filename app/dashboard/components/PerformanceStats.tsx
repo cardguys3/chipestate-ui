@@ -3,7 +3,8 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Card, CardContent } from './internal/Card';
+import { Card, CardContent } from '@/components/card'
+
 
 type Property = {
   id: string;
