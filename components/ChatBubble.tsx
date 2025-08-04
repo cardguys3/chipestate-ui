@@ -3,33 +3,52 @@
 import { useState } from 'react'
 
 export default function ChatBubble() {
-  const [isOpen, setIsOpen] = useState(false)
+  const [chatHistory, setChatHistory] = useState<{ role: string; content: string }[]>([])
+  const [input, setInput] = useState('')
+
+  const sendMessage = async () => {
+    if (!input.trim()) return
+
+    const newHistory = [...chatHistory, { role: 'user', content: input }]
+    setChatHistory(newHistory)
+    setInput('')
+
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [
+          { role: 'system', content: 'You are a helpful real estate AI assistant.' },
+          ...newHistory,
+        ],
+      }),
+    })
+
+    const data = await res.json()
+    setChatHistory([...newHistory, { role: 'assistant', content: data.reply }])
+  }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
-      {/* Chat icon button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-14 h-14 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition-all flex items-center justify-center text-2xl"
-        aria-label="Toggle AI Chat"
-      >
-        💬
-      </button>
-
-      {/* Chat window */}
-      {isOpen && (
-        <div className="mt-2 w-80 h-96 bg-white rounded-lg shadow-xl p-4 border border-gray-200 flex flex-col">
-          <div className="text-lg font-semibold mb-2 text-blue-700">ChipEstate AI</div>
-          <div className="flex-1 overflow-y-auto text-sm text-gray-700">
-            <p>Hello! I'm your ChipEstate assistant. How can I help?</p>
+    <div className="fixed bottom-4 right-4 w-96 max-w-full bg-white text-black rounded-xl shadow-lg p-4 space-y-4">
+      <div className="h-64 overflow-y-auto space-y-2">
+        {chatHistory.map((m, i) => (
+          <div key={i} className={`text-sm p-2 rounded ${m.role === 'user' ? 'bg-blue-100 text-right' : 'bg-gray-200 text-left'}`}>
+            {m.content}
           </div>
-          <input
-            type="text"
-            placeholder="Type a message..."
-            className="mt-2 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-      )}
+        ))}
+      </div>
+      <div className="flex gap-2">
+        <input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+          className="flex-1 border rounded px-2 py-1"
+          placeholder="Ask a question..."
+        />
+        <button onClick={sendMessage} className="bg-emerald-500 text-white px-4 py-1 rounded">
+          Send
+        </button>
+      </div>
     </div>
   )
 }
