@@ -3,13 +3,26 @@
 'use client'
 
 import { useMemo } from 'react'
-import { Card, CardContent } from './internal/Card'  // Corrected import path for Card and CardContent
-import { Property, Chip, MonthlyPayout } from '@/types'
+// Corrected import path for Card and CardContent to use internal folder with explicit extension if necessary
+import { Card, CardContent } from './internal/Card.tsx' 
+
+type Property = {
+  id: string
+  title: string
+  // other fields as needed
+}
+
+type Chip = {
+  id: string
+  serial: string
+  property_id: string
+  // other fields as needed
+}
 
 interface PerformanceStatsProps {
   properties: Property[]
   chips: Chip[]
-  earnings: MonthlyPayout[]   // Added earnings prop
+  earnings: any[]  // Adjust type as needed
 }
 
 export default function PerformanceStats({
@@ -18,7 +31,7 @@ export default function PerformanceStats({
   earnings,
 }: PerformanceStatsProps) {
   const someMemoizedValue = useMemo(() => {
-    // your logic here, e.g. analyze earnings
+    // your logic here
   }, [properties, chips, earnings])
 
   return (
