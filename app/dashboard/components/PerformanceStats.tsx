@@ -3,8 +3,8 @@
 'use client'
 
 import { useMemo } from 'react'
-// Corrected import path for Card and CardContent to use internal folder with explicit extension if necessary
-import { Card, CardContent } from './internal/Card.tsx' 
+// Removed extension from import to fix module resolution error
+import { Card, CardContent } from './internal/Card'
 
 type Property = {
   id: string
@@ -22,7 +22,7 @@ type Chip = {
 interface PerformanceStatsProps {
   properties: Property[]
   chips: Chip[]
-  earnings: any[]  // Adjust type as needed
+  earnings: any[] // Adjust type as needed
 }
 
 export default function PerformanceStats({
