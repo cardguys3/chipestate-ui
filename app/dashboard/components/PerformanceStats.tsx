@@ -3,8 +3,8 @@
 'use client'
 
 import { useMemo } from 'react'
-// Adjusted import to use absolute alias assuming tsconfig.json setup '@/*' => './*'
-import { Card, CardContent } from '@/app/dashboard/components/internal/Card'
+// Changed import to relative path to fix module not found error
+import { Card, CardContent } from './internal/Card'
 
 type Property = {
   id: string
