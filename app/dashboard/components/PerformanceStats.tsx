@@ -3,8 +3,8 @@
 'use client'
 
 import { useMemo } from 'react'
-// Removed extension from import to fix module resolution error
-import { Card, CardContent } from './internal/Card'
+// Adjusted import path to correct relative path based on folder structure
+import { Card, CardContent } from '../internal/Card'
 
 type Property = {
   id: string
