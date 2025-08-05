@@ -3,8 +3,8 @@
 'use client'
 
 import { useMemo } from 'react'
-// Adjusted import path to correct relative path based on folder structure
-import { Card, CardContent } from '../internal/Card'
+// Adjusted import to correct absolute path alias for Card and CardContent
+import { Card, CardContent } from '@/app/dashboard/components/internal/Card'
 
 type Property = {
   id: string
