@@ -3,8 +3,8 @@
 'use client'
 
 import { useMemo } from 'react'
-// Adjusted import to correct absolute path alias for Card and CardContent
-import { Card, CardContent } from '@/app/dashboard/components/internal/Card'
+// Use relative path import to fix module not found error
+import { Card, CardContent } from './internal/Card'
 
 type Property = {
   id: string
