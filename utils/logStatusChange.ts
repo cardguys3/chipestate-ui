@@ -1,4 +1,4 @@
-// ==== FILE: /utils/logStatusChange.ts ====
+// File: /utils/logStatusChange.ts
 
 import { createClient } from './supabase/server'
 
@@ -10,7 +10,8 @@ type LogParams = {
 }
 
 export async function logStatusChange(params: LogParams) {
-  const supabase = createClient()
+  // Await createClient() because it returns a Promise
+  const supabase = await createClient()
   const { error } = await supabase.from('status_change_log').insert([params])
 
   if (error) {

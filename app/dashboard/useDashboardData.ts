@@ -1,18 +1,15 @@
-// /app/dashboard/hooks/useDashboardData.ts
+// File: /app/dashboard/hooks/useDashboardData.ts
 
 'use server'
 
 import { createClient } from '@/utils/supabase/server'
-import { cookies } from 'next/headers'
 
 export async function useDashboardData() {
-  const cookieStore = cookies()
-  const supabase = createClient(cookieStore)
+  // Await createClient() because it returns a Promise
+  const supabase = await createClient()
 
   const {
-    data: {
-      user,
-    },
+    data: { user },
     error: userError,
   } = await supabase.auth.getUser()
 
@@ -34,11 +31,17 @@ export async function useDashboardData() {
 
   const userId = user.id
 
-  const [{ data: chips = [] }, { data: properties = [] }, { data: earnings = [] }, { data: badges = [] }] = await Promise.all([
+  const [
+    { data: chips = [] },
+    { data: properties = [] },
+    { data: earnings = [] },
+    { data: badges = [] },
+  ] = await Promise.all([
     supabase.from('chips').select('*').eq('user_id', userId),
     supabase.from('properties').select('*'),
     supabase.from('chip_earnings').select('*').eq('user_id', userId),
-    supabase.from('badge_activity_log')
+    supabase
+      .from('badge_activity_log')
       .select(`
         id,
         badge_key,
@@ -51,20 +54,27 @@ export async function useDashboardData() {
   const firstName = user.user_metadata?.first_name || ''
   const registrationStatus = user.user_metadata?.registration_status || null
 
-  const totalPayout = earnings
-    .filter(e => e.type === 'distribution')
-    .reduce((sum, e) => sum + (e.amount || 0), 0)
+  // Safe defaults to prevent null errors
+  const chipsSafe = chips ?? []
+  const earningsSafe = earnings ?? []
 
-  const totalEarnings = earnings.reduce((sum, e) => sum + (e.amount || 0), 0)
+  const totalPayout = earningsSafe
+    .filter((e: any) => e.type === 'distribution')
+    .reduce((sum: number, e: any) => sum + (e.amount || 0), 0)
 
-  const netWorth = totalPayout + (chips.length * 50)
+  const totalEarnings = earningsSafe.reduce(
+    (sum: number, e: any) => sum + (e.amount || 0),
+    0
+  )
+
+  const netWorth = totalPayout + chipsSafe.length * 50
 
   return {
     user,
     firstName,
-    chips,
+    chips: chipsSafe,
     properties,
-    earnings,
+    earnings: earningsSafe,
     badges,
     totalPayout,
     totalEarnings,

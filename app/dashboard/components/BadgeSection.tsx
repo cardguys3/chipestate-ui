@@ -3,7 +3,7 @@
 'use client'
 
 import React from 'react'
-import { BadgeWithIcon } from '../types'
+import { BadgeWithIcon } from '@/types'
 import Image from 'next/image'
 
 interface BadgeSectionProps {

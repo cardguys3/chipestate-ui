@@ -1,4 +1,5 @@
-// ==== FILE: /app/admin/users/toggleApproval.ts START ====
+// File: /app/admin/users/toggleApproval.ts
+
 'use server'
 
 import { createClient } from '@/utils/supabase/server'
@@ -6,7 +7,8 @@ import { revalidatePath } from 'next/cache'
 import { logStatusChange } from '@/utils/logStatusChange'
 
 export async function toggleApproval(userId: string, currentStatus: boolean) {
-  const supabase = createClient()
+  // Await createClient() because it returns a Promise
+  const supabase = await createClient()
 
   const { error } = await supabase
     .from('users_extended')
@@ -14,19 +16,17 @@ export async function toggleApproval(userId: string, currentStatus: boolean) {
     .eq('id', userId)
 
   if (error) {
-    console.error('Error toggling approval:', error)
-    return { error: 'Failed to update approval status.' }
+    console.error('Failed to update approval status:', error)
+    return { error: 'Failed to update status' }
   }
 
   await logStatusChange({
     entity_id: userId,
     entity_type: 'user',
     field_changed: 'is_approved',
-    new_value: (!currentStatus).toString(),
-    change_type: 'toggle'
+    change_type: 'toggle',
   })
 
   revalidatePath('/admin/users')
   return { success: true }
 }
-// ==== FILE: /app/admin/users/toggleApproval.ts END ====

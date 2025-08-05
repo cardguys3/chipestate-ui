@@ -1,9 +1,9 @@
-// /app/dashboard/components/PerformanceCards.tsx
+// File: /app/dashboard/components/PerformanceCards.tsx
 
 'use client'
 
 import React from 'react'
-import { Chip, Property } from '../types'
+import { Chip, Property } from '@/types'  // Fixed import path from '../types' to '@/types'
 
 interface PerformanceCardsProps {
   netWorth: number

@@ -29,3 +29,4 @@ export const baseChartOptions = {
     },
   },
 }
+export { baseChartOptions as barChartOptions };

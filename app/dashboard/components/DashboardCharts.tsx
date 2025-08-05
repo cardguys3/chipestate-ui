@@ -1,57 +1,65 @@
-// /app/dashboard/components/DashboardCharts.tsx
+// File: /app/dashboard/components/DashboardCharts.tsx
 
 'use client';
 
 import React from 'react';
-import { MonthlyPayout } from '../types';
+import { MonthlyPayout, Property, Chip } from '@/types';
 import EarningsByChipChart from './charts/EarningsByChipChart';
 import EarningsByPropertyChart from './charts/EarningsByPropertyChart';
 import EarningsOverTimeChart from './charts/EarningsOverTimeChart';
 import ChipEarningsComparisonChart from './charts/ChipEarningsComparisonChart';
 import PropertyComparisonChart from './charts/PropertyComparisonChart';
 
+// ==== BLOCK: DashboardCharts Component ====
 interface DashboardChartsProps {
-  earningsData: MonthlyPayout[];
+  earningsData: MonthlyPayout[];   // Add this
+  properties: Property[];
+  chips: Chip[];
   selectedChips: string[];
   selectedProps: string[];
   months: string[];
   monthIndexes: number[];
 }
 
+
 const DashboardCharts: React.FC<DashboardChartsProps> = ({
   earningsData,
+  properties,
+  chips,
   selectedChips,
   selectedProps,
   months,
   monthIndexes,
 }) => {
-  // ==== BLOCK: Dashboard Charts Section START ====
   return (
     <div className="mb-6">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {/* By Chip */}
+        {/* Earnings by Chip */}
         <div className="bg-gray-800 rounded-xl p-4 col-span-2">
           <h3 className="text-lg font-semibold mb-2">Earnings by Chip</h3>
           <EarningsByChipChart
             data={earningsData}
+            chips={chips}
             selectedChips={selectedChips}
             months={months}
             monthIndexes={monthIndexes}
           />
         </div>
 
-        {/* By Property */}
+        {/* Earnings by Property */}
         <div className="bg-gray-800 rounded-xl p-4 col-span-2">
           <h3 className="text-lg font-semibold mb-2">Earnings by Property</h3>
           <EarningsByPropertyChart
             data={earningsData}
+            chips={chips}
+            properties={properties}
             selectedProps={selectedProps}
             months={months}
             monthIndexes={monthIndexes}
           />
         </div>
 
-        {/* Over Time */}
+        {/* Earnings Over Time */}
         <div className="bg-gray-800 rounded-xl p-4 col-span-4">
           <h3 className="text-lg font-semibold mb-2">Earnings Over Time</h3>
           <EarningsOverTimeChart
@@ -63,7 +71,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
           />
         </div>
 
-        {/* Chip Comparison */}
+        {/* Chip Earnings Comparison */}
         <div className="bg-gray-800 rounded-xl p-4 col-span-2">
           <h3 className="text-lg font-semibold mb-2">Chip Earnings Comparison</h3>
           <ChipEarningsComparisonChart
@@ -74,11 +82,12 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
           />
         </div>
 
-        {/* Property Comparison */}
+        {/* Property Earnings Comparison */}
         <div className="bg-gray-800 rounded-xl p-4 col-span-2">
           <h3 className="text-lg font-semibold mb-2">Property Earnings Comparison</h3>
           <PropertyComparisonChart
             data={earningsData}
+            properties={properties}
             selectedProps={selectedProps}
             months={months}
             monthIndexes={monthIndexes}
@@ -87,7 +96,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
       </div>
     </div>
   );
-  // ==== BLOCK: Dashboard Charts Section END ====
 };
 
 export default DashboardCharts;
+// ==== BLOCK: DashboardCharts Component ... END ====

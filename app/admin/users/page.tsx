@@ -5,7 +5,8 @@ import { createClient } from '@/utils/supabase/server'
 import AdminUsersPageContent from './AdminUsersPageContent'
 
 export default async function AdminUsersPage() {
-  const supabase = createClient()
+  // Await createClient() since it returns a Promise
+  const supabase = await createClient()
   const users = await fetchUsers()
 
   const { data: properties, error } = await supabase
@@ -24,4 +25,5 @@ export default async function AdminUsersPage() {
     </main>
   )
 }
+
 // ==== FILE: /app/admin/users/page.tsx END ====

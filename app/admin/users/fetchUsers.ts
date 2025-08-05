@@ -1,29 +1,18 @@
-// /app/admin/users/fetchUsers.ts
-import { cookies } from 'next/headers'
-import { createServerClient } from '@/utils/supabase/server'
+// ==== FILE: /app/admin/users/fetchUsers.ts ====
+
+import { supabase } from '@/lib/supabaseClient'
+import type { Database } from '@/types/supabase'
 
 export async function fetchUsers() {
-  const supabase = createServerClient<Database>();
-
   const { data, error } = await supabase
     .from('users_extended')
-    .select(`
-      id,
-      email,
-      first_name,
-      last_name,
-      phone,
-      is_active,
-      is_approved,
-      email_verified,
-      email_confirmed_at,
-      created_at
-    `);
+    .select('*')
 
   if (error) {
-    console.error('Error fetching users:', error.message);
-    return [];
+    console.error('Error fetching users:', error)
+    return []
   }
 
-  return data || [];
+  return data
 }
+// ==== END FILE: /app/admin/users/fetchUsers.ts ====

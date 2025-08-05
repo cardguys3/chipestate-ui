@@ -4,7 +4,7 @@
 
 import React from 'react'
 import Image from 'next/image'
-import { UserBadge } from '../types'
+import { UserBadge } from '@/types'
 
 // ==== BLOCK: Badge Section START ====
 interface BadgeGridProps {

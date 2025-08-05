@@ -1,32 +1,30 @@
-// ==== FILE: /app/admin/users/toggleActive.ts START ====
-'use server'
+// ==== FILE: /app/admin/users/filterAndSortUsers.ts ====
 
-import { createClient } from '@/utils/supabase/server'
-import { revalidatePath } from 'next/cache'
-import { logStatusChange } from '@/utils/logStatusChange'
+import { supabase } from '@/lib/supabaseClient'
+import type { User } from '@/types'
 
-export async function toggleActive(userId: string, currentStatus: boolean) {
-  const supabase = createClient()
+export function filterAndSortUsers(
+  users: User[],
+  filters?: { approved?: boolean; active?: boolean },
+  sortKey: keyof User = 'last_name',
+  sortAsc: boolean = true
+): User[] {
+  let filtered = [...users]
 
-  const { error } = await supabase
-    .from('users_extended')
-    .update({ is_active: !currentStatus })
-    .eq('id', userId)
-
-  if (error) {
-    console.error('Error toggling active status:', error)
-    return { error: 'Failed to update active status.' }
+  if (filters?.approved !== undefined) {
+    filtered = filtered.filter((u) => u.is_approved === filters.approved)
   }
 
-  await logStatusChange({
-    entity_id: userId,
-    entity_type: 'user',
-    field_changed: 'is_active',
-    new_value: (!currentStatus).toString(),
-    change_type: 'toggle'
-  })
+  if (filters?.active !== undefined) {
+    filtered = filtered.filter((u) => u.is_active === filters.active)
+  }
 
-  revalidatePath('/admin/users')
-  return { success: true }
+  return filtered.sort((a, b) => {
+    const aVal = a[sortKey] ?? ''
+    const bVal = b[sortKey] ?? ''
+    return sortAsc
+      ? String(aVal).localeCompare(String(bVal))
+      : String(bVal).localeCompare(String(aVal))
+  })
 }
-// ==== FILE: /app/admin/users/toggleActive.ts END ====
+// ==== END FILE: /app/admin/users/filterAndSortUsers.ts ====

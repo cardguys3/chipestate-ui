@@ -1,13 +1,15 @@
-// /app/dashboard/components/PerformanceFilters.tsx
+// File: /app/dashboard/components/PerformanceFilters.tsx
 
 'use client'
 
 import React from 'react'
-import { Chip, Property } from '../types'
+import { Chip, Property } from '@/types'  // Fixed import path from '../types' to '@/types'
+import { MonthlyPayout } from '@/types'
 
 interface PerformanceFiltersProps {
   properties: Property[]
   chips: Chip[]
+  earnings: MonthlyPayout[]   // Add this line
   months: string[]
   selectedProps: string[]
   setSelectedProps: React.Dispatch<React.SetStateAction<string[]>>
